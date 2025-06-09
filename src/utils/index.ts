@@ -138,9 +138,9 @@ export const deepClone = <T>(obj: T): T => {
   if (obj instanceof Date) return new Date(obj.getTime()) as unknown as T;
   if (obj instanceof Array) return obj.map(item => deepClone(item)) as unknown as T;
   if (typeof obj === 'object') {
-    const clonedObj: any = {};
+    const clonedObj: Record<string, unknown> = {};
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         clonedObj[key] = deepClone(obj[key]);
       }
     }
@@ -150,7 +150,7 @@ export const deepClone = <T>(obj: T): T => {
 };
 
 // Debounce function
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: unknown[]) => unknown>(
   func: T,
   delay: number
 ): ((...args: Parameters<T>) => void) => {
@@ -158,12 +158,12 @@ export const debounce = <T extends (...args: any[]) => any>(
   
   return (...args: Parameters<T>) => {
     clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func.apply(null, args), delay);
+    timeoutId = setTimeout(() => func(...args), delay);
   };
 };
 
 // Throttle function
-export const throttle = <T extends (...args: any[]) => any>(
+export const throttle = <T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): ((...args: Parameters<T>) => void) => {
@@ -171,7 +171,7 @@ export const throttle = <T extends (...args: any[]) => any>(
   
   return (...args: Parameters<T>) => {
     if (!inThrottle) {
-      func.apply(null, args);
+      func(...args);
       inThrottle = true;
       setTimeout(() => inThrottle = false, limit);
     }
@@ -263,14 +263,23 @@ export const getImageUrl = (path: string): string => {
 };
 
 // Error message extractor
-export const extractErrorMessage = (error: any): string => {
+export const extractErrorMessage = (error: unknown): string => {
   if (typeof error === 'string') return error;
-  if (error?.message) return error.message;
-  if (error?.errors) {
-    const firstError = Object.values(error.errors)[0];
-    if (Array.isArray(firstError)) return firstError[0];
-    return String(firstError);
+  
+  if (error && typeof error === 'object') {
+    const errorObj = error as Record<string, unknown>;
+    if (errorObj.message && typeof errorObj.message === 'string') {
+      return errorObj.message;
+    }
+    if (errorObj.errors && typeof errorObj.errors === 'object') {
+      const firstError = Object.values(errorObj.errors)[0];
+      if (Array.isArray(firstError) && firstError.length > 0) {
+        return String(firstError[0]);
+      }
+      return String(firstError);
+    }
   }
+  
   return 'Виникла помилка';
 };
 

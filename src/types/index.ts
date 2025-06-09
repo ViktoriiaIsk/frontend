@@ -154,7 +154,7 @@ export interface PaginatedResponse<T> {
 }
 
 // Filter types
-export interface BookFilters {
+export interface BookFilters extends Record<string, unknown> {
   search?: string;
   category_id?: number;
   min_price?: number;

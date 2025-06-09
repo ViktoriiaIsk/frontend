@@ -42,9 +42,9 @@ api.interceptors.response.use(
     };
 
     if (error.response?.data) {
-      const data = error.response.data as any;
-      apiError.message = data.message || 'An error occurred';
-      apiError.errors = data.errors;
+      const data = error.response.data as Record<string, unknown>;
+      apiError.message = (data.message as string) || 'An error occurred';
+      apiError.errors = data.errors as Record<string, string[]>;
     }
 
     // Handle 401 errors (unauthorized)
@@ -180,7 +180,7 @@ export const endpoints = {
 };
 
 // Helper function to build query string
-export const buildQueryString = (params: Record<string, any>): string => {
+export const buildQueryString = (params: Record<string, unknown>): string => {
   const searchParams = new URLSearchParams();
   
   Object.entries(params).forEach(([key, value]) => {
@@ -194,7 +194,7 @@ export const buildQueryString = (params: Record<string, any>): string => {
 };
 
 // Helper function for file uploads
-export const createFormData = (data: Record<string, any>): FormData => {
+export const createFormData = (data: Record<string, unknown>): FormData => {
   const formData = new FormData();
   
   Object.entries(data).forEach(([key, value]) => {

@@ -1,12 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BooksService } from '@/lib/services/books';
 import {
-  Book,
   BookFilters,
   CreateBookData,
-  PaginatedResponse,
-  Category,
-  Review,
   CreateReviewData,
 } from '@/types';
 
@@ -53,7 +49,7 @@ export const useCreateBook = () => {
 
   return useMutation({
     mutationFn: (bookData: CreateBookData) => BooksService.createBook(bookData),
-    onSuccess: (newBook) => {
+    onSuccess: () => {
       // Invalidate books list to show the new book
       queryClient.invalidateQueries({ queryKey: ['books'] });
       // Add the new book to user's books cache

@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Book } from '@/types';
-import { formatCurrency, getImageUrl, truncateText } from '@/utils';
+import { formatCurrency, truncateText } from '@/utils';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 
