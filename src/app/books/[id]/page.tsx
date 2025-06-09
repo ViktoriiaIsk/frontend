@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import SmartImage from '@/components/ui/SmartImage';
+import FallbackImage from '@/components/ui/FallbackImage';
 
 import Navigation from '@/components/layout/Navigation';
 import Button from '@/components/ui/Button';
@@ -131,13 +131,10 @@ const BookDetailPage: React.FC = () => {
           <div className="space-y-4">
             {/* Main image */}
             <div className="relative aspect-[3/4] w-full">
-              <SmartImage
+              <FallbackImage
                 src={primaryImage}
                 alt={book.title}
-                fill
-                className="object-cover rounded-2xl"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
+                className="object-cover rounded-2xl absolute inset-0"
               />
               
               {/* Status badge */}

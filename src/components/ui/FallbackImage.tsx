@@ -1,24 +1,30 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image, { ImageProps } from 'next/image';
 import { getImageUrlAlternatives } from '@/utils';
 
-interface SmartImageProps extends Omit<ImageProps, 'src' | 'onError'> {
+interface FallbackImageProps {
   src: string;
+  alt: string;
+  className?: string;
   fallback?: string;
+  width?: number;
+  height?: number;
 }
 
 /**
- * Smart image component that tries alternative URLs when the main image fails to load
+ * Simple fallback image component using regular img tag
+ * Used when Next.js Image component causes issues
  */
-export default function SmartImage({ 
+export default function FallbackImage({ 
   src, 
+  alt,
+  className = '',
   fallback = '/images/placeholder-book.svg',
-  ...props 
-}: SmartImageProps) {
+  width,
+  height,
+}: FallbackImageProps) {
   const [currentSrc, setCurrentSrc] = useState(() => {
-    // Start with fallback if src is invalid
     if (!src || src === 'null' || src === 'undefined') {
       return fallback;
     }
@@ -30,7 +36,6 @@ export default function SmartImage({
   const [alternatives] = useState(() => {
     if (!src || src === 'null' || src === 'undefined') return [];
     
-    // Extract filename from URL if it's a full URL
     let imagePath = src;
     if (src.startsWith('http') && src.includes('/book-images/')) {
       imagePath = src.split('/book-images/')[1];
@@ -38,7 +43,6 @@ export default function SmartImage({
     return getImageUrlAlternatives(imagePath);
   });
 
-  // Reset when src changes
   useEffect(() => {
     if (!src || src === 'null' || src === 'undefined') {
       setCurrentSrc(fallback);
@@ -52,33 +56,36 @@ export default function SmartImage({
   }, [src, fallback]);
 
   const handleImageError = () => {
-    if (hasFailed) return; // Prevent infinite loops
+    if (hasFailed) return;
     
     const nextIndex = alternativeIndex + 1;
     
     if (nextIndex < alternatives.length) {
-      // Try next alternative
       setAlternativeIndex(nextIndex);
       setCurrentSrc(alternatives[nextIndex]);
     } else {
-      // All alternatives failed, use fallback
       setCurrentSrc(fallback);
       setHasFailed(true);
     }
   };
 
-  // Don't render if src is completely invalid
   if (!currentSrc) {
     return null;
   }
 
   return (
-    <Image
-      {...props}
+    <img
       src={currentSrc}
+      alt={alt}
+      className={className}
+      width={width}
+      height={height}
       onError={handleImageError}
-      // Add unoptimized prop for external images to prevent Next.js optimization issues
-      unoptimized={currentSrc.startsWith('http')}
+      style={{
+        objectFit: 'cover',
+        width: '100%',
+        height: '100%',
+      }}
     />
   );
 } 
