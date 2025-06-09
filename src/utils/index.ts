@@ -250,14 +250,26 @@ export const getBaseUrl = (): string => {
   return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 };
 
-// Image URL helper - using your storage setup
+// Image URL helper - handles multiple possible backend paths
 export const getImageUrl = (path: string): string => {
   if (!path) return '/images/placeholder-book.svg';
   if (path.startsWith('http')) return path;
   
-  // Your backend serves images from storage directory
+  // Your backend serves images from book-images directory
   const backendUrl = 'http://13.37.117.93';
-  return `${backendUrl}/storage/${path}`;
+  return `${backendUrl}/book-images/${path}`;
+};
+
+// Get alternative image URLs to try if main fails
+export const getImageUrlAlternatives = (path: string): string[] => {
+  if (!path || path.startsWith('http')) return [];
+  
+  const backendUrl = 'http://13.37.117.93';
+  return [
+    `${backendUrl}/storage/${path}`,
+    `${backendUrl}/storage/app/public/book-images/${path}`,
+    `${backendUrl}/public/storage/book-images/${path}`,
+  ];
 };
 
 // Error message extractor

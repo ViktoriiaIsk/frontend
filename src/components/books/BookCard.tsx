@@ -2,11 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Book } from '@/types';
 import { formatCurrency, truncateText } from '@/utils';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import SmartImage from '@/components/ui/SmartImage';
 
 interface BookCardProps {
   book: Book;
@@ -33,7 +33,7 @@ const BookCard: React.FC<BookCardProps> = ({
         <div className="flex flex-col sm:flex-row">
           {/* Book Image */}
           <div className="relative w-full sm:w-32 h-48 sm:h-32 flex-shrink-0">
-            <Image
+            <SmartImage
               src={imageUrl}
               alt={book.title}
               fill
@@ -89,7 +89,7 @@ const BookCard: React.FC<BookCardProps> = ({
     <Card padding="none" hover className="overflow-hidden h-full flex flex-col">
       {/* Book Image */}
       <div className="relative aspect-[3/4] w-full">
-        <Image
+        <SmartImage
           src={imageUrl}
           alt={book.title}
           fill
