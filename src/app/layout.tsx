@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/lib/providers";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -83,7 +84,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="BookSwap" />
       </head>
       <body className={`${inter.className} antialiased bg-accent-cream text-neutral-800`}>
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

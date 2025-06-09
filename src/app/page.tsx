@@ -2,15 +2,22 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Providers } from '@/lib/providers';
+
 import Navigation from '@/components/layout/Navigation';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import BookCard from '@/components/books/BookCard';
+import { useBooks } from '@/hooks/useBooks';
 
 /**
  * Home page component with hero section and features
  */
 function HomePage() {
+  // Fetch latest books for display
+  const { data: booksResponse, isLoading: isBooksLoading } = useBooks({
+    per_page: 8,
+    sort_by: 'newest'
+  });
   // Featured categories for quick navigation
   const featuredCategories = [
     { name: 'Fiction', icon: '📖', color: 'bg-primary-100 text-primary-800' },
@@ -144,6 +151,66 @@ function HomePage() {
         </div>
       </section>
 
+      {/* Latest Books Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 mb-4">
+              Latest Books
+            </h2>
+            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
+              Discover newly added books from our community of sellers
+            </p>
+          </div>
+
+          {isBooksLoading ? (
+            // Loading skeleton
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-neutral-200 aspect-[3/4] rounded-2xl mb-4"></div>
+                  <div className="h-4 bg-neutral-200 rounded mb-2"></div>
+                  <div className="h-3 bg-neutral-200 rounded w-3/4"></div>
+                </div>
+              ))}
+            </div>
+          ) : booksResponse?.data?.length ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {booksResponse.data.map((book) => (
+                  <BookCard key={book.id} book={book} />
+                ))}
+              </div>
+              
+              {/* View All Button */}
+              <div className="text-center">
+                <Link href="/books">
+                  <Button size="lg">
+                    View All Books
+                  </Button>
+                </Link>
+              </div>
+            </>
+          ) : (
+            // Empty state
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📚</div>
+              <h3 className="text-xl font-semibold text-neutral-900 mb-2">
+                No books available yet
+              </h3>
+              <p className="text-neutral-600 mb-6">
+                Be the first to add a book to our marketplace!
+              </p>
+              <Link href="/books/create">
+                <Button>
+                  Add First Book
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-16 bg-gradient-eco text-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
@@ -180,12 +247,8 @@ function HomePage() {
 }
 
 /**
- * Main page component wrapped with providers
+ * Main page component (providers are now in layout)
  */
 export default function Page() {
-  return (
-    <Providers>
-      <HomePage />
-    </Providers>
-  );
+  return <HomePage />;
 }
