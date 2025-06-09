@@ -1,103 +1,191 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import React from 'react';
+import Link from 'next/link';
+import { Providers } from '@/lib/providers';
+import Navigation from '@/components/layout/Navigation';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+
+/**
+ * Home page component with hero section and features
+ */
+function HomePage() {
+  // Featured categories for quick navigation
+  const featuredCategories = [
+    { name: 'Fiction', icon: '📖', color: 'bg-primary-100 text-primary-800' },
+    { name: 'Science', icon: '🔬', color: 'bg-secondary-100 text-secondary-800' },
+    { name: 'History', icon: '🏛️', color: 'bg-accent-sage/20 text-accent-forest' },
+    { name: 'Children', icon: '🧸', color: 'bg-pink-100 text-pink-800' },
+  ];
+
+  // App features highlights
+  const features = [
+    {
+      title: 'Buy Books Online',
+      description: 'Browse and purchase books from verified sellers',
+      icon: '🛒',
+    },
+    {
+      title: 'Secure Payments',
+      description: 'Safe transactions through Stripe with buyer protection',
+      icon: '💳',
+    },
+    {
+      title: 'Sell Your Books',
+      description: 'List your books and earn money from your collection',
+      icon: '💰',
+    },
+  ];
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-accent-cream">
+      <Navigation />
+      
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 to-secondary-50 opacity-50" />
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
+          <div className="text-center">
+                         {/* Main headline */}
+             <h1 className="text-4xl md:text-6xl font-bold text-neutral-900 mb-6">
+               Books find new
+               <span className="text-primary-600 block">readers</span>
+             </h1>
+             
+             {/* Subtitle */}
+             <p className="text-lg md:text-xl text-neutral-600 mb-8 max-w-2xl mx-auto">
+               Online marketplace for buying and selling books. Find your next great read or sell your collection.
+             </p>
+            
+                         {/* CTA Buttons */}
+             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+               <Link href="/books">
+                 <Button size="lg" className="w-full sm:w-auto">
+                   🔍 Browse Books
+                 </Button>
+               </Link>
+               <Link href="/books/create">
+                 <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+                   💰 Sell Books
+                 </Button>
+               </Link>
+             </div>
+            
+                         {/* Quick stats */}
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
+               <div className="text-center">
+                 <div className="text-2xl md:text-3xl font-bold text-primary-600">1000+</div>
+                 <div className="text-sm text-neutral-600">Books in catalog</div>
+               </div>
+               <div className="text-center">
+                 <div className="text-2xl md:text-3xl font-bold text-primary-600">500+</div>
+                 <div className="text-sm text-neutral-600">Active users</div>
+               </div>
+               <div className="text-center">
+                 <div className="text-2xl md:text-3xl font-bold text-primary-600">200+</div>
+                 <div className="text-sm text-neutral-600">Books sold</div>
+               </div>
+               <div className="text-center">
+                 <div className="text-2xl md:text-3xl font-bold text-primary-600">50+</div>
+                 <div className="text-sm text-neutral-600">Cities in Ukraine</div>
+               </div>
+             </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+
+      {/* Featured Categories */}
+      <section className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                     <h2 className="text-2xl md:text-3xl font-bold text-center text-neutral-900 mb-8">
+             Popular Categories
+           </h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {featuredCategories.map((category, index) => (
+              <Link key={index} href={`/books?category=${category.name}`}>
+                <Card 
+                  hover 
+                  padding="md" 
+                  className="text-center cursor-pointer h-full"
+                >
+                  <div className={`w-16 h-16 rounded-2xl ${category.color} flex items-center justify-center text-2xl mx-auto mb-3`}>
+                    {category.icon}
+                  </div>
+                  <h3 className="font-medium text-neutral-900">{category.name}</h3>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 bg-accent-cream">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                     <h2 className="text-2xl md:text-3xl font-bold text-center text-neutral-900 mb-12">
+             Why BookSwap?
+           </h2>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} padding="lg" className="text-center">
+                <div className="text-4xl mb-4">{feature.icon}</div>
+                <h3 className="text-xl font-semibold text-neutral-900 mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-neutral-600">{feature.description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-gradient-eco text-white">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            Ready to join the community?
+          </h2>
+          <p className="text-lg mb-8 opacity-90">
+            Create an account and start buying or selling books today
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/auth/register">
+              <Button 
+                variant="secondary" 
+                size="lg" 
+                className="w-full sm:w-auto bg-white text-primary-700 hover:bg-neutral-50"
+              >
+                Sign Up
+              </Button>
+            </Link>
+            <Link href="/auth/login">
+              <Button 
+                variant="ghost" 
+                size="lg" 
+                className="w-full sm:w-auto text-white border border-white hover:bg-white hover:text-primary-700"
+              >
+                Sign In
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
+  );
+}
+
+/**
+ * Main page component wrapped with providers
+ */
+export default function Page() {
+  return (
+    <Providers>
+      <HomePage />
+    </Providers>
   );
 }

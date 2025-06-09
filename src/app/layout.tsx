@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "BookSwap - Обмін та продаж книг",
-  description: "Платформа для обміну та продажу книг. Знайдіть нові книги, продайте старі, обмінюйтеся з іншими читачами.",
-  keywords: "книги, обмін книг, продаж книг, читання, література, BookSwap",
+  title: "BookSwap - Online Book Marketplace",
+  description: "Online marketplace for buying and selling books. Find your next great read or sell your book collection.",
+  keywords: "books, buy books, sell books, online bookstore, used books, BookSwap",
   authors: [{ name: "BookSwap Team" }],
   creator: "BookSwap",
   publisher: "BookSwap",
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "BookSwap - Обмін та продаж книг",
-    description: "Платформа для обміну та продажу книг. Знайдіть нові книги, продайте старі.",
+    title: "BookSwap - Online Book Marketplace",
+    description: "Online marketplace for buying and selling books. Find your next great read.",
     url: "/",
     siteName: "BookSwap",
     images: [
@@ -42,8 +42,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "BookSwap - Обмін та продаж книг",
-    description: "Платформа для обміну та продажу книг",
+    title: "BookSwap - Online Book Marketplace",
+    description: "Online marketplace for buying and selling books",
     images: ["/og-image.jpg"],
   },
   robots: {

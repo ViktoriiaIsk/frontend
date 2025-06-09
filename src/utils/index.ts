@@ -252,12 +252,13 @@ export const getBaseUrl = (): string => {
   return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 };
 
-// Image URL helper
+// Image URL helper - using your storage setup
 export const getImageUrl = (path: string): string => {
   if (!path) return '/images/placeholder-book.jpg';
   if (path.startsWith('http')) return path;
   
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://15.237.117.132';
+  // Your backend serves images from storage directory
+  const backendUrl = 'http://15.237.117.132';
   return `${backendUrl}/storage/${path}`;
 };
 
