@@ -148,12 +148,10 @@ const BookDetailPage: React.FC = () => {
               <div className="grid grid-cols-4 gap-2">
                 {book.images.slice(1, 5).map((image, index) => (
                   <div key={index} className="relative aspect-square">
-                    <SmartImage
+                    <FallbackImage
                       src={image.url || '/images/placeholder-book.svg'}
                       alt={`${book.title} - Image ${index + 2}`}
-                      fill
-                      className="object-cover rounded-lg"
-                      sizes="(max-width: 1024px) 25vw, 12.5vw"
+                      className="object-cover rounded-lg absolute inset-0"
                     />
                   </div>
                 ))}
