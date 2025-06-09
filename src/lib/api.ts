@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 import { ApiError } from '@/types';
 
 // Base API configuration - using your actual API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://15.237.117.132/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://13.37.117.93/api';
 
 // Create axios instance
 export const api = axios.create({

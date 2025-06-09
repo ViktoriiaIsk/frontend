@@ -254,11 +254,11 @@ export const getBaseUrl = (): string => {
 
 // Image URL helper - using your storage setup
 export const getImageUrl = (path: string): string => {
-  if (!path) return '/images/placeholder-book.jpg';
+  if (!path) return '/images/placeholder-book.svg';
   if (path.startsWith('http')) return path;
   
   // Your backend serves images from storage directory
-  const backendUrl = 'http://15.237.117.132';
+  const backendUrl = 'http://13.37.117.93';
   return `${backendUrl}/storage/${path}`;
 };
 
