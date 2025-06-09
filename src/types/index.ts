@@ -34,22 +34,25 @@ export interface Book {
   author: string;
   description: string;
   price: string;
+  condition: string;
   category_id: number;
   owner_id: number;
   status: 'available' | 'reserved' | 'sold';
   created_at: string;
   updated_at: string;
   images: BookImage[];
-  category: Category;
-  owner: User;
+  first_image?: string;
+  category?: Category;
+  owner?: User;
 }
 
 export interface BookImage {
   id: number;
-  book_id: number;
-  image_path: string;
-  is_primary: boolean;
-  created_at: string;
+  book_id?: number;
+  image_path?: string;
+  url?: string; // API uses 'url' instead of 'image_path'
+  is_primary?: boolean;
+  created_at?: string;
 }
 
 export interface Category {

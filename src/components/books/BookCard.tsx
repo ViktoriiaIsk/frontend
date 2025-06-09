@@ -22,9 +22,10 @@ const BookCard: React.FC<BookCardProps> = ({
   variant = 'grid',
   showActions = true,
 }) => {
-  // Get the primary image or first image
-  const primaryImage = book.images?.find(img => img.is_primary) || book.images?.[0];
-  const imageUrl = primaryImage ? getImageUrl(primaryImage.image_path) : '/images/placeholder-book.jpg';
+  // Get the primary image or first image from API
+  const imageUrl = book.first_image || 
+                   book.images?.[0]?.url || 
+                   '/images/placeholder-book.svg';
 
   if (variant === 'list') {
     return (
