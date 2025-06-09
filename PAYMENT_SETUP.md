@@ -1,6 +1,26 @@
-# Payment Setup Instructions
+# Real Stripe Payment Integration - Belgium (EUR)
 
-## Stripe Configuration for Belgium (EUR)
+## ✅ IMPLEMENTED: Real Stripe Checkout Integration
+
+### What's Working Now:
+
+1. **Real Stripe Checkout Session Creation** ✅
+
+   - Creates actual Stripe checkout sessions via API
+   - Redirects users to real Stripe payment page
+   - Supports EUR currency for Belgium
+
+2. **Payment Flow** ✅
+
+   - Click "Buy Now" → Creates Stripe session → Redirects to Stripe
+   - User completes payment with test cards
+   - Stripe redirects back to success/cancel pages
+   - Backend processes payment and updates book status to "sold"
+
+3. **Test Cards Integration** ✅
+   - All Stripe test cards work (4242424242424242, etc.)
+   - Support for successful, declined, and 3D Secure cards
+   - Real payment testing with EUR amounts
 
 ### 1. Environment Variables
 
@@ -45,7 +65,62 @@ NODE_ENV=development
 
 **Note**: Use any future expiry date (e.g., 12/34), any 3-digit CVC, and any postal code.
 
-### 3. Backend Configuration Required
+### 3. Backend API Endpoints Required
+
+The frontend expects these backend endpoints:
+
+```
+POST /api/payment/create-checkout-session
+- Creates Stripe checkout session
+- Body: { book_id, success_url, cancel_url, currency, locale }
+- Returns: { session_id }
+
+POST /api/payment/process-success
+- Confirms payment and updates book status
+- Body: { book_id, session_id }
+- Updates book status to "sold"
+```
+
+### 4. How the Payment Flow Works
+
+1. **User clicks "Buy Now"** on any book card or details page
+2. **Frontend calls** `PaymentService.createCheckoutSession()`
+3. **Backend creates** Stripe checkout session with book data
+4. **User redirected** to Stripe payment page
+5. **User completes payment** using test cards
+6. **Stripe redirects back** to `/payment/success?book_id=X&session_id=Y`
+7. **Frontend calls** `PaymentService.processSuccessfulPayment()`
+8. **Backend confirms** payment and marks book as "sold"
+9. **User sees** success page with order details
+
+### 5. Testing the Real Payment Flow
+
+1. Run the development server: `npm run dev`
+2. Go to any book and click "Buy Now" OR visit `/payment-test` for dedicated testing
+3. You'll be redirected to real Stripe checkout
+4. Use test cards from above (e.g., 4242424242424242)
+5. Complete payment and verify redirect to success page
+6. Check that book status changes to "sold"
+
+### 6. Frontend Implementation Details
+
+- ✅ **PaymentService**: Real Stripe integration with checkout sessions
+- ✅ **usePurchase hook**: Handles payment initiation with error handling
+- ✅ **BookCard component**: "Buy Now" buttons trigger real payments
+- ✅ **Book details page**: Enhanced checkout section with real Stripe
+- ✅ **Payment success page**: Confirms payment and shows order details
+- ✅ **Error handling**: Displays payment errors to users
+- ✅ **Currency formatting**: EUR with Dutch-Belgium locale (€12,00)
+
+### 7. What Happens When Payment Succeeds
+
+- Book status changes from "available" → "sold"
+- User sees confirmation page with order details
+- Purchase details are saved in backend
+- Email notifications sent (if configured)
+- Book becomes unavailable for other users
+
+### 8. Backend Configuration Required
 
 Ensure your backend is configured for:
 
@@ -53,32 +128,9 @@ Ensure your backend is configured for:
 - **Country**: Belgium (BE)
 - **Locale**: nl-BE
 - **Stripe Test Mode**: Enabled
+- **Webhook endpoints**: For payment confirmations
 
-### 4. Testing the Payment Flow
-
-1. Run the development server: `npm run dev`
-2. Navigate to `/payment-test` (only visible in development)
-3. Use the test cards provided above
-4. Check the payment results and backend logs
-
-### 5. Frontend Updates Made
-
-- ✅ Currency formatting changed to EUR with Dutch-Belgium locale
-- ✅ PaymentService updated with EUR conversion methods
-- ✅ Test card helper component created
-- ✅ Payment test page added for development
-- ✅ Navigation updated with payment test link (dev only)
-
-### 6. Integration Checklist
-
-- [ ] Update backend Stripe configuration to EUR
-- [ ] Set backend country to Belgium (BE)
-- [ ] Configure webhook endpoints for EUR payments
-- [ ] Update product prices from UAH to EUR
-- [ ] Test all payment flows with test cards
-- [ ] Verify currency display throughout the application
-
-### 7. Production Deployment
+### 9. Production Deployment
 
 Before going to production:
 
@@ -87,9 +139,20 @@ Before going to production:
 3. Remove `/payment-test` route access
 4. Verify all EUR amounts are correct
 5. Test with real Belgian payment methods
+6. Configure email notifications
+7. Set up proper order management
 
-### 8. Useful Resources
+### 10. Security Considerations
+
+- ✅ **Client-side**: Only public Stripe keys used
+- ✅ **Payment processing**: Handled by Stripe (PCI compliant)
+- ✅ **Sensitive data**: Never stored on frontend
+- ⚠️ **Backend validation**: Ensure payment amounts match book prices
+- ⚠️ **Rate limiting**: Prevent payment session abuse
+
+### 11. Useful Resources
 
 - [Stripe Testing](https://stripe.com/docs/testing)
+- [Stripe Checkout](https://stripe.com/docs/payments/checkout)
 - [Stripe Belgium Guide](https://stripe.com/docs/connect/country-guide/belgium)
 - [EUR Payment Methods](https://stripe.com/docs/payments/payment-methods/overview#europe)

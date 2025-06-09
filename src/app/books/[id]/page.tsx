@@ -11,6 +11,7 @@ import Card from '@/components/ui/Card';
 import { useBook } from '@/hooks/useBooks';
 import { formatCurrency, formatDate } from '@/utils';
 import { PaymentService } from '@/lib/services/payment';
+import { usePurchase } from '@/hooks/usePurchase';
 
 /**
  * Individual book detail page
@@ -19,11 +20,13 @@ const BookDetailPage: React.FC = () => {
   const params = useParams();
   const searchParams = useSearchParams();
   const bookId = parseInt(params?.id as string);
-  const [buyingNow, setBuyingNow] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
   // Fetch book details
   const { data: book, isLoading, error } = useBook(bookId);
+  
+  // Purchase hook for real Stripe integration
+  const { initiating: buyingNow, initiatePurchase, error: purchaseError } = usePurchase();
 
   // Check if user came here to buy
   useEffect(() => {
@@ -32,22 +35,18 @@ const BookDetailPage: React.FC = () => {
     }
   }, [searchParams, book]);
 
-  // Handle buy now action
+  // Handle buy now action with real Stripe checkout
   const handleBuyNow = async () => {
     if (!book || book.status !== 'available') return;
     
-    setBuyingNow(true);
-    
     try {
-      // Simulate payment process - in real app this would open Stripe checkout
-      console.log('Initiating purchase for book:', book.title);
-      
-      // For now, just show checkout section
-      setShowCheckout(true);
+      await initiatePurchase(book);
+      if (purchaseError) {
+        console.error('Purchase failed:', purchaseError);
+        // TODO: Show error toast notification
+      }
     } catch (error) {
       console.error('Purchase failed:', error);
-    } finally {
-      setBuyingNow(false);
     }
   };
 
@@ -282,6 +281,16 @@ const BookDetailPage: React.FC = () => {
               </Button>
             </div>
 
+            {/* Payment Error */}
+            {purchaseError && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+                <div className="text-red-800">
+                  <strong>Payment Error:</strong>
+                  <div className="mt-1 text-sm">{purchaseError}</div>
+                </div>
+              </div>
+            )}
+
             {/* Checkout Section */}
             {showCheckout && isAvailable && (
               <Card className="border-primary-200 bg-primary-50">
@@ -304,10 +313,8 @@ const BookDetailPage: React.FC = () => {
                   <div className="flex space-x-3">
                     <Button 
                       className="flex-1"
-                      onClick={() => {
-                        // Here would go actual Stripe checkout
-                        alert(`Purchase initiated for ${book.title}!\n\nIn a real app, this would open Stripe checkout for ${formatCurrency(book.price)}`);
-                      }}
+                      onClick={handleBuyNow}
+                      loading={buyingNow}
                     >
                       💳 Pay with Card
                     </Button>

@@ -31,6 +31,91 @@ export class PaymentService {
   }
 
   /**
+   * Create Stripe Checkout Session for book purchase
+   * @param bookId - ID of the book to purchase
+   * @param bookTitle - Title of the book
+   * @param bookPrice - Price in EUR
+   * @param successUrl - URL to redirect after successful payment
+   * @param cancelUrl - URL to redirect after cancelled payment
+   * @returns Promise with checkout session URL
+   */
+  static async createCheckoutSession(
+    bookId: number,
+    bookTitle: string,
+    bookPrice: number,
+    successUrl: string,
+    cancelUrl: string
+  ): Promise<{ success: boolean; url?: string; error?: string }> {
+    try {
+      const stripe = await this.getStripeInstance();
+      if (!stripe) {
+        throw new Error('Failed to load Stripe');
+      }
+
+      // Create checkout session via backend
+      const response = await api.post<ApiResponse<{ session_id: string }>>(
+        endpoints.payment.createCheckoutSession,
+        {
+          book_id: bookId,
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+          currency: 'EUR',
+          locale: 'nl',
+        }
+      );
+
+      const { session_id } = response.data.data;
+
+      // Redirect to Stripe Checkout
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: session_id,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Create checkout session error:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to create checkout session' 
+      };
+    }
+  }
+
+  /**
+   * Process successful payment and update book status
+   * @param bookId - ID of the book
+   * @param sessionId - Stripe session ID
+   * @returns Promise with success status
+   */
+  static async processSuccessfulPayment(
+    bookId: number,
+    sessionId: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Confirm payment and update book status via backend
+      await api.post<ApiResponse<void>>(
+        endpoints.payment.processSuccess,
+        {
+          book_id: bookId,
+          session_id: sessionId,
+        }
+      );
+
+      return { success: true };
+    } catch (error) {
+      console.error('Process successful payment error:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to process payment' 
+      };
+    }
+  }
+
+  /**
    * Create payment intent for book purchase
    * @param data - Payment intent data
    * @returns Promise with client secret and order ID
