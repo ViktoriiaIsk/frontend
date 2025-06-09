@@ -167,8 +167,6 @@ export const endpoints = {
   payment: {
     createIntent: '/payment/create-intent',
     confirm: '/payment/confirm',
-    createCheckoutSession: '/payment/create-checkout-session',
-    processSuccess: '/payment/process-success',
   },
   
   // User

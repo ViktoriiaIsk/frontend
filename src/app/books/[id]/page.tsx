@@ -12,6 +12,7 @@ import { useBook } from '@/hooks/useBooks';
 import { formatCurrency, formatDate } from '@/utils';
 import { PaymentService } from '@/lib/services/payment';
 import { usePurchase } from '@/hooks/usePurchase';
+import PaymentModal from '@/components/payment/PaymentModal';
 
 /**
  * Individual book detail page
@@ -25,8 +26,16 @@ const BookDetailPage: React.FC = () => {
   // Fetch book details
   const { data: book, isLoading, error } = useBook(bookId);
   
-  // Purchase hook for real Stripe integration
-  const { initiating: buyingNow, initiatePurchase, error: purchaseError } = usePurchase();
+  // Purchase hook for Payment Intent integration
+  const { 
+    initiatePurchase, 
+    error: purchaseError, 
+    showPaymentForm, 
+    selectedBook, 
+    closePaymentForm 
+  } = usePurchase();
+  
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   // Check if user came here to buy
   useEffect(() => {
@@ -35,19 +44,23 @@ const BookDetailPage: React.FC = () => {
     }
   }, [searchParams, book]);
 
-  // Handle buy now action with real Stripe checkout
-  const handleBuyNow = async () => {
+  // Handle buy now action with Payment Intent
+  const handleBuyNow = () => {
     if (!book || book.status !== 'available') return;
-    
-    try {
-      await initiatePurchase(book);
-      if (purchaseError) {
-        console.error('Purchase failed:', purchaseError);
-        // TODO: Show error toast notification
-      }
-    } catch (error) {
-      console.error('Purchase failed:', error);
-    }
+    initiatePurchase(book);
+  };
+
+  // Handle successful payment
+  const handlePaymentSuccess = () => {
+    setPaymentSuccess(true);
+    // Optionally refresh book data to show updated status
+    window.location.reload();
+  };
+
+  // Handle payment error
+  const handlePaymentError = (error: string) => {
+    console.error('Payment error:', error);
+    // TODO: Show error toast notification
   };
 
   // Loading state
@@ -262,7 +275,6 @@ const BookDetailPage: React.FC = () => {
                     size="lg" 
                     className="w-full"
                     onClick={handleBuyNow}
-                    loading={buyingNow}
                   >
                     🛒 Buy Now - {formatCurrency(book.price)}
                   </Button>
@@ -314,7 +326,6 @@ const BookDetailPage: React.FC = () => {
                     <Button 
                       className="flex-1"
                       onClick={handleBuyNow}
-                      loading={buyingNow}
                     >
                       💳 Pay with Card
                     </Button>
@@ -362,6 +373,15 @@ const BookDetailPage: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* Payment Modal */}
+        <PaymentModal
+          isOpen={showPaymentForm}
+          book={selectedBook}
+          onClose={closePaymentForm}
+          onSuccess={handlePaymentSuccess}
+          onError={handlePaymentError}
+        />
       </div>
     </div>
   );

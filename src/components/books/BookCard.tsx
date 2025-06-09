@@ -23,7 +23,7 @@ const BookCard: React.FC<BookCardProps> = ({
   variant = 'grid',
   showActions = true,
 }) => {
-  const { initiating, initiatePurchase, error } = usePurchase();
+  const { initiatePurchase } = usePurchase();
   
   // Get the primary image or first image from API
   const imageUrl = book.first_image || 
@@ -32,10 +32,6 @@ const BookCard: React.FC<BookCardProps> = ({
 
   const handleBuyNow = () => {
     initiatePurchase(book);
-    if (error) {
-      console.error('Purchase error:', error);
-      // TODO: Show error toast notification
-    }
   };
 
   if (variant === 'list') {
@@ -84,7 +80,6 @@ const BookCard: React.FC<BookCardProps> = ({
                   <Button 
                     size="sm" 
                     onClick={handleBuyNow}
-                    loading={initiating}
                   >
                     Buy Now
                   </Button>
@@ -149,7 +144,6 @@ const BookCard: React.FC<BookCardProps> = ({
                 size="sm" 
                 className="w-full"
                 onClick={handleBuyNow}
-                loading={initiating}
               >
                 🛒 Buy Now
               </Button>

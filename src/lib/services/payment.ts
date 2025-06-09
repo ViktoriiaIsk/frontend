@@ -31,83 +31,60 @@ export class PaymentService {
   }
 
   /**
-   * Create Stripe Checkout Session for book purchase
+   * Process payment with existing Payment Intent flow
    * @param bookId - ID of the book to purchase
-   * @param bookTitle - Title of the book
-   * @param bookPrice - Price in EUR
-   * @param successUrl - URL to redirect after successful payment
-   * @param cancelUrl - URL to redirect after cancelled payment
-   * @returns Promise with checkout session URL
+   * @param paymentMethodId - Stripe payment method ID from form
+   * @param shippingAddress - Shipping address details
+   * @returns Promise with payment result
    */
-  static async createCheckoutSession(
+  static async processPaymentIntent(
     bookId: number,
-    bookTitle: string,
-    bookPrice: number,
-    successUrl: string,
-    cancelUrl: string
-  ): Promise<{ success: boolean; url?: string; error?: string }> {
+    paymentMethodId: string,
+    shippingAddress: any
+  ): Promise<{ success: boolean; error?: string; requiresAction?: boolean; clientSecret?: string }> {
     try {
       const stripe = await this.getStripeInstance();
       if (!stripe) {
         throw new Error('Failed to load Stripe');
       }
 
-      // Create checkout session via backend
-      const response = await api.post<ApiResponse<{ session_id: string }>>(
-        endpoints.payment.createCheckoutSession,
-        {
-          book_id: bookId,
-          success_url: successUrl,
-          cancel_url: cancelUrl,
-          currency: 'EUR',
-          locale: 'nl',
-        }
-      );
+      // Step 1: Create payment intent via backend
+      const intentResponse = await this.createPaymentIntent({
+        book_id: bookId,
+        shipping_address: shippingAddress,
+      });
 
-      const { session_id } = response.data.data;
-
-      // Redirect to Stripe Checkout
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: session_id,
+      // Step 2: Confirm payment with Stripe
+      const { error, paymentIntent } = await stripe.confirmCardPayment(intentResponse.client_secret, {
+        payment_method: paymentMethodId
       });
 
       if (error) {
         return { success: false, error: error.message };
       }
 
-      return { success: true };
-    } catch (error) {
-      console.error('Create checkout session error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to create checkout session' 
-      };
-    }
-  }
+      if (paymentIntent?.status === 'succeeded') {
+        // Step 3: Confirm payment with backend
+        await this.confirmPayment({
+          payment_intent_id: paymentIntent.id,
+          order_id: intentResponse.order_id,
+        });
 
-  /**
-   * Process successful payment and update book status
-   * @param bookId - ID of the book
-   * @param sessionId - Stripe session ID
-   * @returns Promise with success status
-   */
-  static async processSuccessfulPayment(
-    bookId: number,
-    sessionId: string
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      // Confirm payment and update book status via backend
-      await api.post<ApiResponse<void>>(
-        endpoints.payment.processSuccess,
-        {
-          book_id: bookId,
-          session_id: sessionId,
-        }
-      );
+        return { success: true };
+      }
 
-      return { success: true };
+      if (paymentIntent?.status === 'requires_action') {
+        return { 
+          success: false, 
+          requiresAction: true, 
+          clientSecret: intentResponse.client_secret 
+        };
+      }
+
+      return { success: false, error: 'Payment failed' };
+
     } catch (error) {
-      console.error('Process successful payment error:', error);
+      console.error('Process payment intent error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to process payment' 

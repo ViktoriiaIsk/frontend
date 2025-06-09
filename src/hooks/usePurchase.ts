@@ -1,65 +1,49 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Book } from '@/types';
-import { PaymentService } from '@/lib/services/payment';
 
 interface UsePurchaseReturn {
   initiating: boolean;
-  initiatePurchase: (book: Book) => Promise<void>;
+  initiatePurchase: (book: Book) => void;
   error: string | null;
+  showPaymentForm: boolean;
+  selectedBook: Book | null;
+  closePaymentForm: () => void;
 }
 
 /**
- * Hook for handling book purchase flow with real Stripe checkout
+ * Hook for handling book purchase flow with Payment Intent
  */
 export function usePurchase(): UsePurchaseReturn {
   const [initiating, setInitiating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const router = useRouter();
 
-  const initiatePurchase = async (book: Book) => {
+  const initiatePurchase = (book: Book) => {
     if (book.status !== 'available') {
       setError('Book is not available for purchase');
       return;
     }
 
-    setInitiating(true);
     setError(null);
+    setSelectedBook(book);
+    setShowPaymentForm(true);
+  };
 
-    try {
-      // Create URLs for success and cancel redirects
-      const baseUrl = window.location.origin;
-      const successUrl = `${baseUrl}/payment/success?book_id=${book.id}&session_id={CHECKOUT_SESSION_ID}`;
-      const cancelUrl = `${baseUrl}/books/${book.id}?payment=cancelled`;
-
-      // Create Stripe checkout session
-      const result = await PaymentService.createCheckoutSession(
-        book.id,
-        book.title,
-        Number(book.price),
-        successUrl,
-        cancelUrl
-      );
-
-      if (!result.success) {
-        setError(result.error || 'Failed to create checkout session');
-        return;
-      }
-
-      // Stripe will handle the redirect, so we don't need to do anything else
-      // The user will be redirected to Stripe checkout automatically
-      
-    } catch (error) {
-      console.error('Failed to initiate purchase:', error);
-      setError(error instanceof Error ? error.message : 'Failed to initiate purchase');
-    } finally {
-      setInitiating(false);
-    }
+  const closePaymentForm = () => {
+    setShowPaymentForm(false);
+    setSelectedBook(null);
+    setError(null);
   };
 
   return {
     initiating,
     initiatePurchase,
     error,
+    showPaymentForm,
+    selectedBook,
+    closePaymentForm,
   };
 } 

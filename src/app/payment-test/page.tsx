@@ -23,41 +23,31 @@ export default function PaymentTestPage() {
   // Test amounts for Belgium in EUR cents
   const testAmount = 1200; // €12.00
 
-  const handleTestCheckout = async () => {
+  const handleTestPaymentIntent = async () => {
     setPaymentTest({ loading: true, result: null, error: null });
 
     try {
-      // Simulate test book data
+      // Test Payment Intent creation
       const testBookId = 999;
-      const testBookTitle = "Test Book - Programming with React";
-      const testBookPrice = 12.00;
-      
-      const baseUrl = window.location.origin;
-      const successUrl = `${baseUrl}/payment/success?book_id=${testBookId}&session_id={CHECKOUT_SESSION_ID}`;
-      const cancelUrl = `${baseUrl}/payment-test?test=cancelled`;
+      const shippingAddress = {
+        street: 'Test Street 123',
+        city: 'Brussels',
+        state: 'Brussels Capital Region',
+        postal_code: '1000',
+        country: 'BE',
+      };
 
-      // Create real Stripe checkout session
-      const result = await PaymentService.createCheckoutSession(
-        testBookId,
-        testBookTitle,
-        testBookPrice,
-        successUrl,
-        cancelUrl
-      );
+      // Test creating payment intent
+      const result = await PaymentService.createPaymentIntent({
+        book_id: testBookId,
+        shipping_address: shippingAddress,
+      });
 
-      if (result.success) {
-        setPaymentTest({
-          loading: false,
-          result: "Stripe checkout session created! You should be redirected to Stripe...",
-          error: null,
-        });
-      } else {
-        setPaymentTest({
-          loading: false,
-          result: null,
-          error: result.error || "Failed to create checkout session",
-        });
-      }
+      setPaymentTest({
+        loading: false,
+        result: `Payment Intent created successfully! Client Secret: ${result.client_secret.substring(0, 20)}...`,
+        error: null,
+      });
     } catch (error) {
       setPaymentTest({
         loading: false,
@@ -143,16 +133,16 @@ export default function PaymentTestPage() {
           </Card.Content>
         </Card>
 
-        {/* Test Real Checkout */}
+        {/* Test Payment Intent */}
         <Card className="mb-6">
           <Card.Header>
-            <Card.Title>🛒 Test Real Stripe Checkout</Card.Title>
+            <Card.Title>🛒 Test Payment Intent</Card.Title>
           </Card.Header>
           <Card.Content className="space-y-4">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="text-yellow-800">
-                <strong>Warning:</strong> This will create a real Stripe checkout session and redirect you to Stripe.
-                Use the test cards above for testing.
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="text-blue-800">
+                <strong>Info:</strong> This will create a Payment Intent for on-site payment form.
+                Your backend handles the payment processing.
               </div>
             </div>
 
@@ -167,12 +157,12 @@ export default function PaymentTestPage() {
             </div>
 
             <Button 
-              onClick={handleTestCheckout}
+              onClick={handleTestPaymentIntent}
               loading={paymentTest.loading}
               className="w-full"
               size="lg"
             >
-              {paymentTest.loading ? 'Creating Checkout...' : '🚀 Test Real Stripe Checkout'}
+              {paymentTest.loading ? 'Creating Payment Intent...' : '🚀 Test Payment Intent'}
             </Button>
           </Card.Content>
         </Card>
@@ -210,7 +200,7 @@ export default function PaymentTestPage() {
 
             {!paymentTest.loading && !paymentTest.result && !paymentTest.error && (
               <div className="text-center py-8 text-neutral-500">
-                Click "Test Real Stripe Checkout" to start testing with real Stripe integration
+                Click "Test Payment Intent" to test creating payment intent with your backend
               </div>
             )}
 
