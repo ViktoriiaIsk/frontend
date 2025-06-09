@@ -132,6 +132,13 @@ export interface PaymentConfirmData {
   order_id: number;
 }
 
+export interface PaymentResult {
+  success: boolean;
+  orderId?: number;
+  clientSecret?: string;
+  error?: string;
+}
+
 // API Response types
 export interface ApiResponse<T> {
   data: T;

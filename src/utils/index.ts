@@ -7,18 +7,16 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Format currency
-export const formatCurrency = (amount: string | number, currency: string = 'UAH'): string => {
+export const formatCurrency = (amount: string | number, currency: string = 'EUR'): string => {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
   
-  if (isNaN(num)) return '0 ₴';
+  if (isNaN(num)) return '€0,00';
   
-  if (currency === 'UAH') {
-    return `${num.toLocaleString('uk-UA')} ₴`;
-  }
-  
-  return new Intl.NumberFormat('uk-UA', {
+  // Format for Belgium (Dutch-Belgium locale)
+  return new Intl.NumberFormat('nl-BE', {
     style: 'currency',
     currency: currency,
+    minimumFractionDigits: 2,
   }).format(num);
 };
 
