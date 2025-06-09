@@ -1,25 +1,55 @@
 'use client';
 
-import React from 'react';
-import { useParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+import SmartImage from '@/components/ui/SmartImage';
 
 import Navigation from '@/components/layout/Navigation';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { useBook } from '@/hooks/useBooks';
 import { formatCurrency, formatDate } from '@/utils';
+import { PaymentService } from '@/lib/services/payment';
 
 /**
  * Individual book detail page
  */
 const BookDetailPage: React.FC = () => {
   const params = useParams();
+  const searchParams = useSearchParams();
   const bookId = parseInt(params?.id as string);
+  const [buyingNow, setBuyingNow] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   // Fetch book details
   const { data: book, isLoading, error } = useBook(bookId);
+
+  // Check if user came here to buy
+  useEffect(() => {
+    if (searchParams.get('action') === 'buy' && book?.status === 'available') {
+      setShowCheckout(true);
+    }
+  }, [searchParams, book]);
+
+  // Handle buy now action
+  const handleBuyNow = async () => {
+    if (!book || book.status !== 'available') return;
+    
+    setBuyingNow(true);
+    
+    try {
+      // Simulate payment process - in real app this would open Stripe checkout
+      console.log('Initiating purchase for book:', book.title);
+      
+      // For now, just show checkout section
+      setShowCheckout(true);
+    } catch (error) {
+      console.error('Purchase failed:', error);
+    } finally {
+      setBuyingNow(false);
+    }
+  };
 
   // Loading state
   if (isLoading) {
@@ -101,7 +131,7 @@ const BookDetailPage: React.FC = () => {
           <div className="space-y-4">
             {/* Main image */}
             <div className="relative aspect-[3/4] w-full">
-              <Image
+              <SmartImage
                 src={primaryImage}
                 alt={book.title}
                 fill
@@ -121,7 +151,7 @@ const BookDetailPage: React.FC = () => {
               <div className="grid grid-cols-4 gap-2">
                 {book.images.slice(1, 5).map((image, index) => (
                   <div key={index} className="relative aspect-square">
-                    <Image
+                    <SmartImage
                       src={image.url || '/images/placeholder-book.svg'}
                       alt={`${book.title} - Image ${index + 2}`}
                       fill
@@ -159,7 +189,7 @@ const BookDetailPage: React.FC = () => {
                 {formatCurrency(book.price)}
               </div>
               <p className="text-primary-600">
-                Price includes shipping within Ukraine
+                Price includes shipping within Belgium
               </p>
             </div>
 
@@ -234,7 +264,12 @@ const BookDetailPage: React.FC = () => {
             <div className="space-y-3">
               {isAvailable ? (
                 <>
-                  <Button size="lg" className="w-full">
+                  <Button 
+                    size="lg" 
+                    className="w-full"
+                    onClick={handleBuyNow}
+                    loading={buyingNow}
+                  >
                     🛒 Buy Now - {formatCurrency(book.price)}
                   </Button>
                   <Button variant="secondary" size="lg" className="w-full">
@@ -251,6 +286,50 @@ const BookDetailPage: React.FC = () => {
                 ❤️ Add to Wishlist
               </Button>
             </div>
+
+            {/* Checkout Section */}
+            {showCheckout && isAvailable && (
+              <Card className="border-primary-200 bg-primary-50">
+                <h3 className="text-lg font-semibold text-primary-900 mb-4">
+                  🛒 Ready to Purchase
+                </h3>
+                <div className="space-y-4">
+                  <div className="bg-white rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium">{book.title}</span>
+                      <span className="font-bold text-primary-600">
+                        {formatCurrency(book.price)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-neutral-600">
+                      by {book.author} • {book.condition} condition
+                    </p>
+                  </div>
+                  
+                  <div className="flex space-x-3">
+                    <Button 
+                      className="flex-1"
+                      onClick={() => {
+                        // Here would go actual Stripe checkout
+                        alert(`Purchase initiated for ${book.title}!\n\nIn a real app, this would open Stripe checkout for ${formatCurrency(book.price)}`);
+                      }}
+                    >
+                      💳 Pay with Card
+                    </Button>
+                    <Button 
+                      variant="secondary"
+                      onClick={() => setShowCheckout(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                  
+                  <p className="text-xs text-primary-700">
+                    💳 Secure payment with Stripe • 🛡️ Buyer protection included
+                  </p>
+                </div>
+              </Card>
+            )}
 
             {/* Safety Notice */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">

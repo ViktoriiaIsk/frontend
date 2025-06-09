@@ -7,6 +7,7 @@ import { formatCurrency, truncateText } from '@/utils';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import SmartImage from '@/components/ui/SmartImage';
+import { usePurchase } from '@/hooks/usePurchase';
 
 interface BookCardProps {
   book: Book;
@@ -22,10 +23,16 @@ const BookCard: React.FC<BookCardProps> = ({
   variant = 'grid',
   showActions = true,
 }) => {
+  const { initiating, initiatePurchase } = usePurchase();
+  
   // Get the primary image or first image from API
   const imageUrl = book.first_image || 
                    book.images?.[0]?.url || 
                    '/images/placeholder-book.svg';
+
+  const handleBuyNow = () => {
+    initiatePurchase(book);
+  };
 
   if (variant === 'list') {
     return (
@@ -72,7 +79,11 @@ const BookCard: React.FC<BookCardProps> = ({
                   {formatCurrency(book.price)}
                 </span>
                 {showActions && book.status === 'available' && (
-                  <Button size="sm">
+                  <Button 
+                    size="sm" 
+                    onClick={handleBuyNow}
+                    loading={initiating}
+                  >
                     Buy Now
                   </Button>
                 )}
@@ -134,7 +145,12 @@ const BookCard: React.FC<BookCardProps> = ({
         {showActions && (
           <div className="space-y-2">
             {book.status === 'available' ? (
-              <Button size="sm" className="w-full">
+              <Button 
+                size="sm" 
+                className="w-full"
+                onClick={handleBuyNow}
+                loading={initiating}
+              >
                 🛒 Buy Now
               </Button>
             ) : (

@@ -180,6 +180,7 @@ export default function PaymentTestPage() {
                   <div>• Currency: EUR (Euros)</div>
                   <div>• Country: Belgium (BE)</div>
                   <div>• Backend: {process.env.NEXT_PUBLIC_API_BASE_URL || 'http://13.37.117.93/api'}</div>
+                  <div>• Smart image loading: Enabled (auto-fallback)</div>
                 </div>
               </div>
             </Card.Content>
