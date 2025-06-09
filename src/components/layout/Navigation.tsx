@@ -19,9 +19,10 @@ const Navigation: React.FC = () => {
     { href: '/books', label: 'Books', icon: '📚' },
     { href: '/books/create', label: 'Sell Book', icon: '💰' },
     { href: '/dashboard', label: 'Profile', icon: '👤' },
-    // Show payment test only in development
+    // Show dev tools only in development
     ...(process.env.NODE_ENV === 'development' ? [
-      { href: '/payment-test', label: 'Payment Test', icon: '💳' }
+      { href: '/payment-test', label: 'Payment Test', icon: '💳' },
+      { href: '/image-test', label: 'Image Test', icon: '🖼️' }
     ] : []),
   ];
 
