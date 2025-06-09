@@ -1,26 +1,204 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* CSS Variables for eco theme */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary-50: #f0fdf4;
+  --primary-100: #dcfce7;
+  --primary-500: #22c55e;
+  --primary-600: #16a34a;
+  --primary-700: #15803d;
+
+  --accent-forest: #2d5016;
+  --accent-sage: #87a96b;
+  --accent-moss: #606c38;
+  --accent-earth: #8b5a3c;
+  --accent-cream: #fefcf8;
+
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-800: #262626;
+  --neutral-900: #171717;
+
+  --gradient-eco: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  --gradient-earth: linear-gradient(135deg, #87a96b 0%, #606c38 100%);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Base styles */
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-accent-cream text-neutral-800 font-sans antialiased;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-semibold text-neutral-900;
+  line-height: 1.2;
+}
+
+h1 {
+  @apply text-3xl md:text-4xl;
+}
+
+h2 {
+  @apply text-2xl md:text-3xl;
+}
+
+h3 {
+  @apply text-xl md:text-2xl;
+}
+
+/* Focus styles */
+*:focus {
+  @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-accent-cream;
+}
+
+/* Button base styles */
+.btn {
+  @apply inline-flex items-center justify-center rounded-xl font-medium transition-all duration-200 focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-primary {
+  @apply bg-primary-600 hover:bg-primary-700 text-white shadow-eco hover:shadow-eco-lg active:scale-95;
+}
+
+.btn-secondary {
+  @apply bg-white hover:bg-neutral-50 text-neutral-700 border border-neutral-200 hover:border-primary-300 shadow-sm hover:shadow-md;
+}
+
+.btn-ghost {
+  @apply bg-transparent hover:bg-primary-50 text-primary-700 hover:text-primary-800;
+}
+
+/* Card styles */
+.card {
+  @apply bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden transition-all duration-200;
+}
+
+.card-hover {
+  @apply hover:shadow-eco-lg hover:scale-[1.02] hover:-translate-y-1;
+}
+
+/* Input styles */
+.input {
+  @apply w-full px-4 py-3 rounded-xl border border-neutral-200 bg-white text-neutral-800 placeholder-neutral-400 transition-all duration-200;
+  @apply focus:border-primary-500 focus:ring-0 hover:border-neutral-300;
+}
+
+.input-error {
+  @apply border-red-300 bg-red-50 focus:border-red-500;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-neutral-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary-400;
+}
+
+/* Loading animations */
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.loading-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Skeleton loader */
+.skeleton {
+  @apply bg-neutral-200 animate-pulse rounded;
+}
+
+/* Gradient backgrounds */
+.bg-gradient-eco {
+  background: var(--gradient-eco);
+}
+
+.bg-gradient-earth {
+  background: var(--gradient-earth);
+}
+
+/* Mobile-first responsive utilities */
+@media (max-width: 640px) {
+  .mobile-padding {
+    @apply px-4 py-2;
+  }
+
+  .mobile-text {
+    @apply text-sm;
+  }
+
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .card {
+    @apply border-2 border-neutral-400;
+  }
+
+  .btn-primary {
+    @apply border-2 border-primary-800;
+  }
 }
