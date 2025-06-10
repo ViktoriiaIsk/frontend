@@ -9,7 +9,7 @@ import { z } from 'zod';
 
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import { AuthService } from '@/lib/services/auth';
+import { useAuthStore } from '@/store/authStore';
 import { LoginCredentials } from '@/types';
 import { extractErrorMessage } from '@/utils';
 
@@ -27,8 +27,10 @@ type LoginFormData = z.infer<typeof loginSchema>;
  */
 const LoginPage: React.FC = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  
+  // Auth store
+  const { login, isLoading } = useAuthStore();
 
   // Form setup
   const {
@@ -42,7 +44,6 @@ const LoginPage: React.FC = () => {
 
   // Handle form submission
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
     setServerError(null);
 
     try {
@@ -52,7 +53,7 @@ const LoginPage: React.FC = () => {
         remember: data.remember || false,
       };
 
-      await AuthService.login(credentials);
+      await login(credentials);
       
       // Redirect to dashboard on success
       router.push('/dashboard');
@@ -73,8 +74,6 @@ const LoginPage: React.FC = () => {
       } else {
         setServerError(errorMessage);
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 

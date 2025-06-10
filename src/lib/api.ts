@@ -130,6 +130,11 @@ export const endpoints = {
     user: '/user',
     refresh: '/refresh',
   },
+
+  // Stripe Configuration
+  stripe: {
+    config: '/stripe/config',
+  },
   
   // Books
   books: {
