@@ -38,20 +38,13 @@ const Navigation: React.FC = () => {
   // Authenticated user navigation items
   const authNavItems = [
     { href: '/books/create', label: 'Sell Book', icon: '💰' },
-    { href: '/dashboard', label: 'Profile', icon: '👤' },
+    { href: '/dashboard', label: 'Dashboard', icon: '👤' },
   ];
-
-  // Development tools (only in development)
-  const devNavItems = process.env.NODE_ENV === 'development' ? [
-    { href: '/payment-test', label: 'Payment Test', icon: '💳' },
-    { href: '/image-test', label: 'Image Test', icon: '🖼️' }
-  ] : [];
 
   // Combine navigation items based on auth status
   const navItems = [
     ...publicNavItems,
     ...(isAuthenticated ? authNavItems : []),
-    ...devNavItems
   ];
 
   /**
@@ -136,7 +129,7 @@ const Navigation: React.FC = () => {
                 <div className="flex items-center space-x-3">
                   {/* User Info */}
                   <div className="flex items-center space-x-2 text-sm text-neutral-600">
-                    <span className="hidden lg:inline">Привіт,</span>
+                    <span className="hidden lg:inline">Hi,</span>
                     <span className="font-medium text-primary-700">
                       {user?.name || user?.email}
                     </span>
@@ -149,7 +142,7 @@ const Navigation: React.FC = () => {
                     onClick={handleLogout}
                     className="text-neutral-600 hover:text-red-600 hover:border-red-200"
                   >
-                    Вийти
+                    Logout
                   </Button>
                 </div>
               ) : (
@@ -160,14 +153,14 @@ const Navigation: React.FC = () => {
                     onClick={handleLogin}
                     className="text-neutral-600 hover:text-primary-700"
                   >
-                    Увійти
+                    Sign In
                   </Button>
                   <Link href="/auth/register">
                     <Button
                       variant="primary"
                       size="sm"
                     >
-                      Реєстрація
+                      Sign Up
                     </Button>
                   </Link>
                 </div>
@@ -254,7 +247,7 @@ const Navigation: React.FC = () => {
                       className="w-full text-left px-4 py-3 rounded-xl font-medium transition-all duration-200 text-red-600 hover:bg-red-50 mobile-touch-target"
                     >
                       <span className="mr-3 text-lg">🚪</span>
-                      Вийти
+                      Logout
                     </button>
                   </>
                 ) : (
@@ -264,7 +257,7 @@ const Navigation: React.FC = () => {
                       className="w-full text-left px-4 py-3 rounded-xl font-medium transition-all duration-200 text-neutral-600 hover:bg-primary-50 hover:text-primary-700 mobile-touch-target"
                     >
                       <span className="mr-3 text-lg">🔑</span>
-                      Увійти
+                      Sign In
                     </button>
                     <Link
                       href="/auth/register"
@@ -272,7 +265,7 @@ const Navigation: React.FC = () => {
                       className="flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-200 text-primary-600 hover:bg-primary-50 hover:text-primary-700 mobile-touch-target"
                     >
                       <span className="mr-3 text-lg">👤</span>
-                      Реєстрація
+                      Sign Up
                     </Link>
                   </div>
                 )}

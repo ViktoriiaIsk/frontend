@@ -97,7 +97,7 @@ function HomePage() {
                </div>
                <div className="text-center">
                  <div className="text-2xl md:text-3xl font-bold text-primary-600">50+</div>
-                 <div className="text-sm text-neutral-600">Cities in Ukraine</div>
+                 <div className="text-sm text-neutral-600">Happy customers</div>
                </div>
              </div>
           </div>

@@ -27,22 +27,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card hover padding="lg" className="text-center">
-            <div className="text-4xl mb-4">📚</div>
-            <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-              My Books
-            </h3>
-            <p className="text-neutral-600 mb-4">
-              View and manage your listed books
-            </p>
-            <Link href="/dashboard/books">
-              <Button variant="secondary" size="sm" className="w-full">
-                View Books
-              </Button>
-            </Link>
-          </Card>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Card hover padding="lg" className="text-center">
             <div className="text-4xl mb-4">💰</div>
             <h3 className="text-lg font-semibold text-neutral-900 mb-2">
@@ -59,31 +44,16 @@ const DashboardPage: React.FC = () => {
           </Card>
 
           <Card hover padding="lg" className="text-center">
-            <div className="text-4xl mb-4">📦</div>
+            <div className="text-4xl mb-4">📚</div>
             <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-              Orders
+              Browse Books
             </h3>
             <p className="text-neutral-600 mb-4">
-              Track your purchases and sales
+              Find your next great read
             </p>
-            <Link href="/dashboard/orders">
+            <Link href="/books">
               <Button variant="secondary" size="sm" className="w-full">
-                View Orders
-              </Button>
-            </Link>
-          </Card>
-
-          <Card hover padding="lg" className="text-center">
-            <div className="text-4xl mb-4">👤</div>
-            <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-              Profile
-            </h3>
-            <p className="text-neutral-600 mb-4">
-              Update your account settings
-            </p>
-            <Link href="/profile">
-              <Button variant="secondary" size="sm" className="w-full">
-                Edit Profile
+                Browse Collection
               </Button>
             </Link>
           </Card>
@@ -107,7 +77,7 @@ const DashboardPage: React.FC = () => {
           
           <Card>
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">₴450</div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">$45.00</div>
               <div className="text-sm text-neutral-600">Total Earnings</div>
             </div>
           </Card>
@@ -115,10 +85,10 @@ const DashboardPage: React.FC = () => {
 
         {/* Recent Activity */}
         <Card>
-          <Card.Header>
-            <Card.Title>Recent Activity</Card.Title>
-          </Card.Header>
-          <Card.Content>
+          <div className="p-6 border-b border-neutral-100">
+            <h3 className="text-lg font-semibold text-neutral-900">Recent Activity</h3>
+          </div>
+          <div className="p-6">
             <div className="space-y-4">
               <div className="flex items-center space-x-4 p-4 bg-neutral-50 rounded-xl">
                 <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -130,7 +100,7 @@ const DashboardPage: React.FC = () => {
                   </p>
                   <p className="text-xs text-neutral-500">2 hours ago</p>
                 </div>
-                <div className="text-sm font-medium text-green-600">+₴150</div>
+                <div className="text-sm font-medium text-green-600">+$15.00</div>
               </div>
 
               <div className="flex items-center space-x-4 p-4 bg-neutral-50 rounded-xl">
@@ -155,10 +125,10 @@ const DashboardPage: React.FC = () => {
                   </p>
                   <p className="text-xs text-neutral-500">3 days ago</p>
                 </div>
-                <div className="text-sm font-medium text-orange-600">-₴200</div>
+                <div className="text-sm font-medium text-orange-600">-$20.00</div>
               </div>
             </div>
-          </Card.Content>
+          </div>
         </Card>
       </div>
     </div>

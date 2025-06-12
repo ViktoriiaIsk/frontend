@@ -19,7 +19,6 @@ const registerSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters').max(255, 'Password is too long'),
   password_confirmation: z.string(),
-  terms: z.boolean().refine(val => val === true, 'You must accept the terms and conditions'),
 }).refine(data => data.password === data.password_confirmation, {
   message: "Passwords don't match",
   path: ["password_confirmation"],
@@ -186,32 +185,6 @@ const RegisterPage: React.FC = () => {
               )}
             </div>
 
-            {/* Terms and Conditions */}
-            <div className="flex items-start">
-              <div className="flex items-center h-5">
-                <input
-                  type="checkbox"
-                  {...register('terms')}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
-                />
-              </div>
-              <div className="ml-3 text-sm">
-                <label className="text-neutral-700">
-                  I agree to the{' '}
-                  <Link href="/terms" className="text-primary-600 hover:text-primary-500">
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link href="/privacy" className="text-primary-600 hover:text-primary-500">
-                    Privacy Policy
-                  </Link>
-                </label>
-                {errors.terms && (
-                  <p className="text-red-600 text-sm mt-1">{errors.terms.message}</p>
-                )}
-              </div>
-            </div>
-
             {/* Submit Button */}
             <Button
               type="submit"
@@ -258,7 +231,7 @@ const RegisterPage: React.FC = () => {
             </div>
             <div className="flex items-center justify-center space-x-2">
               <span>🌍</span>
-              <span>Connect with readers across Ukraine</span>
+              <span>Connect with readers worldwide</span>
             </div>
           </div>
         </div>

@@ -143,27 +143,16 @@ const LoginPage: React.FC = () => {
               )}
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  {...register('remember')}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
-                />
-                <label className="ml-2 block text-sm text-neutral-700">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <Link
-                  href="/auth/forgot-password"
-                  className="font-medium text-primary-600 hover:text-primary-500"
-                >
-                  Forgot password?
-                </Link>
-              </div>
+            {/* Remember Me */}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                {...register('remember')}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
+              />
+              <label className="ml-2 block text-sm text-neutral-700">
+                Remember me
+              </label>
             </div>
 
             {/* Submit Button */}
@@ -195,20 +184,6 @@ const LoginPage: React.FC = () => {
             </Link>
           </form>
         </Card>
-
-        {/* Footer */}
-        <div className="text-center">
-          <p className="text-xs text-neutral-500">
-            By signing in, you agree to our{' '}
-            <Link href="/terms" className="text-primary-600 hover:text-primary-500">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="text-primary-600 hover:text-primary-500">
-              Privacy Policy
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );

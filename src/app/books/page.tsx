@@ -139,7 +139,7 @@ const BooksPage: React.FC = () => {
             {/* Price Range */}
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Price Range (UAH)
+                Price Range (EUR)
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <input

@@ -91,11 +91,11 @@ const LoginForm: React.FC = () => {
         }
         // Handle network or other errors
         else {
-          setErrors({ general: 'Сталася помилка при вході. Спробуйте ще раз.' });
+          setErrors({ general: 'An error occurred during login. Please try again.' });
         }
       } else {
         // Fallback for unexpected error types
-        setErrors({ general: 'Невідома помилка. Спробуйте ще раз.' });
+        setErrors({ general: 'An unknown error occurred. Please try again.' });
       }
     }
   };
@@ -183,26 +183,18 @@ const LoginForm: React.FC = () => {
             </div>
 
             {/* Remember Me */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember"
-                  name="remember"
-                  type="checkbox"
-                  checked={formData.remember}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
-                />
-                <label htmlFor="remember" className="ml-2 block text-sm text-neutral-700">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <Link href="/auth/forgot-password" className="text-primary-600 hover:text-primary-500">
-                  Forgot password?
-                </Link>
-              </div>
+            <div className="flex items-center">
+              <input
+                id="remember"
+                name="remember"
+                type="checkbox"
+                checked={formData.remember}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
+              />
+              <label htmlFor="remember" className="ml-2 block text-sm text-neutral-700">
+                Remember me
+              </label>
             </div>
 
             {/* Submit Button */}
