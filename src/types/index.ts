@@ -161,15 +161,13 @@ export interface PaginatedResponse<T> {
 }
 
 // Filter types
-export interface BookFilters extends Record<string, unknown> {
+export interface BookFilters {
+  page?: number;
+  per_page?: number;
   search?: string;
   category_id?: number;
   min_price?: number;
   max_price?: number;
-  status?: Book['status'];
-  sort_by?: 'price_asc' | 'price_desc' | 'newest' | 'oldest' | 'title_asc' | 'title_desc';
-  page?: number;
-  per_page?: number;
 }
 
 // Form types

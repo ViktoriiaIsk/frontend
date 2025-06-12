@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import { ApiError } from '@/types';
+import { ApiError, BookFilters } from '@/types';
 
 // Base API configuration - using your actual API
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://13.37.117.93/api';
@@ -202,16 +202,38 @@ export const endpoints = {
 };
 
 // Helper function to build query string
-export const buildQueryString = (params: Record<string, unknown>): string => {
-  const searchParams = new URLSearchParams();
+export const buildQueryString = (filters: BookFilters): string => {
+  const params = new URLSearchParams();
   
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      searchParams.append(key, String(value));
-    }
-  });
+  // Add pagination
+  if (filters.page && filters.page > 1) {
+    params.append('page', filters.page.toString());
+  }
+  if (filters.per_page) {
+    params.append('per_page', filters.per_page.toString());
+  }
   
-  const queryString = searchParams.toString();
+  // Add search
+  if (filters.search) {
+    params.append('search', filters.search);
+  }
+  
+  // Add category filter
+  if (filters.category_id) {
+    params.append('category_id', filters.category_id.toString());
+  }
+  
+  // Add price range
+  if (filters.min_price) {
+    params.append('min_price', filters.min_price.toString());
+  }
+  if (filters.max_price) {
+    params.append('max_price', filters.max_price.toString());
+  }
+  
+  const queryString = params.toString();
+  console.log('Generated query string:', queryString);
+  
   return queryString ? `?${queryString}` : '';
 };
 

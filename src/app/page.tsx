@@ -15,8 +15,7 @@ import { useBooks } from '@/hooks/useBooks';
 function HomePage() {
   // Fetch latest books for display
   const { data: booksResponse, isLoading: isBooksLoading } = useBooks({
-    per_page: 8,
-    sort_by: 'newest'
+    per_page: 8
   });
   // Featured categories for quick navigation
   const featuredCategories = [

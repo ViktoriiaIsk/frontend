@@ -48,7 +48,6 @@ const BooksPage: React.FC = () => {
     category_id: searchParams?.get('category') ? parseInt(searchParams.get('category')!) : undefined,
     page: searchParams?.get('page') ? parseInt(searchParams.get('page')!) : 1,
     per_page: 12,
-    sort_by: (searchParams?.get('sort') as BookFilters['sort_by']) || 'newest',
     min_price: searchParams?.get('min_price') ? parseInt(searchParams.get('min_price')!) : undefined,
     max_price: searchParams?.get('max_price') ? parseInt(searchParams.get('max_price')!) : undefined,
   });
@@ -67,7 +66,6 @@ const BooksPage: React.FC = () => {
     if (currentFilters.search) params.set('search', currentFilters.search);
     if (currentFilters.category_id) params.set('category', currentFilters.category_id.toString());
     if (currentFilters.page && currentFilters.page > 1) params.set('page', currentFilters.page.toString());
-    if (currentFilters.sort_by && currentFilters.sort_by !== 'newest') params.set('sort', currentFilters.sort_by);
     if (currentFilters.min_price) params.set('min_price', currentFilters.min_price.toString());
     if (currentFilters.max_price) params.set('max_price', currentFilters.max_price.toString());
     
@@ -95,11 +93,6 @@ const BooksPage: React.FC = () => {
     setSearchInput(search);
   };
 
-  // Handle sort change
-  const handleSortChange = (sort_by: BookFilters['sort_by']) => {
-    handleFilterChange({ sort_by });
-  };
-
   // Handle pagination
   const handlePageChange = (page: number) => {
     setCurrentFilters(prev => ({ ...prev, page }));
@@ -113,7 +106,6 @@ const BooksPage: React.FC = () => {
     setCurrentFilters({
       page: 1,
       per_page: 12,
-      sort_by: 'newest',
     });
   };
 
@@ -122,19 +114,8 @@ const BooksPage: React.FC = () => {
     currentFilters.search ||
     currentFilters.category_id ||
     currentFilters.min_price ||
-    currentFilters.max_price ||
-    (currentFilters.sort_by && currentFilters.sort_by !== 'newest')
+    currentFilters.max_price
   );
-
-  // Sort options
-  const sortOptions = [
-    { value: 'newest', label: 'Newest First' },
-    { value: 'oldest', label: 'Oldest First' },
-    { value: 'price_asc', label: 'Price: Low to High' },
-    { value: 'price_desc', label: 'Price: High to Low' },
-    { value: 'title_asc', label: 'Title: A-Z' },
-    { value: 'title_desc', label: 'Title: Z-A' },
-  ];
 
   // Mobile filter toggle
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -178,12 +159,17 @@ const BooksPage: React.FC = () => {
                   Search Books
                 </label>
                 <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
                   <input
                     type="text"
-                    placeholder="Search by title or author..."
+                    placeholder="Type to search titles and authors..."
                     value={searchInput}
                     onChange={(e) => handleSearchInputChange(e.target.value)}
-                    className="input pr-10"
+                    className="input pl-10 pr-10"
                   />
                   {searchInput && (
                     <button
@@ -194,6 +180,11 @@ const BooksPage: React.FC = () => {
                     </button>
                   )}
                 </div>
+                <p className="text-xs text-neutral-500 mt-1">
+                  🔍 Live search: Results update as you type. Searches both book titles and author names simultaneously.
+                  <br />
+                  <span className="text-amber-600">⚠️ Search filtering happens on your device for better accuracy.</span>
+                </p>
               </div>
 
               {/* Category Filter */}
@@ -217,24 +208,6 @@ const BooksPage: React.FC = () => {
                       </option>
                     )) : null
                   }
-                </select>
-              </div>
-
-              {/* Sort */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Sort By
-                </label>
-                <select
-                  value={currentFilters.sort_by || 'newest'}
-                  onChange={(e) => handleSortChange(e.target.value as BookFilters['sort_by'])}
-                  className="input"
-                >
-                  {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
                 </select>
               </div>
 

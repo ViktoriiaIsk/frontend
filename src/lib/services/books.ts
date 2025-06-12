@@ -21,11 +21,72 @@ export class BooksService {
    */
   static async getBooks(filters: BookFilters = {}): Promise<PaginatedResponse<Book>> {
     try {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('BooksService.getBooks called with filters:', filters);
+      }
+      
       const queryString = buildQueryString(filters);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Generated query string:', queryString);
+        console.log('Full URL:', `${endpoints.books.list}${queryString}`);
+      }
+      
       const response = await api.get<PaginatedResponse<Book>>(
         `${endpoints.books.list}${queryString}`
       );
-      return response.data;
+      
+      let books = response.data.data || [];
+      
+      // Client-side filtering for search since backend is not accurate
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = filters.search.toLowerCase().trim();
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('=== CLIENT-SIDE FILTERING ===');
+          console.log('Search term:', searchTerm);
+          console.log('Books before filtering:', books.length);
+          console.log('Sample book data:', books[0]);
+        }
+        
+        books = books.filter((book, index) => {
+          const title = book.title?.toLowerCase() || '';
+          const author = book.author?.toLowerCase() || '';
+          const description = book.description?.toLowerCase() || '';
+          
+          const matches = title.includes(searchTerm) || 
+                         author.includes(searchTerm) || 
+                         description.includes(searchTerm);
+          
+          if (process.env.NODE_ENV === 'development' && index < 3) {
+            console.log(`Book ${index + 1}:`, {
+              title: book.title,
+              author: book.author,
+              matches,
+              titleIncludes: title.includes(searchTerm),
+              authorIncludes: author.includes(searchTerm),
+              descIncludes: description.includes(searchTerm)
+            });
+          }
+          
+          return matches;
+        });
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Books after filtering:', books.length);
+          console.log('=== END FILTERING ===');
+        }
+      }
+      
+      // Return the filtered results with original pagination structure
+      return {
+        ...response.data,
+        data: books,
+        // Update total count if we filtered results
+        total: filters.search ? books.length : response.data.total,
+        // Recalculate pagination info
+        last_page: filters.search ? Math.ceil(books.length / (filters.per_page || 12)) : response.data.last_page
+      };
     } catch (error) {
       throw error;
     }
