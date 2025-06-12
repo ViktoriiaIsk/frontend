@@ -23,7 +23,14 @@ export class AuthService {
         credentials
       );
 
-      const { user, token } = response.data.data;
+      // Handle both response.data.data and response.data structures
+      const responseData = response.data.data || response.data;
+      const { user, token } = responseData;
+
+      // Validate that we have the required data
+      if (!user || !token) {
+        throw new Error('Invalid response format from server');
+      }
 
       // Store token in localStorage or sessionStorage based on remember option
       setAuthToken(token, credentials.remember || false);
@@ -46,7 +53,14 @@ export class AuthService {
         data
       );
 
-      const { user, token } = response.data.data;
+      // Handle both response.data.data and response.data structures
+      const responseData = response.data.data || response.data;
+      const { user, token } = responseData;
+
+      // Validate that we have the required data
+      if (!user || !token) {
+        throw new Error('Invalid response format from server');
+      }
 
       // Store token in sessionStorage by default for new registrations
       setAuthToken(token, false);
@@ -81,7 +95,15 @@ export class AuthService {
   static async getCurrentUser(): Promise<User> {
     try {
       const response = await api.get<ApiResponse<User>>(endpoints.auth.user);
-      return response.data.data;
+      // Handle both response.data.data and response.data structures
+      const user = response.data.data || response.data;
+      
+      // Validate that we have user data
+      if (!user) {
+        throw new Error('Invalid user data from server');
+      }
+      
+      return user;
     } catch (error) {
       // If token is invalid, clear it
       removeAuthToken();
@@ -99,7 +121,14 @@ export class AuthService {
         endpoints.auth.refresh
       );
       
-      const token = response.data.data.token;
+      // Handle both response.data.data and response.data structures
+      const responseData = response.data.data || response.data;
+      const token = responseData.token;
+      
+      // Validate that we have token
+      if (!token) {
+        throw new Error('Invalid token data from server');
+      }
       
       // Update stored token
       setAuthToken(token, true);

@@ -66,16 +66,36 @@ const LoginForm: React.FC = () => {
     if (!validateForm()) return;
 
     try {
+      console.log('Attempting login with:', { email: formData.email, password: '***' });
       await login(formData);
+      console.log('Login successful, redirecting...');
       router.push('/'); // Redirect to home after successful login
     } catch (error: any) {
       console.error('Login error:', error);
       
-      // Handle API errors
-      if (error.errors) {
-        setErrors(error.errors);
+      // Enhanced error handling
+      if (error && typeof error === 'object') {
+        // Handle validation errors from API
+        if (error.errors && typeof error.errors === 'object') {
+          const errorMessages: Record<string, string> = {};
+          Object.entries(error.errors).forEach(([field, messages]) => {
+            if (Array.isArray(messages) && messages.length > 0) {
+              errorMessages[field] = messages[0];
+            }
+          });
+          setErrors(errorMessages);
+        } 
+        // Handle general error message
+        else if (error.message) {
+          setErrors({ general: error.message });
+        }
+        // Handle network or other errors
+        else {
+          setErrors({ general: 'Сталася помилка при вході. Спробуйте ще раз.' });
+        }
       } else {
-        setErrors({ general: error.message || 'Login failed' });
+        // Fallback for unexpected error types
+        setErrors({ general: 'Невідома помилка. Спробуйте ще раз.' });
       }
     }
   };

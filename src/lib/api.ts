@@ -33,9 +33,26 @@ api.interceptors.request.use(
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response: AxiosResponse) => {
+    // Log response structure for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('API Response:', {
+        url: response.config.url,
+        status: response.status,
+        data: response.data
+      });
+    }
     return response;
   },
   (error: AxiosError) => {
+    // Log error details for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.error('API Error:', {
+        url: error.config?.url,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+    }
+
     const apiError: ApiError = {
       message: 'An error occurred',
       status: error.response?.status,

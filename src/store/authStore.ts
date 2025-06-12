@@ -39,7 +39,14 @@ export const useAuthStore = create<AuthState>()(
             credentials
           );
           
-          const { user, token } = response.data.data;
+          // Handle both response.data.data and response.data structures
+          const responseData = response.data.data || response.data;
+          const { user, token } = responseData;
+          
+          // Validate that we have the required data
+          if (!user || !token) {
+            throw new Error('Invalid response format from server');
+          }
           
           // Save token and user
           setAuthToken(token, credentials.remember);
@@ -65,7 +72,14 @@ export const useAuthStore = create<AuthState>()(
             data
           );
           
-          const { user, token } = response.data.data;
+          // Handle both response.data.data and response.data structures
+          const responseData = response.data.data || response.data;
+          const { user, token } = responseData;
+          
+          // Validate that we have the required data
+          if (!user || !token) {
+            throw new Error('Invalid response format from server');
+          }
           
           // Save token and user
           setAuthToken(token, false); // Don't remember by default for registration
@@ -104,7 +118,13 @@ export const useAuthStore = create<AuthState>()(
         
         try {
           const response = await api.get<ApiResponse<User>>(endpoints.auth.user);
-          const user = response.data.data;
+          // Handle both response.data.data and response.data structures
+          const user = response.data.data || response.data;
+          
+          // Validate that we have user data
+          if (!user) {
+            throw new Error('Invalid user data from server');
+          }
           
           set({ 
             user, 
