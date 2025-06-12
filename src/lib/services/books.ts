@@ -41,7 +41,16 @@ export class BooksService {
       const response = await api.get<ApiResponse<Book>>(
         endpoints.books.show(id)
       );
-      return response.data.data;
+      
+      // Handle both response.data.data and response.data structures
+      const book = response.data.data || response.data;
+      
+      // Validate that we have book data
+      if (!book) {
+        throw new Error('Invalid book data from server');
+      }
+      
+      return book;
     } catch (error) {
       throw error;
     }
@@ -58,7 +67,16 @@ export class BooksService {
         endpoints.books.create,
         bookData
       );
-      return response.data.data;
+      
+      // Handle both response.data.data and response.data structures
+      const book = response.data.data || response.data;
+      
+      // Validate that we have book data
+      if (!book) {
+        throw new Error('Invalid book data from server');
+      }
+      
+      return book;
     } catch (error) {
       throw error;
     }
@@ -76,7 +94,16 @@ export class BooksService {
         endpoints.books.update(id),
         bookData
       );
-      return response.data.data;
+      
+      // Handle both response.data.data and response.data structures
+      const book = response.data.data || response.data;
+      
+      // Validate that we have book data
+      if (!book) {
+        throw new Error('Invalid book data from server');
+      }
+      
+      return book;
     } catch (error) {
       throw error;
     }
@@ -115,7 +142,15 @@ export class BooksService {
         }
       );
       
-      return response.data.data;
+      // Handle both response.data.data and response.data structures
+      const book = response.data.data || response.data;
+      
+      // Validate that we have book data
+      if (!book) {
+        throw new Error('Invalid book data from server');
+      }
+      
+      return book;
     } catch (error) {
       throw error;
     }
@@ -130,8 +165,19 @@ export class BooksService {
       const response = await api.get<ApiResponse<Category[]>>(
         endpoints.categories.list
       );
-      return response.data.data;
+      
+      // Handle both response.data.data and response.data structures
+      const categories = response.data.data || response.data;
+      
+      // Validate that we have categories data
+      if (!Array.isArray(categories)) {
+        console.warn('Invalid categories data from server:', categories);
+        return [];
+      }
+      
+      return categories;
     } catch (error) {
+      console.error('Error fetching categories:', error);
       throw error;
     }
   }
@@ -146,7 +192,16 @@ export class BooksService {
       const response = await api.get<ApiResponse<Category>>(
         endpoints.categories.show(id)
       );
-      return response.data.data;
+      
+      // Handle both response.data.data and response.data structures
+      const category = response.data.data || response.data;
+      
+      // Validate that we have category data
+      if (!category) {
+        throw new Error('Invalid category data from server');
+      }
+      
+      return category;
     } catch (error) {
       throw error;
     }
@@ -162,7 +217,17 @@ export class BooksService {
       const response = await api.get<ApiResponse<Review[]>>(
         endpoints.books.reviews(bookId)
       );
-      return response.data.data;
+      
+      // Handle both response.data.data and response.data structures
+      const reviews = response.data.data || response.data;
+      
+      // Validate that we have reviews data
+      if (!Array.isArray(reviews)) {
+        console.warn('Invalid reviews data from server:', reviews);
+        return [];
+      }
+      
+      return reviews;
     } catch (error) {
       throw error;
     }
@@ -180,7 +245,16 @@ export class BooksService {
         endpoints.reviews.create(bookId),
         reviewData
       );
-      return response.data.data;
+      
+      // Handle both response.data.data and response.data structures
+      const review = response.data.data || response.data;
+      
+      // Validate that we have review data
+      if (!review) {
+        throw new Error('Invalid review data from server');
+      }
+      
+      return review;
     } catch (error) {
       throw error;
     }
@@ -198,7 +272,16 @@ export class BooksService {
         endpoints.reviews.update(reviewId),
         reviewData
       );
-      return response.data.data;
+      
+      // Handle both response.data.data and response.data structures
+      const review = response.data.data || response.data;
+      
+      // Validate that we have review data
+      if (!review) {
+        throw new Error('Invalid review data from server');
+      }
+      
+      return review;
     } catch (error) {
       throw error;
     }
@@ -246,7 +329,17 @@ export class BooksService {
       const response = await api.get<ApiResponse<Book[]>>(
         endpoints.user.books
       );
-      return response.data.data;
+      
+      // Handle both response.data.data and response.data structures
+      const books = response.data.data || response.data;
+      
+      // Validate that we have books data
+      if (!Array.isArray(books)) {
+        console.warn('Invalid user books data from server:', books);
+        return [];
+      }
+      
+      return books;
     } catch (error) {
       throw error;
     }

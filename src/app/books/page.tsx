@@ -210,11 +210,13 @@ const BooksPage: React.FC = () => {
                   disabled={isCategoriesLoading}
                 >
                   <option value="">All Categories</option>
-                  {categoriesResponse?.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
+                  {categoriesResponse && Array.isArray(categoriesResponse) ? 
+                    categoriesResponse.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    )) : null
+                  }
                 </select>
               </div>
 
@@ -290,7 +292,10 @@ const BooksPage: React.FC = () => {
             
             {currentFilters.category_id && (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-secondary-100 text-secondary-800">
-                Category: {categoriesResponse?.find(c => c.id === currentFilters.category_id)?.name}
+                Category: {categoriesResponse && Array.isArray(categoriesResponse) ? 
+                  categoriesResponse.find(c => c.id === currentFilters.category_id)?.name || 'Unknown'
+                  : 'Unknown'
+                }
                 <button 
                   onClick={() => handleFilterChange({ category_id: undefined })}
                   className="ml-2 text-secondary-600 hover:text-secondary-800"
