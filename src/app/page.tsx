@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import BookCard from '@/components/books/BookCard';
 import { useBooks } from '@/hooks/useBooks';
+import { useCategories } from '@/hooks/useBooks';
 
 /**
  * Home page component with hero section and features
@@ -17,13 +18,34 @@ function HomePage() {
   const { data: booksResponse, isLoading: isBooksLoading } = useBooks({
     per_page: 8
   });
-  // Featured categories for quick navigation
-  const featuredCategories = [
-    { name: 'Fiction', icon: '📖', color: 'bg-primary-100 text-primary-800' },
-    { name: 'Science', icon: '🔬', color: 'bg-secondary-100 text-secondary-800' },
-    { name: 'History', icon: '🏛️', color: 'bg-accent-sage/20 text-accent-forest' },
-    { name: 'Children', icon: '🧸', color: 'bg-pink-100 text-pink-800' },
-  ];
+  
+  // Fetch categories for navigation
+  const { data: categoriesResponse, isLoading: isCategoriesLoading } = useCategories();
+  
+  // Category icons mapping
+  const categoryIcons: Record<string, string> = {
+    'fiction': '📖',
+    'non-fiction': '📚',
+    'science': '🔬',
+    'history': '🏛️',
+    'children': '🧸',
+    'romance': '💕',
+    'mystery': '🕵️',
+    'fantasy': '🐉',
+    'biography': '👤',
+    'self-help': '💪',
+    'technology': '💻',
+    'cooking': '👨‍🍳',
+    'travel': '✈️',
+    'art': '🎨',
+    'education': '🎓'
+  };
+  
+  // Get default icon for unknown categories
+  const getCategoryIcon = (categoryName: string) => {
+    const key = categoryName.toLowerCase().replace(/\s+/g, '-');
+    return categoryIcons[key] || '📘';
+  };
 
   // App features highlights
   const features = [
@@ -110,22 +132,40 @@ function HomePage() {
              Popular Categories
            </h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {featuredCategories.map((category, index) => (
-              <Link key={index} href={`/books?category=${category.name}`}>
-                <Card 
-                  hover 
-                  padding="md" 
-                  className="text-center cursor-pointer h-full"
-                >
-                  <div className={`w-16 h-16 rounded-2xl ${category.color} flex items-center justify-center text-2xl mx-auto mb-3`}>
-                    {category.icon}
-                  </div>
-                  <h3 className="font-medium text-neutral-900">{category.name}</h3>
-                </Card>
-              </Link>
-            ))}
-          </div>
+          {isCategoriesLoading ? (
+            // Loading skeleton for categories
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-neutral-200 h-24 rounded-2xl mb-3"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-3/4 mx-auto"></div>
+                </div>
+              ))}
+            </div>
+          ) : categoriesResponse?.length ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {categoriesResponse.slice(0, 8).map((category) => (
+                <Link key={category.id} href={`/books?category=${category.id}`}>
+                  <Card 
+                    hover 
+                    padding="md" 
+                    className="text-center cursor-pointer h-full"
+                  >
+                    <div className="w-16 h-16 rounded-2xl bg-primary-100 text-primary-800 flex items-center justify-center text-2xl mx-auto mb-3">
+                      {getCategoryIcon(category.name)}
+                    </div>
+                    <h3 className="font-medium text-neutral-900">{category.name}</h3>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            // Empty state for categories
+            <div className="text-center py-8">
+              <div className="text-4xl mb-2">📚</div>
+              <p className="text-neutral-600">No categories available yet</p>
+            </div>
+          )}
         </div>
       </section>
 
