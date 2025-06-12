@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 import Navigation from '@/components/layout/Navigation';
 import BookCard from '@/components/books/BookCard';
@@ -11,18 +11,69 @@ import { useBooks, useCategories } from '@/hooks/useBooks';
 import { BookFilters } from '@/types';
 import { cn } from '@/utils';
 
+// Debounce hook for search input
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 /**
  * Books listing page with filters and search
  */
 const BooksPage: React.FC = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  
+  // Search input state (for immediate UI feedback)
+  const [searchInput, setSearchInput] = useState(
+    searchParams?.get('search') || ''
+  );
+  
+  // Debounced search value (for API calls)
+  const debouncedSearch = useDebounce(searchInput, 300);
+  
   const [currentFilters, setCurrentFilters] = useState<BookFilters>({
     search: searchParams?.get('search') || '',
     category_id: searchParams?.get('category') ? parseInt(searchParams.get('category')!) : undefined,
-    page: 1,
+    page: searchParams?.get('page') ? parseInt(searchParams.get('page')!) : 1,
     per_page: 12,
-    sort_by: 'newest',
+    sort_by: (searchParams?.get('sort') as BookFilters['sort_by']) || 'newest',
+    min_price: searchParams?.get('min_price') ? parseInt(searchParams.get('min_price')!) : undefined,
+    max_price: searchParams?.get('max_price') ? parseInt(searchParams.get('max_price')!) : undefined,
   });
+
+  // Update filters when debounced search changes
+  useEffect(() => {
+    if (debouncedSearch !== currentFilters.search) {
+      handleFilterChange({ search: debouncedSearch });
+    }
+  }, [debouncedSearch]);
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    
+    if (currentFilters.search) params.set('search', currentFilters.search);
+    if (currentFilters.category_id) params.set('category', currentFilters.category_id.toString());
+    if (currentFilters.page && currentFilters.page > 1) params.set('page', currentFilters.page.toString());
+    if (currentFilters.sort_by && currentFilters.sort_by !== 'newest') params.set('sort', currentFilters.sort_by);
+    if (currentFilters.min_price) params.set('min_price', currentFilters.min_price.toString());
+    if (currentFilters.max_price) params.set('max_price', currentFilters.max_price.toString());
+    
+    const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+    router.replace(newUrl, { scroll: false });
+  }, [currentFilters, router]);
 
   // Fetch books with current filters
   const { data: booksResponse, isLoading: isBooksLoading, error: booksError } = useBooks(currentFilters);
@@ -31,17 +82,17 @@ const BooksPage: React.FC = () => {
   const { data: categoriesResponse, isLoading: isCategoriesLoading } = useCategories();
 
   // Handle filter changes
-  const handleFilterChange = (newFilters: Partial<BookFilters>) => {
+  const handleFilterChange = useCallback((newFilters: Partial<BookFilters>) => {
     setCurrentFilters(prev => ({
       ...prev,
       ...newFilters,
-      page: 1, // Reset to first page when filters change
+      page: newFilters.page || 1, // Reset to first page when filters change (except for pagination)
     }));
-  };
+  }, []);
 
-  // Handle search
-  const handleSearch = (search: string) => {
-    handleFilterChange({ search });
+  // Handle search input change
+  const handleSearchInputChange = (search: string) => {
+    setSearchInput(search);
   };
 
   // Handle sort change
@@ -52,7 +103,28 @@ const BooksPage: React.FC = () => {
   // Handle pagination
   const handlePageChange = (page: number) => {
     setCurrentFilters(prev => ({ ...prev, page }));
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchInput('');
+    setCurrentFilters({
+      page: 1,
+      per_page: 12,
+      sort_by: 'newest',
+    });
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = !!(
+    currentFilters.search ||
+    currentFilters.category_id ||
+    currentFilters.min_price ||
+    currentFilters.max_price ||
+    (currentFilters.sort_by && currentFilters.sort_by !== 'newest')
+  );
 
   // Sort options
   const sortOptions = [
@@ -63,6 +135,9 @@ const BooksPage: React.FC = () => {
     { value: 'title_asc', label: 'Title: A-Z' },
     { value: 'title_desc', label: 'Title: Z-A' },
   ];
+
+  // Mobile filter toggle
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   return (
     <div className="min-h-screen bg-accent-cream">
@@ -80,92 +155,173 @@ const BooksPage: React.FC = () => {
         </div>
 
         {/* Filters Section */}
-        <Card className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {/* Search */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Search Books
-              </label>
-              <input
-                type="text"
-                placeholder="Search by title or author..."
-                value={currentFilters.search || ''}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="input"
-              />
-            </div>
+        <Card className="mb-6">
+          {/* Mobile Filter Toggle */}
+          <div className="md:hidden mb-4">
+            <Button
+              variant="secondary"
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="w-full flex items-center justify-between"
+            >
+              <span>Filters</span>
+              <span className={`transform transition-transform ${showMobileFilters ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </Button>
+          </div>
 
-            {/* Category Filter */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Category
-              </label>
-              <select
-                value={currentFilters.category_id || ''}
-                onChange={(e) => handleFilterChange({ 
-                  category_id: e.target.value ? parseInt(e.target.value) : undefined 
-                })}
-                className="input"
-                disabled={isCategoriesLoading}
-              >
-                <option value="">All Categories</option>
-                {categoriesResponse?.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className={`${showMobileFilters ? 'block' : 'hidden'} md:block`}>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {/* Search */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Search Books
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search by title or author..."
+                    value={searchInput}
+                    onChange={(e) => handleSearchInputChange(e.target.value)}
+                    className="input pr-10"
+                  />
+                  {searchInput && (
+                    <button
+                      onClick={() => handleSearchInputChange('')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
 
-            {/* Sort */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Sort By
-              </label>
-              <select
-                value={currentFilters.sort_by || 'newest'}
-                onChange={(e) => handleSortChange(e.target.value as BookFilters['sort_by'])}
-                className="input"
-              >
-                {sortOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Price Range */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Price Range (EUR)
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={currentFilters.min_price || ''}
+              {/* Category Filter */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Category
+                </label>
+                <select
+                  value={currentFilters.category_id || ''}
                   onChange={(e) => handleFilterChange({ 
-                    min_price: e.target.value ? parseInt(e.target.value) : undefined 
+                    category_id: e.target.value ? parseInt(e.target.value) : undefined 
                   })}
-                  className="input text-sm"
-                  min="0"
-                />
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={currentFilters.max_price || ''}
-                  onChange={(e) => handleFilterChange({ 
-                    max_price: e.target.value ? parseInt(e.target.value) : undefined 
-                  })}
-                  className="input text-sm"
-                  min="0"
-                />
+                  className="input"
+                  disabled={isCategoriesLoading}
+                >
+                  <option value="">All Categories</option>
+                  {categoriesResponse?.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Sort */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Sort By
+                </label>
+                <select
+                  value={currentFilters.sort_by || 'newest'}
+                  onChange={(e) => handleSortChange(e.target.value as BookFilters['sort_by'])}
+                  className="input"
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Price Range */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Price Range (EUR)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={currentFilters.min_price || ''}
+                    onChange={(e) => handleFilterChange({ 
+                      min_price: e.target.value ? parseInt(e.target.value) : undefined 
+                    })}
+                    className="input text-sm"
+                    min="0"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={currentFilters.max_price || ''}
+                    onChange={(e) => handleFilterChange({ 
+                      max_price: e.target.value ? parseInt(e.target.value) : undefined 
+                    })}
+                    className="input text-sm"
+                    min="0"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </Card>
+
+        {/* Active Filters & Clear Button */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 mb-6">
+            <span className="text-sm font-medium text-neutral-600">Active filters:</span>
+            
+            {currentFilters.search && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                Search: "{currentFilters.search}"
+                <button 
+                  onClick={() => {
+                    setSearchInput('');
+                    handleFilterChange({ search: undefined });
+                  }}
+                  className="ml-2 text-primary-600 hover:text-primary-800"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            
+            {currentFilters.category_id && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-secondary-100 text-secondary-800">
+                Category: {categoriesResponse?.find(c => c.id === currentFilters.category_id)?.name}
+                <button 
+                  onClick={() => handleFilterChange({ category_id: undefined })}
+                  className="ml-2 text-secondary-600 hover:text-secondary-800"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            
+            {(currentFilters.min_price || currentFilters.max_price) && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Price: {currentFilters.min_price || 0}€ - {currentFilters.max_price || '∞'}€
+                <button 
+                  onClick={() => handleFilterChange({ min_price: undefined, max_price: undefined })}
+                  className="ml-2 text-green-600 hover:text-green-800"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearAllFilters}
+              className="text-neutral-600 hover:text-neutral-800"
+            >
+              Clear All
+            </Button>
+          </div>
+        )}
 
         {/* Results Section */}
         {booksError ? (
@@ -176,6 +332,9 @@ const BooksPage: React.FC = () => {
             <p className="text-neutral-600">
               {booksError.message || 'Something went wrong. Please try again.'}
             </p>
+            <Button onClick={() => window.location.reload()} className="mt-4">
+              Try Again
+            </Button>
           </Card>
         ) : isBooksLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -194,6 +353,7 @@ const BooksPage: React.FC = () => {
             <div className="flex justify-between items-center mb-6">
               <p className="text-neutral-600">
                 Showing {booksResponse.data.length} of {booksResponse.total} books
+                {hasActiveFilters && ' (filtered)'}
               </p>
               <p className="text-sm text-neutral-500">
                 Page {booksResponse.current_page} of {booksResponse.last_page}
@@ -252,11 +412,20 @@ const BooksPage: React.FC = () => {
               No books found
             </h3>
             <p className="text-neutral-600 mb-6">
-              Try adjusting your search criteria or check back later for new listings.
+              {hasActiveFilters 
+                ? 'Try adjusting your search criteria or clear filters to see all books.'
+                : 'No books available yet. Check back later for new listings.'
+              }
             </p>
-            <Button onClick={() => setCurrentFilters({ page: 1, per_page: 12, sort_by: 'newest' })}>
-              Clear Filters
-            </Button>
+            {hasActiveFilters ? (
+              <Button onClick={clearAllFilters}>
+                Clear Filters
+              </Button>
+            ) : (
+              <Button onClick={() => router.push('/books/create')}>
+                List First Book
+              </Button>
+            )}
           </Card>
         )}
       </div>
