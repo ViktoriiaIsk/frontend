@@ -66,6 +66,22 @@ function HomePage() {
     },
   ];
 
+  // Utility: Fisher-Yates shuffle
+  function shuffleArray<T>(array: T[]): T[] {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // Get 4 random categories
+  const randomCategories = categoriesResponse ? shuffleArray(categoriesResponse).slice(0, 4) : [];
+
+  // Get random books
+  const randomBooks = booksResponse?.data ? shuffleArray(booksResponse.data) : [];
+
   return (
     <div className="min-h-screen bg-accent-cream">
       <Navigation />
@@ -144,7 +160,7 @@ function HomePage() {
             </div>
           ) : categoriesResponse?.length ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {categoriesResponse.slice(0, 8).map((category) => (
+              {randomCategories.map((category) => (
                 <Link key={category.id} href={`/books?category=${category.id}`}>
                   <Card 
                     hover 
@@ -169,13 +185,36 @@ function HomePage() {
         </div>
       </section>
 
+      {/* Eco Impact Section */}
+      <section className="py-12 bg-green-50 border-t border-green-100">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="flex justify-center mb-4">
+            <span className="text-5xl">🌱</span>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold text-green-900 mb-4">
+            Why it matters for the planet
+          </h2>
+          <p className="text-lg text-green-800 mb-4">
+            Every second-hand book you buy or share helps reduce waste, saves resources, and gives stories a new life. BookSwap is about sustainable reading and conscious consumption.
+          </p>
+          <ul className="text-green-900 text-base mb-4 list-inside list-disc inline-block text-left">
+            <li>♻️ Less waste — fewer books end up in landfill</li>
+            <li>🌳 Saves trees and water</li>
+            <li>💚 Supports a circular, eco-friendly economy</li>
+            <li>📚 Makes reading affordable and accessible</li>
+          </ul>
+          <div className="mt-4 text-green-700 font-semibold">
+            Join the movement — choose second-hand, save the planet!
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-16 bg-accent-cream">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                     <h2 className="text-2xl md:text-3xl font-bold text-center text-neutral-900 mb-12">
-             Why BookSwap?
-           </h2>
-          
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-neutral-900 mb-12">
+            Why BookSwap?
+          </h2>
           <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Card key={index} padding="lg" className="text-center">
@@ -190,15 +229,15 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Latest Books Section */}
-      <section className="py-16 bg-white">
+      {/* Books Section (eco accent) */}
+      <section className="py-16 bg-green-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 mb-4">
-              Latest Books
+            <h2 className="text-2xl md:text-3xl font-bold text-green-900 mb-4">
+              Books you may like (Second-hand)
             </h2>
-            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-              Discover newly added books from our community of sellers
+            <p className="text-lg text-green-800 max-w-2xl mx-auto">
+              Discover pre-loved books from our community. Every book here is looking for a new home — and helps the planet!
             </p>
           </div>
 
@@ -207,24 +246,23 @@ function HomePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="bg-neutral-200 aspect-[3/4] rounded-2xl mb-4"></div>
-                  <div className="h-4 bg-neutral-200 rounded mb-2"></div>
-                  <div className="h-3 bg-neutral-200 rounded w-3/4"></div>
+                  <div className="bg-green-100 aspect-[3/4] rounded-2xl mb-4"></div>
+                  <div className="h-4 bg-green-100 rounded mb-2"></div>
+                  <div className="h-3 bg-green-100 rounded w-3/4"></div>
                 </div>
               ))}
             </div>
-          ) : booksResponse?.data?.length ? (
+          ) : randomBooks.length ? (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {booksResponse.data.map((book) => (
+                {randomBooks.map((book) => (
                   <BookCard key={book.id} book={book} />
                 ))}
               </div>
-              
               {/* View All Button */}
               <div className="text-center">
                 <Link href="/books">
-                  <Button size="lg">
+                  <Button size="lg" className="bg-green-600 text-white hover:bg-green-700">
                     View All Books
                   </Button>
                 </Link>
@@ -234,14 +272,14 @@ function HomePage() {
             // Empty state
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📚</div>
-              <h3 className="text-xl font-semibold text-neutral-900 mb-2">
+              <h3 className="text-xl font-semibold text-green-900 mb-2">
                 No books available yet
               </h3>
-              <p className="text-neutral-600 mb-6">
-                Be the first to add a book to our marketplace!
+              <p className="text-green-800 mb-6">
+                Be the first to give a book a second life!
               </p>
               <Link href="/books/create">
-                <Button>
+                <Button className="bg-green-600 text-white hover:bg-green-700">
                   Add First Book
                 </Button>
               </Link>
