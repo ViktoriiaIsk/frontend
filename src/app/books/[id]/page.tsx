@@ -1,107 +1,25 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import FallbackImage from '@/components/ui/FallbackImage';
-
+import { BooksService } from '@/lib/services/books';
 import Navigation from '@/components/layout/Navigation';
-import Button from '@/components/ui/Button';
+import BookCard from '@/components/books/BookCard';
 import Card from '@/components/ui/Card';
-import { useBook } from '@/hooks/useBooks';
-import { formatCurrency, formatDate } from '@/utils';
-import { PaymentService } from '@/lib/services/payment';
-import { usePurchase } from '@/hooks/usePurchase';
-import PaymentModal from '@/components/payment/PaymentModal';
+import Button from '@/components/ui/Button';
+import FallbackImage from '@/components/ui/FallbackImage';
+import Link from 'next/link';
 
-/**
- * Individual book detail page
- */
-const BookDetailPage: React.FC = () => {
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const bookId = parseInt(params?.id as string);
-  const [showCheckout, setShowCheckout] = useState(false);
+export default async function BookDetailPage({ params, searchParams }: { params: { id: string }, searchParams: Record<string, string> }) {
+  const bookId = parseInt(params.id);
+  const book = await BooksService.getBook(bookId);
+  // TODO: reviews, category, owner, etc. if needed
 
-  // Fetch book details
-  const { data: book, isLoading, error } = useBook(bookId);
-  
-  // Purchase hook for Payment Intent integration
-  const { 
-    initiatePurchase, 
-    error: purchaseError, 
-    showPaymentForm, 
-    selectedBook, 
-    closePaymentForm 
-  } = usePurchase();
-  
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
-
-  // Check if user came here to buy
-  useEffect(() => {
-    if (searchParams.get('action') === 'buy' && book?.status === 'available') {
-      setShowCheckout(true);
-    }
-  }, [searchParams, book]);
-
-  // Handle buy now action with Payment Intent
-  const handleBuyNow = () => {
-    if (!book || book.status !== 'available') return;
-    initiatePurchase(book);
-  };
-
-  // Handle successful payment
-  const handlePaymentSuccess = () => {
-    setPaymentSuccess(true);
-    // Optionally refresh book data to show updated status
-    window.location.reload();
-  };
-
-  // Handle payment error
-  const handlePaymentError = (error: string) => {
-    console.error('Payment error:', error);
-    // TODO: Show error toast notification
-  };
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-accent-cream">
-        <Navigation />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* Image skeleton */}
-              <div className="bg-neutral-200 aspect-[3/4] rounded-2xl"></div>
-              {/* Content skeleton */}
-              <div className="space-y-4">
-                <div className="h-8 bg-neutral-200 rounded w-3/4"></div>
-                <div className="h-6 bg-neutral-200 rounded w-1/2"></div>
-                <div className="h-4 bg-neutral-200 rounded w-1/4"></div>
-                <div className="h-32 bg-neutral-200 rounded"></div>
-                <div className="h-12 bg-neutral-200 rounded w-1/3"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error || !book) {
+  if (!book) {
     return (
       <div className="min-h-screen bg-accent-cream">
         <Navigation />
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="text-center py-12">
             <div className="text-6xl mb-4">❌</div>
-            <h1 className="text-2xl font-bold text-neutral-900 mb-2">
-              Book Not Found
-            </h1>
-            <p className="text-neutral-600 mb-6">
-              The book you're looking for doesn't exist or has been removed.
-            </p>
+            <h1 className="text-2xl font-bold text-neutral-900 mb-2">Book Not Found</h1>
+            <p className="text-neutral-600 mb-6">The book you're looking for doesn't exist or has been removed.</p>
             <Link href="/books">
               <Button>Browse All Books</Button>
             </Link>
@@ -111,12 +29,7 @@ const BookDetailPage: React.FC = () => {
     );
   }
 
-  // Get the primary image or first image
-  const primaryImage = book.first_image || 
-                      book.images?.[0]?.url || 
-                      '/images/placeholder-book.svg';
-
-  // Book availability status
+  const primaryImage = book.first_image || book.images?.[0]?.url || '/images/placeholder-book.svg';
   const isAvailable = book.status === 'available';
   const statusColors = {
     available: 'bg-green-100 text-green-800',
@@ -127,35 +40,25 @@ const BookDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-accent-cream">
       <Navigation />
-      
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back button */}
         <div className="mb-6">
           <Link href="/books">
-            <Button variant="ghost">
-              ← Back to Books
-            </Button>
+            <Button variant="ghost">← Back to Books</Button>
           </Link>
         </div>
-
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Book Images */}
           <div className="space-y-4">
-            {/* Main image */}
             <div className="relative aspect-[3/4] w-full">
               <FallbackImage
                 src={primaryImage}
                 alt={book.title}
                 className="object-cover rounded-2xl absolute inset-0"
               />
-              
-              {/* Status badge */}
               <div className={`absolute top-4 left-4 px-3 py-1 rounded-lg text-sm font-medium ${statusColors[book.status]}`}>
                 {book.status.charAt(0).toUpperCase() + book.status.slice(1)}
               </div>
             </div>
-
-            {/* Additional images */}
             {book.images && book.images.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
                 {book.images.slice(1, 5).map((image, index) => (
@@ -170,221 +73,39 @@ const BookDetailPage: React.FC = () => {
               </div>
             )}
           </div>
-
           {/* Book Details */}
           <div className="space-y-6">
-            {/* Title and Author */}
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-2">
-                {book.title}
-              </h1>
-              <p className="text-xl text-neutral-600 mb-4">
-                by {book.author}
-              </p>
-              
-              {/* Category */}
+              <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-2">{book.title}</h1>
+              <p className="text-xl text-neutral-600 mb-4">by {book.author}</p>
               {book.category && (
                 <div className="inline-flex items-center px-3 py-1 bg-primary-100 text-primary-800 rounded-lg text-sm font-medium">
                   📚 {book.category.name}
                 </div>
               )}
             </div>
-
-            {/* Price */}
             <div className="bg-primary-50 p-6 rounded-2xl">
-              <div className="text-3xl font-bold text-primary-700 mb-2">
-                {formatCurrency(book.price)}
-              </div>
-              <p className="text-primary-600">
-                Price includes shipping within Belgium
-              </p>
+              <div className="text-3xl font-bold text-primary-700 mb-2">€{book.price}</div>
+              <p className="text-primary-600">Price includes shipping within Belgium</p>
             </div>
-
-            {/* Description */}
             <div>
-              <h3 className="text-lg font-semibold text-neutral-900 mb-3">
-                Description
-              </h3>
-              <p className="text-neutral-600 leading-relaxed whitespace-pre-line">
-                {book.description}
-              </p>
+              <span className="font-medium text-neutral-700">Condition:</span> {book.condition}
             </div>
-
-            {/* Book Details */}
-            <Card>
-              <h3 className="text-lg font-semibold text-neutral-900 mb-4">
-                Book Details
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-neutral-500">Listed:</span>
-                  <span className="ml-2 text-neutral-900">
-                    {formatDate(book.created_at)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-neutral-500">Category:</span>
-                  <span className="ml-2 text-neutral-900">
-                    {book.category?.name || 'Uncategorized'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-neutral-500">Condition:</span>
-                  <span className="ml-2 text-neutral-900">
-                    {book.condition || 'Good'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-neutral-500">Status:</span>
-                  <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${statusColors[book.status]}`}>
-                    {book.status.charAt(0).toUpperCase() + book.status.slice(1)}
-                  </span>
-                </div>
-              </div>
-            </Card>
-
-            {/* Seller Info */}
-            {book.owner && (
-              <Card>
-                <h3 className="text-lg font-semibold text-neutral-900 mb-4">
-                  Seller Information
-                </h3>
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                    <span className="text-primary-600 font-semibold">
-                      {book.owner.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-neutral-900">
-                      {book.owner.name}
-                    </p>
-                    <p className="text-sm text-neutral-500">
-                      Member since {formatDate(book.owner.created_at)}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            {/* Action Buttons */}
-            <div className="space-y-3">
+            <div>
+              <span className="font-medium text-neutral-700">Description:</span>
+              <div className="text-neutral-800 mt-1 whitespace-pre-line">{book.description}</div>
+            </div>
+            {/* Book actions (Buy, Sold, etc.) — можна винести у окремий клієнтський компонент */}
+            <div>
               {isAvailable ? (
-                <>
-                  <Button 
-                    size="lg" 
-                    className="w-full"
-                    onClick={handleBuyNow}
-                  >
-                    🛒 Buy Now - {formatCurrency(book.price)}
-                  </Button>
-                  <Button variant="secondary" size="lg" className="w-full">
-                    💬 Contact Seller
-                  </Button>
-                </>
+                <Button className="w-full bg-green-600 text-white hover:bg-green-700">Buy Now</Button>
               ) : (
-                <Button variant="secondary" size="lg" className="w-full" disabled>
-                  {book.status === 'sold' ? '✅ Sold' : '⏳ Reserved'}
-                </Button>
+                <Button className="w-full" disabled>Not Available</Button>
               )}
-              
-              <Button variant="ghost" size="lg" className="w-full">
-                ❤️ Add to Wishlist
-              </Button>
-            </div>
-
-            {/* Payment Error */}
-            {purchaseError && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
-                <div className="text-red-800">
-                  <strong>Payment Error:</strong>
-                  <div className="mt-1 text-sm">{purchaseError}</div>
-                </div>
-              </div>
-            )}
-
-            {/* Checkout Section */}
-            {showCheckout && isAvailable && (
-              <Card className="border-primary-200 bg-primary-50">
-                <h3 className="text-lg font-semibold text-primary-900 mb-4">
-                  🛒 Ready to Purchase
-                </h3>
-                <div className="space-y-4">
-                  <div className="bg-white rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-medium">{book.title}</span>
-                      <span className="font-bold text-primary-600">
-                        {formatCurrency(book.price)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-neutral-600">
-                      by {book.author} • {book.condition} condition
-                    </p>
-                  </div>
-                  
-                  <div className="flex space-x-3">
-                    <Button 
-                      className="flex-1"
-                      onClick={handleBuyNow}
-                    >
-                      💳 Pay with Card
-                    </Button>
-                    <Button 
-                      variant="secondary"
-                      onClick={() => setShowCheckout(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                  
-                  <p className="text-xs text-primary-700">
-                    💳 Secure payment with Stripe • 🛡️ Buyer protection included
-                  </p>
-                </div>
-              </Card>
-            )}
-
-            {/* Safety Notice */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-              <h4 className="font-medium text-yellow-800 mb-2">
-                🛡️ Safety Notice
-              </h4>
-              <p className="text-sm text-yellow-700">
-                Always meet in public places. Inspect the book before payment. 
-                BookSwap provides buyer protection for online payments.
-              </p>
             </div>
           </div>
         </div>
-
-        {/* Related Books */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold text-neutral-900 mb-8">
-            More Books Like This
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Placeholder for related books */}
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="bg-neutral-200 aspect-[3/4] rounded-2xl mb-4"></div>
-                <div className="h-4 bg-neutral-200 rounded mb-2"></div>
-                <div className="h-3 bg-neutral-200 rounded w-3/4"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Payment Modal */}
-        <PaymentModal
-          isOpen={showPaymentForm}
-          book={selectedBook}
-          onClose={closePaymentForm}
-          onSuccess={handlePaymentSuccess}
-          onError={handlePaymentError}
-        />
       </div>
     </div>
   );
-};
-
-export default BookDetailPage; 
+} 

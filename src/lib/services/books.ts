@@ -390,19 +390,25 @@ export class BooksService {
       const response = await api.get<ApiResponse<Book[]>>(
         endpoints.user.books
       );
-      
       // Handle both response.data.data and response.data structures
       const books = response.data.data || response.data;
-      
       // Validate that we have books data
       if (!Array.isArray(books)) {
         console.warn('Invalid user books data from server:', books);
         return [];
       }
-      
       return books;
-    } catch (error) {
-      throw error;
+    } catch (error: any) {
+      // Log full error for debugging
+      console.error('Error fetching user books:', error);
+      // Handle specific error status
+      if (error?.status === 401) {
+        throw new Error('Session expired. Please log in again.');
+      }
+      if (error?.status === 404) {
+        throw new Error('No books found for your account.');
+      }
+      throw new Error(error?.message || 'Failed to fetch your books.');
     }
   }
 } 

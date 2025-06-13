@@ -33,24 +33,24 @@ api.interceptors.request.use(
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Log response structure for debugging
+    // Log response structure for debugging (only in development)
     if (process.env.NODE_ENV === 'development') {
-      console.log('API Response:', {
-        url: response.config.url,
-        status: response.status,
-        data: response.data
-      });
+      // console.log('API Response:', {
+      //   url: response.config.url,
+      //   status: response.status,
+      //   data: response.data
+      // });
     }
     return response;
   },
   (error: AxiosError) => {
-    // Log error details for debugging
+    // Log error details for debugging (only in development)
     if (process.env.NODE_ENV === 'development') {
-      console.error('API Error:', {
-        url: error.config?.url,
-        status: error.response?.status,
-        data: error.response?.data
-      });
+      // console.error('API Error:', {
+      //   url: error.config?.url,
+      //   status: error.response?.status,
+      //   data: error.response?.data
+      // });
     }
 
     const apiError: ApiError = {

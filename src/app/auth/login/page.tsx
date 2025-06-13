@@ -55,8 +55,8 @@ const LoginPage: React.FC = () => {
 
       await login(credentials);
       
-      // Redirect to dashboard on success
-      router.push('/dashboard');
+      // Redirect to profile on success
+      router.push('/profile');
     } catch (error) {
       const errorMessage = extractErrorMessage(error);
       
