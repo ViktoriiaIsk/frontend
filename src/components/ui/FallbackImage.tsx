@@ -47,8 +47,8 @@ export default function FallbackImage({
   const handleImageError = () => {
     if (hasFailed) return;
     
-    setCurrentSrc(fallback);
-    setHasFailed(true);
+      setCurrentSrc(fallback);
+      setHasFailed(true);
   };
 
   if (!currentSrc) {

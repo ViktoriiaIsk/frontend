@@ -234,7 +234,7 @@ export const buildQueryString = (filters: BookFilters): string => {
   }
   if (filters.max_price) {
     params.append('max_price', filters.max_price.toString());
-  }
+    }
   
   const queryString = params.toString();
   console.log('Generated query string:', queryString);

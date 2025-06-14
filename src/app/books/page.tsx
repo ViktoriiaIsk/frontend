@@ -1,7 +1,7 @@
 import { BooksService } from '@/lib/services/books';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
-import BookCard from '@/components/books/BookCard';
+import BooksList from '@/components/books/BooksList';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
@@ -88,14 +88,10 @@ export default async function BooksPage(props: { searchParams: Promise<Record<st
               <Button type="submit" className="w-full">Apply Filters</Button>
             </div>
           </form>
-        </Card>
+          </Card>
         {/* Books List */}
         {booksResponse.data.length ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {booksResponse.data.map((book) => (
-              <BookCard key={book.id} book={book} />
-            ))}
-          </div>
+          <BooksList books={booksResponse.data} />
         ) : (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📚</div>

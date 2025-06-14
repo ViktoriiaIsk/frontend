@@ -11,6 +11,7 @@ import BookCard from '@/components/books/BookCard';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import FallbackImage from '@/components/ui/FallbackImage';
+import PaymentModal from '@/components/payment/PaymentModal';
 import Link from 'next/link';
 import type { Book, User } from '@/types';
 
@@ -24,7 +25,8 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   const [authLoading, setAuthLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
-  
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
   // Delete book hook
   const { mutate: deleteBook, isPending: isDeleting } = useDeleteBook();
   
@@ -95,6 +97,31 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [showImageModal, selectedImageIndex, book]);
 
+  // Handle book purchase
+  const handleBuyNow = () => {
+    if (!book) return;
+    
+    if (!currentUser) {
+      alert('Please log in to purchase books');
+      return;
+    }
+    
+    // Open payment modal
+    setShowPaymentModal(true);
+  };
+
+  // Handle payment success
+  const handlePaymentSuccess = () => {
+    alert('Payment successful! Your order has been placed.');
+    // Optionally redirect to orders page or refresh book data
+    router.push('/profile'); // or wherever you want to redirect after purchase
+  };
+
+  // Handle payment error
+  const handlePaymentError = (error: string) => {
+    alert(`Payment failed: ${error}`);
+  };
+
   // Handle book deletion
   const handleDelete = () => {
     if (!book) return;
@@ -164,9 +191,9 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
               >
                 Try Again
               </Button>
-              <Link href="/books">
-                <Button>Browse All Books</Button>
-              </Link>
+            <Link href="/books">
+              <Button>Browse All Books</Button>
+            </Link>
             </div>
           </Card>
         </div>
@@ -219,7 +246,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
               )}
             </div>
-            
+
             {/* Thumbnail Gallery */}
             {allImages.length > 1 && (
               <div className="grid grid-cols-5 gap-2">
@@ -248,7 +275,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
               <p className="text-xl text-neutral-600 mb-4">by {book.author}</p>
               {bookCategory && (
                 <div className="mb-4">
-                  <div className="inline-flex items-center px-3 py-1 bg-primary-100 text-primary-800 rounded-lg text-sm font-medium">
+                <div className="inline-flex items-center px-3 py-1 bg-primary-100 text-primary-800 rounded-lg text-sm font-medium">
                     📚 {bookCategory.name}
                   </div>
                   {bookCategory.description && (
@@ -266,12 +293,12 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
             <div>
               <span className="font-medium text-neutral-700">Condition:</span> {book.condition || 'Not specified'}
             </div>
-            <div>
+                <div>
               <span className="font-medium text-neutral-700">Description:</span>
               <div className="text-neutral-800 mt-1 whitespace-pre-line">{book.description}</div>
-            </div>
+                </div>
             {/* Book actions - different for owner vs other users */}
-            <div>
+                <div>
               {isOwner ? (
                 <div className="space-y-3">
                   <p className="text-sm text-neutral-600">This is your book listing</p>
@@ -295,7 +322,10 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
               ) : (
                 <>
                   {isAvailable ? (
-                    <Button className="w-full bg-green-600 text-white hover:bg-green-700">
+                    <Button 
+                      className="w-full bg-green-600 text-white hover:bg-green-700"
+                      onClick={handleBuyNow}
+                    >
                       Buy Now
                     </Button>
                   ) : (
@@ -304,12 +334,12 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                     </Button>
                   )}
                 </>
-              )}
+            )}
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Image Modal */}
       {showImageModal && (
         <div 
@@ -359,10 +389,19 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
                 </>
               )}
-            </div>
+              </div>
           </div>
         </div>
       )}
+
+        {/* Payment Modal */}
+        <PaymentModal
+        isOpen={showPaymentModal}
+        book={book}
+        onClose={() => setShowPaymentModal(false)}
+          onSuccess={handlePaymentSuccess}
+          onError={handlePaymentError}
+        />
       
       <Footer />
     </div>

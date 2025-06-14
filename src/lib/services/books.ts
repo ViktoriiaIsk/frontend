@@ -221,13 +221,13 @@ export class BooksService {
       images.forEach((image) => {
         formData.append('images[]', image);
       });
-
+      
       const response = await api.post(`/books/${bookId}/images`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
       });
-
+      
       return response.data;
     } catch (error: unknown) {
       console.error('Upload images error:', error);

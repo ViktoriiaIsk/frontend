@@ -1,10 +1,12 @@
 'use client';
 
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, LogIn } from 'lucide-react';
 import { Book } from '@/types';
+import { useAuthStore } from '@/store/authStore';
 import StripeProvider from './StripeProvider';
 import PaymentForm from './PaymentForm';
+import Button from '@/components/ui/Button';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -24,11 +26,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onSuccess,
   onError,
 }) => {
+  const { isAuthenticated } = useAuthStore();
+
   if (!isOpen || !book) return null;
 
   const handleSuccess = () => {
     onSuccess();
     onClose();
+  };
+
+  const handleLoginRedirect = () => {
+    window.location.href = '/auth/login';
   };
 
   return (
@@ -57,7 +65,37 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             </button>
           </div>
 
-          {/* Payment Form */}
+          {/* Authentication Check */}
+          {!isAuthenticated ? (
+            <div className="text-center py-8">
+              <LogIn className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+                Увійдіть для покупки
+              </h3>
+              <p className="text-neutral-600 mb-6">
+                Для здійснення покупки потрібно увійти в свій акаунт
+              </p>
+              <div className="space-y-3">
+                <Button
+                  onClick={handleLoginRedirect}
+                  className="w-full"
+                  size="lg"
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Увійти в акаунт
+                </Button>
+                <Button
+                  onClick={onClose}
+                  variant="secondary"
+                  className="w-full"
+                  size="lg"
+                >
+                  Скасувати
+                </Button>
+              </div>
+            </div>
+          ) : (
+            /* Payment Form */
           <StripeProvider>
             <PaymentForm
               book={book}
@@ -65,6 +103,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               onError={onError}
             />
           </StripeProvider>
+          )}
         </div>
       </div>
     </div>

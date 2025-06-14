@@ -110,7 +110,7 @@ const CreateBookPage: React.FC = () => {
 
   // Handle form submission
   const onSubmit = async (data: CreateBookFormData) => {
-    createBook(data, {
+      createBook(data, {
         onSuccess: async (createdBook) => {
           console.log('Book created:', createdBook);
           console.log('Selected images:', selectedImages);

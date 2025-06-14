@@ -1,6 +1,11 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import BookCard from '@/components/books/BookCard';
 import Button from '@/components/ui/Button';
+import { AuthService } from '@/lib/services/auth';
+import type { User } from '@/types';
 
 function shuffleArray<T>(array: T[]): T[] {
   const arr = [...array];
@@ -14,7 +19,22 @@ function shuffleArray<T>(array: T[]): T[] {
 import type { Book } from '@/types';
 
 export default function BooksYouMayLike({ books }: { books: Book[] }) {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const randomBooks = shuffleArray(books);
+
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const user = await AuthService.getCurrentUser();
+        setCurrentUser(user);
+      } catch (error) {
+        // User not authenticated, that's fine
+        setCurrentUser(null);
+      }
+    };
+
+    getCurrentUser();
+  }, []);
   return (
     <section className="py-16 bg-green-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -30,7 +50,11 @@ export default function BooksYouMayLike({ books }: { books: Book[] }) {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {randomBooks.map((book) => (
-                <BookCard key={book.id} book={book} />
+                <BookCard 
+                  key={book.id} 
+                  book={book} 
+                  currentUserId={currentUser?.id}
+                />
               ))}
             </div>
             <div className="text-center">

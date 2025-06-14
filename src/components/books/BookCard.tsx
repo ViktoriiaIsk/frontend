@@ -1,18 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Book } from '@/types';
 import { formatCurrency, truncateText } from '@/utils';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import FallbackImage from '@/components/ui/FallbackImage';
-import { usePurchase } from '@/hooks/usePurchase';
+import PaymentModal from '@/components/payment/PaymentModal';
+// import { usePurchase } from '@/hooks/usePurchase';
 
 interface BookCardProps {
   book: Book;
   variant?: 'grid' | 'list';
   showActions?: boolean;
+  currentUserId?: number | null;
 }
 
 /**
@@ -22,8 +24,12 @@ const BookCard: React.FC<BookCardProps> = ({
   book,
   variant = 'grid',
   showActions = true,
+  currentUserId,
 }) => {
-  const { initiatePurchase } = usePurchase();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  
+  // Check if current user is the owner
+  const isOwner = currentUserId && book.owner_id === currentUserId;
   
   // Get the primary image or first image from API
   // Backend now returns ready-to-use URLs in image_url field
@@ -32,8 +38,20 @@ const BookCard: React.FC<BookCardProps> = ({
                    book.images?.[0]?.url || // Fallback for backward compatibility
                    '/images/placeholder-book.svg';
 
+  // Handle buy now click
   const handleBuyNow = () => {
-    initiatePurchase(book.id);
+    setShowPaymentModal(true);
+  };
+
+  // Handle payment success
+  const handlePaymentSuccess = () => {
+    alert('Payment successful! Your order has been placed.');
+    setShowPaymentModal(false);
+  };
+
+  // Handle payment error
+  const handlePaymentError = (error: string) => {
+    alert(`Payment failed: ${error}`);
   };
 
   if (variant === 'list') {
@@ -78,13 +96,23 @@ const BookCard: React.FC<BookCardProps> = ({
                 <span className="text-xl font-bold text-primary-600 mb-2">
                   {formatCurrency(book.price)}
                 </span>
-                {showActions && book.status === 'available' && (
+                {showActions && (
+                  <>
+                    {isOwner ? (
+                      <Link href={`/books/${book.id}/edit`}>
+                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                          ✏️ Edit
+                        </Button>
+                      </Link>
+                                         ) : book.status === 'available' ? (
                   <Button 
                     size="sm" 
                     onClick={handleBuyNow}
                   >
                     Buy Now
                   </Button>
+                     ) : null}
+                  </>
                 )}
               </div>
             </div>
@@ -141,6 +169,23 @@ const BookCard: React.FC<BookCardProps> = ({
         {/* Actions */}
         {showActions && (
           <div className="space-y-2">
+            {isOwner ? (
+              // Owner actions
+              <>
+                <Link href={`/books/${book.id}/edit`}>
+                  <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
+                    ✏️ Edit Book
+                  </Button>
+                </Link>
+                <Link href={`/books/${book.id}`}>
+                  <Button variant="ghost" size="sm" className="w-full">
+                    View Details
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              // Buyer actions
+              <>
             {book.status === 'available' ? (
               <Button 
                 size="sm" 
@@ -160,9 +205,20 @@ const BookCard: React.FC<BookCardProps> = ({
                 View Details
               </Button>
             </Link>
+              </>
+            )}
           </div>
         )}
       </div>
+      
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        book={book}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={handlePaymentSuccess}
+        onError={handlePaymentError}
+      />
     </Card>
   );
 };

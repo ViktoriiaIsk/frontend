@@ -137,10 +137,13 @@ export interface CreateOrderData {
   shipping_address: ShippingAddress;
 }
 
-// Payment types
+// Payment types - based on API documentation
 export interface PaymentIntentData {
   book_id: number;
-  shipping_address: ShippingAddress;
+  shipping_address: string; // Full address as string (max 255)
+  shipping_city: string; // Max 100
+  shipping_postal_code: string; // Max 20
+  shipping_country: string; // Max 100
 }
 
 export interface PaymentIntentResponse {

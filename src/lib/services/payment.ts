@@ -49,10 +49,13 @@ export class PaymentService {
         throw new Error('Failed to load Stripe');
       }
 
-      // Step 1: Create payment intent via backend
+      // Step 1: Create payment intent via backend - correct format per API docs
       const intentResponse = await this.createPaymentIntent({
         book_id: bookId,
-        shipping_address: shippingAddress,
+        shipping_address: shippingAddress.street, // Full address as string
+        shipping_city: shippingAddress.city,
+        shipping_postal_code: shippingAddress.postal_code,
+        shipping_country: shippingAddress.country,
       });
 
       // Step 2: Confirm payment with Stripe
@@ -100,10 +103,34 @@ export class PaymentService {
    */
   static async createPaymentIntent(data: PaymentIntentData): Promise<PaymentIntentResponse> {
     try {
-      const response = await api.post<PaymentIntentResponse>('/payment/create-intent', data);
-      return response.data;
+      console.log('Creating payment intent with data:', data);
+      const response = await api.post<any>('/payment/create-intent', data);
+      console.log('Payment intent response:', response.data);
+      
+      // Extract client_secret from the nested structure
+      const clientSecret = response.data.payment_intent?.client_secret || 
+                          response.data.client_secret ||
+                          response.data.payment?.client_secret;
+      
+      const orderId = response.data.order?.id || response.data.order_id;
+      
+      if (!clientSecret) {
+        throw new Error('No client_secret received from backend');
+      }
+      
+      return {
+        client_secret: clientSecret,
+        order_id: orderId
+      };
     } catch (error: unknown) {
       console.error('Create payment intent error:', error);
+      // Log detailed error information
+      if (error && typeof error === 'object' && 'errors' in error) {
+        console.error('Validation errors:', (error as any).errors);
+      }
+      if (error && typeof error === 'object' && 'message' in error) {
+        console.error('Error message:', (error as any).message);
+      }
       throw error;
     }
   }
@@ -145,10 +172,13 @@ export class PaymentService {
         };
       }
 
-      // Create payment intent
+      // Create payment intent - correct format per API docs
       const paymentData: PaymentIntentData = {
         book_id: bookId,
-        shipping_address: shippingAddress,
+        shipping_address: shippingAddress.street, // Full address as string
+        shipping_city: shippingAddress.city,
+        shipping_postal_code: shippingAddress.postal_code,
+        shipping_country: shippingAddress.country,
       };
 
       const { client_secret, order_id } = await this.createPaymentIntent(paymentData);

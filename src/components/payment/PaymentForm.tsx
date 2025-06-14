@@ -61,7 +61,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ book, onSuccess, onError }) =
         return;
       }
 
-      // Process payment with backend
+      // Process payment with backend - flatten shipping address
       const result = await PaymentService.processPaymentIntent(
         book.id,
         paymentMethod.id,

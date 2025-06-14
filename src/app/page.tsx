@@ -28,7 +28,7 @@ export default async function HomePage() {
     ]);
     const books = booksResponse.data;
 
-    return (
+  return (
       <>
         <HeroSection />
         <FeaturedCategories categories={categories} />
@@ -46,6 +46,6 @@ export default async function HomePage() {
         <EcoSection />
         <Footer />
       </>
-    );
-  }
+  );
+}
 }

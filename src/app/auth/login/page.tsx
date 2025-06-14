@@ -144,15 +144,15 @@ const LoginPage: React.FC = () => {
             </div>
 
             {/* Remember Me */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                {...register('remember')}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
-              />
-              <label className="ml-2 block text-sm text-neutral-700">
-                Remember me
-              </label>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  {...register('remember')}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
+                />
+                <label className="ml-2 block text-sm text-neutral-700">
+                  Remember me
+                </label>
             </div>
 
             {/* Submit Button */}
