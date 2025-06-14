@@ -71,13 +71,17 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ book, onSuccess, onError }) =
       );
 
       if (result.success) {
-        // Redirect to thank you page with order details
-        const searchParams = new URLSearchParams({
-          order_id: result.orderId?.toString() || '',
-          payment_intent: result.paymentIntentId || ''
-        });
-        router.push(`/thank-you?${searchParams.toString()}`);
+        // Call onSuccess first, then redirect
         onSuccess();
+        
+        // Small delay to ensure state updates, then redirect to thank you page
+        setTimeout(() => {
+          const searchParams = new URLSearchParams({
+            order_id: result.orderId?.toString() || '',
+            payment_intent: result.paymentIntentId || ''
+          });
+          router.push(`/thank-you?${searchParams.toString()}`);
+        }, 100);
       } else if (result.requiresAction && result.clientSecret) {
         // Handle 3D Secure
         const { error: confirmError } = await stripe.confirmCardPayment(result.clientSecret);
@@ -85,13 +89,17 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ book, onSuccess, onError }) =
         if (confirmError) {
           onError(confirmError.message || 'Payment confirmation failed');
         } else {
-          // Redirect to thank you page after 3D Secure success
-          const searchParams = new URLSearchParams({
-            order_id: result.orderId?.toString() || '',
-            payment_intent: result.paymentIntentId || ''
-          });
-          router.push(`/thank-you?${searchParams.toString()}`);
+          // Call onSuccess first, then redirect
           onSuccess();
+          
+          // Small delay to ensure state updates, then redirect to thank you page
+          setTimeout(() => {
+            const searchParams = new URLSearchParams({
+              order_id: result.orderId?.toString() || '',
+              payment_intent: result.paymentIntentId || ''
+            });
+            router.push(`/thank-you?${searchParams.toString()}`);
+          }, 100);
         }
       } else {
         onError(result.error || 'Payment failed');

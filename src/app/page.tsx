@@ -1,51 +1,69 @@
-import Link from 'next/link';
+'use client';
 
-import Navigation from '@/components/layout/Navigation';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import BookCard from '@/components/books/BookCard';
-import { useBooks } from '@/hooks/useBooks';
-import { useCategories } from '@/hooks/useBooks';
+import { useEffect, useState } from 'react';
 import HeroSection from '@/components/HeroSection';
 import FeaturedCategories from '@/components/FeaturedCategories';
 import EcoSection from '@/components/EcoSection';
 import BooksYouMayLike from '@/components/BooksYouMayLike';
 import Footer from '@/components/layout/Footer';
 import { BooksService } from '@/lib/services/books';
-
-// Add caching for better performance
-export const revalidate = 300; // Revalidate every 5 minutes
+import { Book, Category } from '@/types';
 
 /**
  * Home page component with hero section and features
  */
-export default async function HomePage() {
-  try {
-    // Get data on the server in parallel for better performance
-    const [categories, booksResponse] = await Promise.all([
-      BooksService.getCategories(),
-      BooksService.getBooks({ per_page: 8 })
-    ]);
-    const books = booksResponse.data;
+export default function HomePage() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  return (
-      <>
-        <HeroSection />
-        <FeaturedCategories categories={categories} />
-        <EcoSection />
-        <BooksYouMayLike books={books} />
-        <Footer />
-      </>
-    );
-  } catch (error) {
-    console.error('Error loading home page:', error);
-    // Fallback UI in case of API errors
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Get data in parallel for better performance
+        const [categoriesData, booksResponse] = await Promise.all([
+          BooksService.getCategories(),
+          BooksService.getBooks({ per_page: 8 })
+        ]);
+        
+        setCategories(categoriesData);
+        setBooks(booksResponse.data);
+      } catch (err) {
+        console.error('Error loading home page:', err);
+        setError('Не вдалося завантажити дані');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
     return (
       <>
         <HeroSection />
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Завантаження...</p>
+          </div>
+        </div>
         <EcoSection />
         <Footer />
       </>
+    );
+  }
+
+  return (
+    <>
+      <HeroSection />
+      {categories.length > 0 && <FeaturedCategories categories={categories} />}
+      <EcoSection />
+      {books.length > 0 && <BooksYouMayLike books={books} />}
+      <Footer />
+    </>
   );
-}
 }

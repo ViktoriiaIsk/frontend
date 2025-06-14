@@ -19,7 +19,7 @@ export default function ThankYouPage() {
 
   useEffect(() => {
     if (!orderId) {
-      setError('Не знайдено інформацію про замовлення');
+      setError('Order information not found');
       setLoading(false);
       return;
     }
@@ -30,7 +30,7 @@ export default function ThankYouPage() {
         setOrder(orderData);
       } catch (err) {
         console.error('Error fetching order:', err);
-        setError('Не вдалося завантажити деталі замовлення');
+        setError('Failed to load order details');
       } finally {
         setLoading(false);
       }
@@ -44,7 +44,7 @@ export default function ThankYouPage() {
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Завантаження деталей замовлення...</p>
+          <p className="text-gray-600">Loading order details...</p>
         </div>
       </div>
     );
@@ -57,13 +57,13 @@ export default function ThankYouPage() {
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <ShoppingBagIcon className="w-8 h-8 text-red-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Помилка</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error</h1>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => router.push('/')}
             className="w-full bg-gray-900 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors"
           >
-            Повернутися на головну
+            Back to Home
           </button>
         </div>
       </div>
@@ -80,10 +80,10 @@ export default function ThankYouPage() {
               <CheckCircleIcon className="w-12 h-12 text-green-600" />
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Дякуємо за покупку!
+              Thank You for Your Purchase!
             </h1>
             <p className="text-xl text-gray-600">
-              Ваше замовлення успішно оформлено
+              Your order has been successfully placed
             </p>
           </div>
 
@@ -91,13 +91,13 @@ export default function ThankYouPage() {
           <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
             <div className="border-b border-gray-200 pb-6 mb-6">
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                Деталі замовлення
+                Order Details
               </h2>
               <p className="text-gray-600">
-                Номер замовлення: <span className="font-mono font-medium">#{order.id}</span>
+                Order Number: <span className="font-mono font-medium">#{order.id}</span>
               </p>
               <p className="text-gray-600">
-                Дата: {OrderService.formatOrderDate(order.created_at)}
+                Date: {OrderService.formatOrderDate(order.created_at)}
               </p>
             </div>
 
@@ -119,8 +119,8 @@ export default function ThankYouPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">
                   {order.book.title}
                 </h3>
-                <p className="text-gray-600 mb-2">Автор: {order.book.author}</p>
-                <p className="text-gray-600 mb-2">Стан: {order.book.condition}</p>
+                <p className="text-gray-600 mb-2">Author: {order.book.author}</p>
+                <p className="text-gray-600 mb-2">Condition: {order.book.condition}</p>
                 <p className="text-2xl font-bold text-green-600">
                   {PaymentService.formatCurrency(parseFloat(order.total_amount) * 100)}
                 </p>
@@ -130,7 +130,7 @@ export default function ThankYouPage() {
             {/* Shipping Address */}
             <div className="border-t border-gray-200 pt-6">
               <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                Адреса доставки
+                Shipping Address
               </h4>
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-gray-800">{order.shipping_address.street}</p>
@@ -145,13 +145,13 @@ export default function ThankYouPage() {
           {/* Information Card */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
             <h3 className="text-lg font-semibold text-blue-900 mb-3">
-              Що далі?
+              What's Next?
             </h3>
             <ul className="space-y-2 text-blue-800">
-              <li>• Ви отримаєте підтвердження на email протягом декількох хвилин</li>
-              <li>• Продавець зв'яжеться з вами для узгодження доставки</li>
-              <li>• Відстежити статус замовлення можна в особистому кабінеті</li>
-              <li>• За питаннями звертайтеся до служби підтримки</li>
+              <li>• You will receive a confirmation email within a few minutes</li>
+              <li>• The seller will contact you to arrange delivery</li>
+              <li>• You can track your order status in your profile</li>
+              <li>• Contact our support team if you have any questions</li>
             </ul>
           </div>
 
@@ -161,7 +161,7 @@ export default function ThankYouPage() {
               onClick={() => router.push('/profile')}
               className="flex items-center justify-center space-x-2 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors"
             >
-              <span>Мої замовлення</span>
+              <span>My Orders</span>
               <ArrowRightIcon className="w-4 h-4" />
             </button>
             
@@ -169,7 +169,7 @@ export default function ThankYouPage() {
               onClick={() => router.push('/')}
               className="flex items-center justify-center space-x-2 bg-gray-900 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors"
             >
-              <span>Продовжити покупки</span>
+              <span>Continue Shopping</span>
               <ArrowRightIcon className="w-4 h-4" />
             </button>
           </div>
@@ -177,12 +177,12 @@ export default function ThankYouPage() {
           {/* Contact Support */}
           <div className="text-center mt-8">
             <p className="text-gray-600">
-              Маєте питання? {' '}
+              Have questions? {' '}
               <a 
                 href="mailto:support@bookswap.com" 
                 className="text-blue-600 hover:text-blue-800 font-medium"
               >
-                Зверніться до служби підтримки
+                Contact Support
               </a>
             </p>
           </div>

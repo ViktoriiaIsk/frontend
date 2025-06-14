@@ -26,11 +26,21 @@ export default function OrderList({ className = '' }: OrderListProps) {
     try {
       setLoading(true);
       const data = await OrderService.getUserOrders(currentPage, 10);
-      setOrders(data.data);
-      setTotalPages(data.last_page);
+      
+      // Ensure data exists and has the expected structure
+      if (data && Array.isArray(data.data)) {
+        setOrders(data.data);
+        setTotalPages(data.last_page || 1);
+      } else {
+        console.warn('Invalid orders data structure:', data);
+        setOrders([]);
+        setTotalPages(1);
+      }
     } catch (err) {
       console.error('Error fetching orders:', err);
-      setError('Не вдалося завантажити замовлення');
+      setError('Failed to load orders');
+      setOrders([]); // Ensure orders is always an array
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -52,11 +62,11 @@ export default function OrderList({ className = '' }: OrderListProps) {
   if (loading && orders.length === 0) {
     return (
       <div className={`bg-white rounded-lg shadow p-6 ${className}`}>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Мої замовлення</h2>
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Завантаження замовлень...</p>
-        </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">My Orders</h2>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading orders...</p>
+          </div>
       </div>
     );
   }
@@ -64,7 +74,7 @@ export default function OrderList({ className = '' }: OrderListProps) {
   if (error) {
     return (
       <div className={`bg-white rounded-lg shadow p-6 ${className}`}>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Мої замовлення</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">My Orders</h2>
         <div className="text-center py-8">
           <ShoppingBagIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-red-600 mb-4">{error}</p>
@@ -72,7 +82,7 @@ export default function OrderList({ className = '' }: OrderListProps) {
             onClick={fetchOrders}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Спробувати знову
+            Try Again
           </button>
         </div>
       </div>
@@ -82,15 +92,15 @@ export default function OrderList({ className = '' }: OrderListProps) {
   if (orders.length === 0) {
     return (
       <div className={`bg-white rounded-lg shadow p-6 ${className}`}>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Мої замовлення</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">My Orders</h2>
         <div className="text-center py-8">
           <ShoppingBagIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-4">У вас поки немає замовлень</p>
+          <p className="text-gray-600 mb-4">You don't have any orders yet</p>
           <a
             href="/"
             className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Почати покупки
+            Start Shopping
           </a>
         </div>
       </div>
@@ -100,9 +110,9 @@ export default function OrderList({ className = '' }: OrderListProps) {
   return (
     <div className={`bg-white rounded-lg shadow ${className}`}>
       <div className="p-6 border-b border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-900">Мої замовлення</h2>
+        <h2 className="text-2xl font-bold text-gray-900">My Orders</h2>
         <p className="text-gray-600">
-          Загальна вартість: {PaymentService.formatCurrency(
+          Total Value: {PaymentService.formatCurrency(
             OrderService.calculateTotalValue(orders) * 100
           )}
         </p>
@@ -119,7 +129,7 @@ export default function OrderList({ className = '' }: OrderListProps) {
                   {getStatusIcon(order.status)}
                   <div>
                     <h3 className="font-semibold text-gray-900">
-                      Замовлення #{order.id}
+                      Order #{order.id}
                     </h3>
                     <p className="text-sm text-gray-600">
                       {OrderService.formatOrderDate(order.created_at)}
@@ -150,11 +160,11 @@ export default function OrderList({ className = '' }: OrderListProps) {
                   <h4 className="font-medium text-gray-900 truncate">
                     {order.book.title}
                   </h4>
-                  <p className="text-sm text-gray-600 mb-1">Автор: {order.book.author}</p>
-                  <p className="text-sm text-gray-600 mb-2">Стан: {order.book.condition}</p>
+                  <p className="text-sm text-gray-600 mb-1">Author: {order.book.author}</p>
+                  <p className="text-sm text-gray-600 mb-2">Condition: {order.book.condition}</p>
                   
                   <div className="text-sm text-gray-500">
-                    <p>Доставка: {order.shipping_address.city}, {order.shipping_address.country}</p>
+                    <p>Shipping: {order.shipping_address.city}, {order.shipping_address.country}</p>
                   </div>
                 </div>
                 
@@ -179,11 +189,11 @@ export default function OrderList({ className = '' }: OrderListProps) {
               disabled={currentPage === 1}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Попередня
+              Previous
             </button>
             
             <span className="text-sm text-gray-700">
-              Сторінка {currentPage} з {totalPages}
+              Page {currentPage} of {totalPages}
             </span>
             
             <button
@@ -191,7 +201,7 @@ export default function OrderList({ className = '' }: OrderListProps) {
               disabled={currentPage === totalPages}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Наступна
+              Next
             </button>
           </div>
         </div>

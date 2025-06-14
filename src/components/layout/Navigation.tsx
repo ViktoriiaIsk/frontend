@@ -24,9 +24,13 @@ const Navigation: React.FC = () => {
     checkAuth 
   } = useAuthStore();
 
-  // Check authentication status on mount
+  // Check authentication status on mount with a small delay to avoid race conditions
   useEffect(() => {
-    checkAuth();
+    const timer = setTimeout(() => {
+      checkAuth();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [checkAuth]);
 
   // Public navigation items (always visible)

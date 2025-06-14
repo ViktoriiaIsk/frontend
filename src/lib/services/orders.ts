@@ -20,8 +20,27 @@ export class OrderService {
         `${endpoints.orders.list}?page=${page}&per_page=${perPage}`
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Get user orders error:', error);
+      
+      // If orders endpoint doesn't exist, return empty result
+      if (error?.status === 404) {
+        console.warn('Orders endpoint not found, returning empty orders');
+        return {
+          data: [],
+          current_page: 1,
+          last_page: 1,
+          per_page: perPage,
+          total: 0,
+          links: {
+            first: '',
+            last: '',
+            prev: undefined,
+            next: undefined
+          }
+        };
+      }
+      
       throw error;
     }
   }
@@ -51,13 +70,13 @@ export class OrderService {
   static formatOrderStatus(status: string): { text: string; color: string } {
     switch (status) {
       case 'pending':
-        return { text: 'В обробці', color: 'text-yellow-600 bg-yellow-100' };
+        return { text: 'Processing', color: 'text-yellow-600 bg-yellow-100' };
       case 'completed':
-        return { text: 'Виконано', color: 'text-green-600 bg-green-100' };
+        return { text: 'Completed', color: 'text-green-600 bg-green-100' };
       case 'cancelled':
-        return { text: 'Скасовано', color: 'text-red-600 bg-red-100' };
+        return { text: 'Cancelled', color: 'text-red-600 bg-red-100' };
       default:
-        return { text: 'Невідомо', color: 'text-gray-600 bg-gray-100' };
+        return { text: 'Unknown', color: 'text-gray-600 bg-gray-100' };
     }
   }
 

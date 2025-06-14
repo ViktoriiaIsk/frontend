@@ -27,6 +27,16 @@ api.interceptors.request.use(
     const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Request with token:', config.method?.toUpperCase(), config.url, 'Token:', token.substring(0, 20) + '...');
+      }
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Request without token:', config.method?.toUpperCase(), config.url);
+        if (config.url?.includes('/login')) {
+          console.log('Login request data:', config.data);
+        }
+      }
     }
     return config;
   },
@@ -40,22 +50,24 @@ api.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log response structure for debugging (only in development)
     if (process.env.NODE_ENV === 'development') {
-      // console.log('API Response:', {
-      //   url: response.config.url,
-      //   status: response.status,
-      //   data: response.data
-      // });
+      console.log('API Response:', {
+        url: response.config.url,
+        method: response.config.method,
+        status: response.status,
+        data: response.data
+      });
     }
     return response;
   },
   (error: AxiosError) => {
     // Log error details for debugging (only in development)
     if (process.env.NODE_ENV === 'development') {
-      // console.error('API Error:', {
-      //   url: error.config?.url,
-      //   status: error.response?.status,
-      //   data: error.response?.data
-      // });
+      console.error('API Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+        data: error.response?.data
+      });
     }
 
     const apiError: ApiError = {

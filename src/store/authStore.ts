@@ -108,15 +108,26 @@ export const useAuthStore = create<AuthState>()(
       },
 
       checkAuth: async () => {
-        const { token } = get();
+        // Get token from storage (in case it's not in state yet due to hydration)
+        const { token: stateToken } = get();
+        const storageToken = typeof window !== 'undefined' ? 
+          localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') : null;
+        
+        const token = stateToken || storageToken;
         
         if (!token) {
           set({ 
             isAuthenticated: false,
             isLoading: false,
-            user: null 
+            user: null,
+            token: null
           });
           return;
+        }
+
+        // Update state with token if it wasn't there
+        if (!stateToken && storageToken) {
+          set({ token: storageToken });
         }
 
         set({ isLoading: true });
@@ -134,7 +145,8 @@ export const useAuthStore = create<AuthState>()(
           set({ 
             user, 
             isAuthenticated: true, 
-            isLoading: false 
+            isLoading: false,
+            token: token
           });
           
         } catch (error) {
