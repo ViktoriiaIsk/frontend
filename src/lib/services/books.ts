@@ -191,7 +191,22 @@ export class BooksService {
    */
   static async uploadBookImages(bookId: number, images: File[]): Promise<Book> {
     try {
-      const formData = createFormData({ images });
+      // Alternative FormData creation for better backend compatibility
+      const formData = new FormData();
+      
+      // Simple approach - append each image with 'images' key
+      images.forEach((image) => {
+        formData.append('images', image);
+      });
+      
+      // Debug logging
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Uploading images:', images.length, 'files');
+        console.log('FormData entries:');
+        for (let pair of formData.entries()) {
+          console.log(pair[0], pair[1]);
+        }
+      }
       
       const response = await api.post<ApiResponse<Book>>(
         endpoints.books.images(bookId),
@@ -213,6 +228,7 @@ export class BooksService {
       
       return book;
     } catch (error) {
+      console.error('Upload images error:', error);
       throw error;
     }
   }

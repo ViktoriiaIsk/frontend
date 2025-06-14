@@ -50,7 +50,8 @@ export interface BookImage {
   id: number;
   book_id?: number;
   image_path?: string;
-  url?: string; // API uses 'url' instead of 'image_path'
+  url?: string; // Legacy field - API used to return 'url'
+  image_url?: string; // New field - backend now returns ready-to-use URLs with CORS
   is_primary?: boolean;
   created_at?: string;
 }

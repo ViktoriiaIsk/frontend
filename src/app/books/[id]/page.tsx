@@ -6,8 +6,11 @@ import Button from '@/components/ui/Button';
 import FallbackImage from '@/components/ui/FallbackImage';
 import Link from 'next/link';
 
+// Next.js App Router: params тепер асинхронні, треба await
 export default async function BookDetailPage({ params, searchParams }: { params: { id: string }, searchParams: Record<string, string> }) {
-  const bookId = parseInt(params.id);
+  // Обов'язково await params (Next.js 14+)
+  const resolvedParams = await params;
+  const bookId = parseInt(resolvedParams.id);
   const book = await BooksService.getBook(bookId);
   // TODO: reviews, category, owner, etc. if needed
 
@@ -29,7 +32,8 @@ export default async function BookDetailPage({ params, searchParams }: { params:
     );
   }
 
-  const primaryImage = book.first_image || book.images?.[0]?.url || '/images/placeholder-book.svg';
+  // Backend now returns ready-to-use image URLs with proper CORS headers
+  const primaryImage = book.first_image || book.images?.[0]?.image_url || '/images/placeholder-book.svg';
   const isAvailable = book.status === 'available';
   const statusColors = {
     available: 'bg-green-100 text-green-800',
@@ -64,7 +68,7 @@ export default async function BookDetailPage({ params, searchParams }: { params:
                 {book.images.slice(1, 5).map((image, index) => (
                   <div key={index} className="relative aspect-square">
                     <FallbackImage
-                      src={image.url || '/images/placeholder-book.svg'}
+                      src={image.image_url || '/images/placeholder-book.svg'}
                       alt={`${book.title} - Image ${index + 2}`}
                       className="object-cover rounded-lg absolute inset-0"
                     />

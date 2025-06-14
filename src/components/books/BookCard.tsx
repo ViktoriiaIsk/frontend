@@ -26,8 +26,10 @@ const BookCard: React.FC<BookCardProps> = ({
   const { initiatePurchase } = usePurchase();
   
   // Get the primary image or first image from API
+  // Backend now returns ready-to-use URLs in image_url field
   const imageUrl = book.first_image || 
-                   book.images?.[0]?.url || 
+                   book.images?.[0]?.image_url || 
+                   book.images?.[0]?.url || // Fallback for backward compatibility
                    '/images/placeholder-book.svg';
 
   const handleBuyNow = () => {

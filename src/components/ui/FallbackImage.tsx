@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getImageUrlAlternatives } from '@/utils';
 
 interface FallbackImageProps {
   src: string;
@@ -14,7 +13,7 @@ interface FallbackImageProps {
 
 /**
  * Simple fallback image component using regular img tag
- * Used when Next.js Image component causes issues
+ * Backend now returns ready-to-use image URLs with proper CORS headers
  */
 export default function FallbackImage({ 
   src, 
@@ -30,18 +29,7 @@ export default function FallbackImage({
     }
     return src;
   });
-  const [alternativeIndex, setAlternativeIndex] = useState(-1);
   const [hasFailed, setHasFailed] = useState(false);
-  
-  const [alternatives] = useState(() => {
-    if (!src || src === 'null' || src === 'undefined') return [];
-    
-    let imagePath = src;
-    if (src.startsWith('http') && src.includes('/book-images/')) {
-      imagePath = src.split('/book-images/')[1];
-    }
-    return getImageUrlAlternatives(imagePath);
-  });
 
   useEffect(() => {
     if (!src || src === 'null' || src === 'undefined') {
@@ -51,22 +39,14 @@ export default function FallbackImage({
     }
     
     setCurrentSrc(src);
-    setAlternativeIndex(-1);
     setHasFailed(false);
   }, [src, fallback]);
 
   const handleImageError = () => {
     if (hasFailed) return;
     
-    const nextIndex = alternativeIndex + 1;
-    
-    if (nextIndex < alternatives.length) {
-      setAlternativeIndex(nextIndex);
-      setCurrentSrc(alternatives[nextIndex]);
-    } else {
-      setCurrentSrc(fallback);
-      setHasFailed(true);
-    }
+    setCurrentSrc(fallback);
+    setHasFailed(true);
   };
 
   if (!currentSrc) {

@@ -13,15 +13,18 @@ function buildQuery(params: Record<string, any>) {
   return q ? `?${q}` : '';
 }
 
+// Next.js App Router: searchParams тепер асинхронні, треба await
 export default async function BooksPage({ searchParams }: { searchParams: Record<string, string> }) {
+  // Обов'язково await searchParams (Next.js 14+)
+  const resolvedSearchParams = await searchParams;
   // SSR: отримуємо фільтри з URL
   const filters = {
-    search: searchParams?.search || '',
-    category_id: searchParams?.category ? parseInt(searchParams.category) : undefined,
-    page: searchParams?.page ? parseInt(searchParams.page) : 1,
+    search: resolvedSearchParams?.search || '',
+    category_id: resolvedSearchParams?.category ? parseInt(resolvedSearchParams.category) : undefined,
+    page: resolvedSearchParams?.page ? parseInt(resolvedSearchParams.page) : 1,
     per_page: 12,
-    min_price: searchParams?.min_price ? parseInt(searchParams.min_price) : undefined,
-    max_price: searchParams?.max_price ? parseInt(searchParams.max_price) : undefined,
+    min_price: resolvedSearchParams?.min_price ? parseInt(resolvedSearchParams.min_price) : undefined,
+    max_price: resolvedSearchParams?.max_price ? parseInt(resolvedSearchParams.max_price) : undefined,
   };
   const booksResponse = await BooksService.getBooks(filters);
   const categories = await BooksService.getCategories();

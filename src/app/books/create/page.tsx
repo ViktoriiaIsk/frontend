@@ -12,6 +12,7 @@ import Card from '@/components/ui/Card';
 import { useCreateBook, useCategories } from '@/hooks/useBooks';
 import { CreateBookData } from '@/types';
 import { extractErrorMessage } from '@/utils';
+import { BooksService } from '@/lib/services/books';
 
 // Validation schema
 const createBookSchema = z.object({
@@ -88,13 +89,26 @@ const CreateBookPage: React.FC = () => {
   const onSubmit = async (data: CreateBookFormData) => {
     try {
       createBook(data, {
-        onSuccess: (createdBook) => {
-          // TODO: Upload images if any
+        onSuccess: async (createdBook) => {
+          console.log('Book created:', createdBook);
+          console.log('Selected images:', selectedImages);
+          // Upload images if any
+          if (selectedImages.length > 0) {
+            try {
+              const uploadResult = await BooksService.uploadBookImages(createdBook.id, selectedImages);
+              console.log('Upload result:', uploadResult);
+              // Fetch updated book after image upload
+              const updatedBook = await BooksService.getBook(createdBook.id);
+              console.log('Updated book after image upload:', updatedBook);
+            } catch (imgErr) {
+              console.error('Image upload error:', imgErr);
+              alert('Book created, but failed to upload images.');
+            }
+          }
           router.push(`/books/${createdBook.id}`);
         },
         onError: (error) => {
           const errorMessage = extractErrorMessage(error);
-          
           // Handle validation errors
           if (error && typeof error === 'object' && 'errors' in error) {
             const errors = (error as any).errors;

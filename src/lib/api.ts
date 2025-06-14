@@ -10,7 +10,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'X-Requested-With': 'XMLHttpRequest',
+    // 'X-Requested-With': 'XMLHttpRequest', // Removed due to CORS restrictions on backend
   },
   withCredentials: false,
   timeout: 10000,
@@ -244,11 +244,13 @@ export const createFormData = (data: Record<string, unknown>): FormData => {
   Object.entries(data).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
       if (Array.isArray(value)) {
-        value.forEach((item, index) => {
+        value.forEach((item) => {
           if (item instanceof File) {
-            formData.append(`${key}[${index}]`, item);
+            // For file arrays, append each file with the same key name (e.g., images[])
+            formData.append(`${key}[]`, item);
           } else {
-            formData.append(`${key}[${index}]`, String(item));
+            // For non-file arrays, use indexed keys
+            formData.append(`${key}[]`, String(item));
           }
         });
       } else if (value instanceof File) {
