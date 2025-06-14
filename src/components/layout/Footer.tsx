@@ -1,10 +1,19 @@
+'use client';
+
+import React, { useState } from 'react';
 import Link from 'next/link';
+import Toast from '@/components/ui/Toast';
 
 /**
  * Footer component with company info, links, and eco message
  */
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const [showToast, setShowToast] = useState(false);
+
+  const handleSocialClick = () => {
+    setShowToast(true);
+  };
 
   return (
     <footer className="bg-neutral-900 text-neutral-300">
@@ -23,34 +32,34 @@ const Footer: React.FC = () => {
               Give stories a new life and help the planet through sustainable reading.
             </p>
             <div className="flex space-x-4">
-              <a 
-                href="#" 
+              <button 
+                onClick={handleSocialClick}
                 className="text-neutral-400 hover:text-primary-400 transition-colors"
                 aria-label="Facebook"
               >
                 📘
-              </a>
-              <a 
-                href="#" 
+              </button>
+              <button 
+                onClick={handleSocialClick}
                 className="text-neutral-400 hover:text-primary-400 transition-colors"
                 aria-label="Twitter"
               >
                 🐦
-              </a>
-              <a 
-                href="#" 
+              </button>
+              <button 
+                onClick={handleSocialClick}
                 className="text-neutral-400 hover:text-primary-400 transition-colors"
                 aria-label="Instagram"
               >
                 📷
-              </a>
-              <a 
-                href="#" 
+              </button>
+              <button 
+                onClick={handleSocialClick}
                 className="text-neutral-400 hover:text-primary-400 transition-colors"
                 aria-label="LinkedIn"
               >
                 💼
-              </a>
+              </button>
             </div>
           </div>
 
@@ -76,33 +85,6 @@ const Footer: React.FC = () => {
               <li>
                 <Link href="/auth/register" className="hover:text-primary-400 transition-colors">
                   Join BookSwap
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Categories */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-white">Popular Categories</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/books?category=fiction" className="hover:text-primary-400 transition-colors">
-                  📚 Fiction
-                </Link>
-              </li>
-              <li>
-                <Link href="/books?category=non-fiction" className="hover:text-primary-400 transition-colors">
-                  📖 Non-Fiction
-                </Link>
-              </li>
-              <li>
-                <Link href="/books?category=textbooks" className="hover:text-primary-400 transition-colors">
-                  🎓 Textbooks
-                </Link>
-              </li>
-              <li>
-                <Link href="/books?category=children" className="hover:text-primary-400 transition-colors">
-                  🧸 Children's Books
                 </Link>
               </li>
             </ul>
@@ -187,6 +169,15 @@ const Footer: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {showToast && (
+        <Toast
+          message="Social media integration coming soon! 🚀"
+          type="info"
+          onClose={() => setShowToast(false)}
+        />
+      )}
     </footer>
   );
 };

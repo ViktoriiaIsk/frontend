@@ -45,8 +45,10 @@ const BookCard: React.FC<BookCardProps> = ({
 
   // Handle payment success
   const handlePaymentSuccess = () => {
-    alert('Payment successful! Your order has been placed.');
+    // Removed the alert notification - direct redirect to thank you page
+    // The PaymentForm component will handle the redirect internally
     setShowPaymentModal(false);
+    console.log('Payment successful - user will be redirected to thank you page');
   };
 
   // Handle payment error

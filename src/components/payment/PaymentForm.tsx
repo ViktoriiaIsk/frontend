@@ -5,6 +5,7 @@ import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { PaymentService } from '@/lib/services/payment';
+import { LocalOrdersService } from '@/lib/services/localOrders';
 import { Book } from '@/types';
 
 interface PaymentFormProps {
@@ -71,6 +72,18 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ book, onSuccess, onError }) =
       );
 
       if (result.success) {
+        // Save order to localStorage as backup while backend has issues
+        if (result.orderId && result.paymentIntentId) {
+          LocalOrdersService.saveOrder({
+            id: result.orderId,
+            book: book,
+            totalAmount: book.price,
+            paymentIntentId: result.paymentIntentId,
+            status: 'completed',
+            shippingAddress: shippingAddress
+          });
+        }
+        
         // Call onSuccess first, then redirect
         onSuccess();
         
@@ -89,6 +102,18 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ book, onSuccess, onError }) =
         if (confirmError) {
           onError(confirmError.message || 'Payment confirmation failed');
         } else {
+          // Save order to localStorage as backup while backend has issues
+          if (result.orderId && result.paymentIntentId) {
+            LocalOrdersService.saveOrder({
+              id: result.orderId,
+              book: book,
+              totalAmount: book.price,
+              paymentIntentId: result.paymentIntentId,
+              status: 'completed',
+              shippingAddress: shippingAddress
+            });
+          }
+          
           // Call onSuccess first, then redirect
           onSuccess();
           

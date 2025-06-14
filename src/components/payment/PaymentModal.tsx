@@ -31,8 +31,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   if (!isOpen || !book) return null;
 
   const handleSuccess = () => {
+    // Don't close modal immediately - let PaymentForm handle redirect
+    // The modal will be closed when user navigates away
     onSuccess();
-    onClose();
   };
 
   const handleLoginRedirect = () => {

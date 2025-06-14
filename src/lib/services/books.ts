@@ -405,13 +405,31 @@ export class BooksService {
    */
   static async getUserBooks(): Promise<Book[]> {
     try {
-      // For now, return empty array since the endpoint doesn't exist
-      // This prevents the 404 error and allows the profile page to load
-      console.warn('getUserBooks: endpoint not available, returning empty array');
-      return [];
+      console.log('Fetching user books...');
+      const response = await api.get<ApiResponse<Book[]>>('/user/books');
+      console.log('User books response:', response.data);
+      
+      // Handle both response.data.data and response.data structures
+      const books = response.data.data || response.data;
+      
+      if (Array.isArray(books)) {
+        return books;
+      } else {
+        console.warn('Unexpected user books response format:', books);
+        return [];
+      }
     } catch (error: any) {
-      // Log full error for debugging
       console.error('Error fetching user books:', error);
+      console.error('Error status:', error?.status);
+      console.error('Error response:', error?.response?.data);
+      
+      // If endpoint doesn't exist (404), return empty array
+      if (error?.status === 404 || error?.response?.status === 404) {
+        console.warn('User books endpoint not found (404), returning empty array');
+        return [];
+      }
+      
+      // For other errors, also return empty array to prevent UI crashes
       return [];
     }
   }

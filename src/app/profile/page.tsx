@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { AuthService } from '@/lib/services/auth';
 import { BooksService } from '@/lib/services/books';
+import { LocalOrdersService } from '@/lib/services/localOrders';
 import type { User, Book } from '@/types';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
@@ -106,6 +107,42 @@ export default function ProfilePage() {
           </div>
         )}
         {/* User Orders */}
+        <div className="mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-neutral-900">My Orders</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+              <span className="text-xs sm:text-sm text-gray-600">
+                Local orders: {LocalOrdersService.getLocalOrders().length}
+              </span>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => window.location.reload()}
+                  className="flex-1 sm:flex-none text-xs sm:text-sm"
+                >
+                  Refresh
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    if (confirm('Are you sure you want to clear all local orders? This cannot be undone.')) {
+                      LocalOrdersService.clearLocalOrders();
+                      window.location.reload();
+                    }
+                  }}
+                  className="flex-1 sm:flex-none bg-red-100 text-red-700 hover:bg-red-200 border-red-200 text-xs sm:text-sm"
+                >
+                  Clear Local Orders
+                </Button>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs sm:text-sm text-gray-500 mt-2">
+            Orders are temporarily stored locally while backend issues are resolved.
+          </p>
+        </div>
         <OrderList className="mb-10" />
       </div>
       <Footer />

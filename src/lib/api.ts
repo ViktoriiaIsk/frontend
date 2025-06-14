@@ -49,14 +49,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log response structure for debugging (only in development)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('API Response:', {
-        url: response.config.url,
-        method: response.config.method,
-        status: response.status,
-        data: response.data
-      });
-    }
+          if (process.env.NODE_ENV === 'development') {
+        // Only log non-sensitive responses
+        if (!response.config.url?.includes('login') && !response.config.url?.includes('register')) {
+          console.log('API Response:', {
+            url: response.config.url,
+            method: response.config.method,
+            status: response.status,
+            dataKeys: Object.keys(response.data || {})
+          });
+        }
+      }
     return response;
   },
   (error: AxiosError) => {

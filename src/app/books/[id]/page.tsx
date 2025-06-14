@@ -112,9 +112,9 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
 
   // Handle payment success
   const handlePaymentSuccess = () => {
-    alert('Payment successful! Your order has been placed.');
-    // Optionally redirect to orders page or refresh book data
-    router.push('/profile'); // or wherever you want to redirect after purchase
+    // Removed the alert notification - direct redirect to thank you page
+    // The PaymentForm component will handle the redirect internally
+    console.log('Payment successful - user will be redirected to thank you page');
   };
 
   // Handle payment error
