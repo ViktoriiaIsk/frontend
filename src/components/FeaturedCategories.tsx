@@ -33,7 +33,9 @@ function getCategoryIcon(categoryName: string) {
   return categoryIcons[key] || '📘';
 }
 
-export default function FeaturedCategories({ categories }: { categories: any[] }) {
+import type { Category } from '@/types';
+
+export default function FeaturedCategories({ categories }: { categories: Category[] }) {
   const randomCategories = shuffleArray(categories).slice(0, 4);
   return (
     <section className="py-12 bg-white">

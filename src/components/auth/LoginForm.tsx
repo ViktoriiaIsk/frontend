@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { LoginCredentials } from '@/types';
+import { extractErrorMessage } from '@/utils';
 
 /**
  * Login form component
@@ -70,32 +71,22 @@ const LoginForm: React.FC = () => {
       await login(formData);
       console.log('Login successful, redirecting...');
       router.push('/'); // Redirect to home after successful login
-    } catch (error: any) {
-      console.error('Login error:', error);
+    } catch (error: unknown) {
+      const errorMessage = extractErrorMessage(error);
       
-      // Enhanced error handling
-      if (error && typeof error === 'object') {
-        // Handle validation errors from API
-        if (error.errors && typeof error.errors === 'object') {
-          const errorMessages: Record<string, string> = {};
-          Object.entries(error.errors).forEach(([field, messages]) => {
-            if (Array.isArray(messages) && messages.length > 0) {
-              errorMessages[field] = messages[0];
-            }
-          });
-          setErrors(errorMessages);
-        } 
-        // Handle general error message
-        else if (error.message) {
-          setErrors({ general: error.message });
-        }
-        // Handle network or other errors
-        else {
-          setErrors({ general: 'An error occurred during login. Please try again.' });
-        }
+      // Handle validation errors
+      if (error && typeof error === 'object' && 'errors' in error) {
+        const errors = (error as { errors: Record<string, string[]> }).errors;
+        Object.entries(errors).forEach(([field, messages]) => {
+          if (Array.isArray(messages) && messages.length > 0) {
+            setErrors(prev => ({
+              ...prev,
+              [field as string]: messages[0]
+            }));
+          }
+        });
       } else {
-        // Fallback for unexpected error types
-        setErrors({ general: 'An unknown error occurred. Please try again.' });
+        setErrors({ general: errorMessage });
       }
     }
   };
@@ -210,7 +201,7 @@ const LoginForm: React.FC = () => {
             {/* Register Link */}
             <div className="text-center">
               <p className="text-sm text-neutral-600">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link href="/auth/register" className="text-primary-600 hover:text-primary-500 font-medium">
                   Sign up
                 </Link>

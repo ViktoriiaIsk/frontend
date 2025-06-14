@@ -62,12 +62,12 @@ const RegisterPage: React.FC = () => {
       
       // Redirect to profile on success
       router.push('/profile');
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = extractErrorMessage(error);
       
       // Handle validation errors
       if (error && typeof error === 'object' && 'errors' in error) {
-        const errors = (error as any).errors;
+        const errors = (error as { errors: Record<string, string[]> }).errors;
         Object.entries(errors).forEach(([field, messages]) => {
           if (Array.isArray(messages) && messages.length > 0) {
             setError(field as keyof RegisterFormData, {

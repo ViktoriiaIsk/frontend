@@ -11,7 +11,9 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
-export default function BooksYouMayLike({ books }: { books: any[] }) {
+import type { Book } from '@/types';
+
+export default function BooksYouMayLike({ books }: { books: Book[] }) {
   const randomBooks = shuffleArray(books);
   return (
     <section className="py-16 bg-green-50">

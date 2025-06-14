@@ -4,6 +4,7 @@ import {
   PaymentIntentData, 
   PaymentIntentResponse, 
   PaymentConfirmData,
+  ShippingAddress,
   ApiResponse 
 } from '@/types';
 
@@ -40,7 +41,7 @@ export class PaymentService {
   static async processPaymentIntent(
     bookId: number,
     paymentMethodId: string,
-    shippingAddress: any
+    shippingAddress: ShippingAddress
   ): Promise<{ success: boolean; error?: string; requiresAction?: boolean; clientSecret?: string }> {
     try {
       const stripe = await this.getStripeInstance();
@@ -99,13 +100,9 @@ export class PaymentService {
    */
   static async createPaymentIntent(data: PaymentIntentData): Promise<PaymentIntentResponse> {
     try {
-      const response = await api.post<ApiResponse<PaymentIntentResponse>>(
-        endpoints.payment.createIntent,
-        data
-      );
-
-      return response.data.data;
-    } catch (error) {
+      const response = await api.post<PaymentIntentResponse>('/payment/create-intent', data);
+      return response.data;
+    } catch (error: unknown) {
       console.error('Create payment intent error:', error);
       throw error;
     }
@@ -136,7 +133,7 @@ export class PaymentService {
    */
   static async createBookPaymentIntent(
     bookId: number,
-    shippingAddress: any
+    shippingAddress: ShippingAddress
   ): Promise<{ success: boolean; orderId?: number; clientSecret?: string; error?: string }> {
     try {
       // Validate input data
@@ -227,7 +224,7 @@ export class PaymentService {
    * @param shippingAddress - Shipping address
    * @returns Validation result
    */
-  static validatePaymentData(bookId: number, shippingAddress: any): { valid: boolean; errors: string[] } {
+  static validatePaymentData(bookId: number, shippingAddress: ShippingAddress): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     if (!bookId || bookId <= 0) {
@@ -248,6 +245,8 @@ export class PaymentService {
       errors,
     };
   }
+
+
 }
 
 export default PaymentService; 

@@ -1,6 +1,7 @@
 import { BooksService } from '@/lib/services/books';
-import BookCard from '@/components/books/BookCard';
 import Navigation from '@/components/layout/Navigation';
+import Footer from '@/components/layout/Footer';
+import BookCard from '@/components/books/BookCard';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
@@ -14,17 +15,16 @@ function buildQuery(params: Record<string, any>) {
 }
 
 // Next.js App Router: searchParams тепер асинхронні, треба await
-export default async function BooksPage({ searchParams }: { searchParams: Record<string, string> }) {
-  // Обов'язково await searchParams (Next.js 14+)
-  const resolvedSearchParams = await searchParams;
+export default async function BooksPage(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const searchParams = await props.searchParams;
   // SSR: отримуємо фільтри з URL
   const filters = {
-    search: resolvedSearchParams?.search || '',
-    category_id: resolvedSearchParams?.category ? parseInt(resolvedSearchParams.category) : undefined,
-    page: resolvedSearchParams?.page ? parseInt(resolvedSearchParams.page) : 1,
+    search: Array.isArray(searchParams?.search) ? searchParams.search[0] : (searchParams?.search || ''),
+    category_id: searchParams?.category ? parseInt(Array.isArray(searchParams.category) ? searchParams.category[0] : searchParams.category) : undefined,
+    page: searchParams?.page ? parseInt(Array.isArray(searchParams.page) ? searchParams.page[0] : searchParams.page) : 1,
     per_page: 12,
-    min_price: resolvedSearchParams?.min_price ? parseInt(resolvedSearchParams.min_price) : undefined,
-    max_price: resolvedSearchParams?.max_price ? parseInt(resolvedSearchParams.max_price) : undefined,
+    min_price: searchParams?.min_price ? parseInt(Array.isArray(searchParams.min_price) ? searchParams.min_price[0] : searchParams.min_price) : undefined,
+    max_price: searchParams?.max_price ? parseInt(Array.isArray(searchParams.max_price) ? searchParams.max_price[0] : searchParams.max_price) : undefined,
   };
   const booksResponse = await BooksService.getBooks(filters);
   const categories = await BooksService.getCategories();
@@ -119,6 +119,7 @@ export default async function BooksPage({ searchParams }: { searchParams: Record
           ))}
         </div>
       </div>
+      <Footer />
     </div>
   );
 } 

@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Book } from '@/types';
+import { PaymentService } from '@/lib/services/payment';
 
 interface UsePurchaseReturn {
   initiating: boolean;
-  initiatePurchase: (book: Book) => void;
+  initiatePurchase: (bookId: number) => Promise<{ success: boolean; orderId?: number; clientSecret?: string; error?: string; }>;
   error: string | null;
   showPaymentForm: boolean;
   selectedBook: Book | null;
@@ -15,21 +15,31 @@ interface UsePurchaseReturn {
  * Hook for handling book purchase flow with Payment Intent
  */
 export function usePurchase(): UsePurchaseReturn {
-  const [initiating, setInitiating] = useState(false);
+  const [isInitiating, setIsInitiating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
-  const router = useRouter();
 
-  const initiatePurchase = (book: Book) => {
-    if (book.status !== 'available') {
-      setError('Book is not available for purchase');
-      return;
-    }
-
+  const initiatePurchase = async (bookId: number) => {
+    setIsInitiating(true);
     setError(null);
-    setSelectedBook(book);
-    setShowPaymentForm(true);
+    
+    try {
+      const result = await PaymentService.createBookPaymentIntent(bookId, {
+        street: '',
+        city: '',
+        state: '',
+        postal_code: '',
+        country: 'BE'
+      });
+      return result;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to initiate purchase';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsInitiating(false);
+    }
   };
 
   const closePaymentForm = () => {
@@ -39,7 +49,7 @@ export function usePurchase(): UsePurchaseReturn {
   };
 
   return {
-    initiating,
+    initiating: isInitiating,
     initiatePurchase,
     error,
     showPaymentForm,

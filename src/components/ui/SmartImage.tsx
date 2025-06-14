@@ -77,6 +77,7 @@ export default function SmartImage({
       {...props}
       src={currentSrc}
       onError={handleImageError}
+      alt={props.alt || 'Book image'}
       // Add unoptimized prop for external images to prevent Next.js optimization issues
       unoptimized={currentSrc.startsWith('http')}
     />

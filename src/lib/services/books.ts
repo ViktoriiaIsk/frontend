@@ -1,5 +1,5 @@
 import { api, endpoints, buildQueryString, createFormData } from '@/lib/api';
-import {
+import type {
   Book,
   CreateBookData,
   BookFilters,
@@ -99,20 +99,12 @@ export class BooksService {
    */
   static async getBook(id: number): Promise<Book> {
     try {
-      const response = await api.get<ApiResponse<Book>>(
-        endpoints.books.show(id)
-      );
-      
-      // Handle both response.data.data and response.data structures
-      const book = response.data.data || response.data;
-      
-      // Validate that we have book data
-      if (!book) {
-        throw new Error('Invalid book data from server');
-      }
-      
-      return book;
-    } catch (error) {
+      console.log(`Fetching book with ID: ${id}`);
+      const response = await api.get<Book>(`/books/${id}`);
+      console.log('Book response:', response.data);
+      return response.data;
+    } catch (error: unknown) {
+      console.error('Get book error:', error);
       throw error;
     }
   }
@@ -177,8 +169,9 @@ export class BooksService {
    */
   static async deleteBook(id: number): Promise<void> {
     try {
-      await api.delete(endpoints.books.delete(id));
-    } catch (error) {
+      await api.delete(`/books/${id}`);
+    } catch (error: unknown) {
+      console.error('Delete book error:', error);
       throw error;
     }
   }
@@ -189,45 +182,23 @@ export class BooksService {
    * @param images - Array of image files
    * @returns Promise with updated book data
    */
-  static async uploadBookImages(bookId: number, images: File[]): Promise<Book> {
+  static async uploadBookImages(bookId: number, images: File[]): Promise<{ success: boolean; message: string }> {
     try {
-      // Alternative FormData creation for better backend compatibility
       const formData = new FormData();
       
-      // Simple approach - append each image with 'images' key
+      // Add each image with the key 'images[]' (Laravel expects array format)
       images.forEach((image) => {
-        formData.append('images', image);
+        formData.append('images[]', image);
       });
-      
-      // Debug logging
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Uploading images:', images.length, 'files');
-        console.log('FormData entries:');
-        for (let pair of formData.entries()) {
-          console.log(pair[0], pair[1]);
-        }
-      }
-      
-      const response = await api.post<ApiResponse<Book>>(
-        endpoints.books.images(bookId),
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-      
-      // Handle both response.data.data and response.data structures
-      const book = response.data.data || response.data;
-      
-      // Validate that we have book data
-      if (!book) {
-        throw new Error('Invalid book data from server');
-      }
-      
-      return book;
-    } catch (error) {
+
+      const response = await api.post(`/books/${bookId}/images`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      return response.data;
+    } catch (error: unknown) {
       console.error('Upload images error:', error);
       throw error;
     }

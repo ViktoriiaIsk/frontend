@@ -4,6 +4,7 @@ import { AuthService } from '@/lib/services/auth';
 import { BooksService } from '@/lib/services/books';
 import type { User, Book } from '@/types';
 import Navigation from '@/components/layout/Navigation';
+import Footer from '@/components/layout/Footer';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
@@ -35,16 +36,16 @@ export default function ProfilePage() {
       try {
         const userData = await AuthService.getCurrentUser();
         setUser(userData);
-      } catch (e: any) {
-        setProfileError(e?.message || 'Failed to load profile data');
+      } catch (e: unknown) {
+        setProfileError(e instanceof Error ? e.message : 'Failed to load profile data');
         setLoading(false);
         return;
       }
       try {
         const books = await BooksService.getUserBooks();
         setUserBooks(books);
-      } catch (e: any) {
-        setBooksError(e?.message || 'Failed to load your books');
+      } catch (e: unknown) {
+        setBooksError(e instanceof Error ? e.message : 'Failed to load your books');
       } finally {
         setLoading(false);
       }
@@ -107,6 +108,7 @@ export default function ProfilePage() {
         <h2 className="text-2xl font-bold text-neutral-900 mb-4">My Orders</h2>
         <div className="text-neutral-500">(Order history coming soon)</div>
       </div>
+      <Footer />
     </div>
   );
 } 

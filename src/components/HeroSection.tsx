@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import Button from '@/components/ui/Button';
 import Navigation from '@/components/layout/Navigation';
 
 export default function HeroSection() {
@@ -8,19 +10,22 @@ export default function HeroSection() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-neutral-900 mb-6">
-            Books find new
-            <span className="text-primary-600 block">readers</span>
+            Give Books a <span className="text-primary-600">Second Life</span>
           </h1>
-          <p className="text-lg md:text-xl text-neutral-600 mb-8 max-w-2xl mx-auto">
-            Online marketplace for buying and selling second-hand books. Give stories a new life and help the planet.
+          <p className="text-xl text-neutral-700 mb-8 max-w-3xl mx-auto">
+            Buy and sell pre-loved books in our sustainable marketplace. Every book deserves another reader, and every reader deserves great books at great prices.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <a href="/books">
-              <button className="btn btn-primary w-full sm:w-auto text-lg">🔍 Browse Books</button>
-            </a>
-            <a href="/books/create">
-              <button className="btn btn-secondary w-full sm:w-auto text-lg">💰 Sell Books</button>
-            </a>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/books">
+              <Button size="lg" className="w-full sm:w-auto">
+                Browse Books
+              </Button>
+            </Link>
+            <Link href="/books/create">
+              <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+                Sell Your Books
+              </Button>
+            </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
             <div className="text-center">

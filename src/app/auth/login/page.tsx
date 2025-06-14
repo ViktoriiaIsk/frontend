@@ -57,12 +57,12 @@ const LoginPage: React.FC = () => {
       
       // Redirect to profile on success
       router.push('/profile');
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = extractErrorMessage(error);
       
       // Handle validation errors
       if (error && typeof error === 'object' && 'errors' in error) {
-        const errors = (error as any).errors;
+        const errors = (error as { errors: Record<string, string[]> }).errors;
         Object.entries(errors).forEach(([field, messages]) => {
           if (Array.isArray(messages) && messages.length > 0) {
             setError(field as keyof LoginFormData, {
@@ -172,7 +172,7 @@ const LoginPage: React.FC = () => {
                 <div className="w-full border-t border-neutral-200" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-neutral-500">Don't have an account?</span>
+                <span className="px-2 bg-white text-neutral-500">Don&apos;t have an account?</span>
               </div>
             </div>
 

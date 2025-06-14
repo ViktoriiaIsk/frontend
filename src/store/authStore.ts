@@ -90,9 +90,10 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false 
           });
           
-        } catch (error) {
+        } catch (err) {
           set({ isLoading: false });
-          throw error;
+          const message = err instanceof Error ? err.message : 'Registration failed';
+          throw new Error(message);
         }
       },
 

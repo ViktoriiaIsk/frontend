@@ -1,21 +1,33 @@
 {
-  "name": "BookSwap",
+  "name": "BookSwap - Online Book Marketplace",
   "short_name": "BookSwap",
-  "description": "A platform for swapping and buying books",
+  "description": "Online marketplace for buying and selling second-hand books. Give stories a new life and help the planet.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2d5a27",
+  "background_color": "#fefcf8",
+  "theme_color": "#22c55e",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["shopping", "books", "marketplace"],
   "icons": [
     {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 } 

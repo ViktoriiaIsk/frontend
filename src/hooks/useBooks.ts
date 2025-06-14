@@ -104,9 +104,9 @@ export const useUploadBookImages = () => {
   return useMutation({
     mutationFn: ({ bookId, images }: { bookId: number; images: File[] }) =>
       BooksService.uploadBookImages(bookId, images),
-    onSuccess: (updatedBook) => {
-      // Update the book in cache with new images
-      queryClient.setQueryData(['book', updatedBook.id], updatedBook);
+    onSuccess: (_, { bookId }) => {
+      // Invalidate the book cache to refetch with new images
+      queryClient.invalidateQueries({ queryKey: ['book', bookId] });
       queryClient.invalidateQueries({ queryKey: ['books'] });
     },
   });

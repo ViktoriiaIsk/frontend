@@ -1,3 +1,22 @@
+// Constants for book conditions and statuses
+export const BOOK_CONDITIONS = [
+  'New',
+  'Like New', 
+  'Good',
+  'Fair',
+  'Poor'
+] as const;
+
+export const BOOK_STATUSES = [
+  'available',
+  'sold', 
+  'reserved',
+  'pending'
+] as const;
+
+export type BookCondition = typeof BOOK_CONDITIONS[number];
+export type BookStatus = typeof BOOK_STATUSES[number];
+
 // User types
 export interface User {
   id: number;
@@ -34,10 +53,10 @@ export interface Book {
   author: string;
   description: string;
   price: string;
-  condition: string;
+  condition: BookCondition;
   category_id: number;
   owner_id: number;
-  status: 'available' | 'reserved' | 'sold';
+  status: BookStatus;
   created_at: string;
   updated_at: string;
   images: BookImage[];
@@ -70,6 +89,7 @@ export interface CreateBookData {
   description: string;
   price: string;
   category_id: number;
+  condition: BookCondition;
 }
 
 // Review types

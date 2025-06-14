@@ -4,6 +4,11 @@ import { ApiError, BookFilters } from '@/types';
 // Base API configuration - using your actual API
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://13.37.117.93/api';
 
+// Debug: log the API URL in development
+if (process.env.NODE_ENV === 'development') {
+  console.log('API_BASE_URL:', API_BASE_URL);
+}
+
 // Create axios instance
 export const api = axios.create({
   baseURL: API_BASE_URL,

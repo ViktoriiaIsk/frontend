@@ -37,7 +37,7 @@ const Navigation: React.FC = () => {
 
   // Authenticated user navigation items
   const authNavItems = [
-    { href: '/books/create', label: 'Sell Book', icon: '��' },
+    { href: '/books/create', label: 'Sell Book', icon: '💰' },
     { href: '/profile', label: 'Profile', icon: '👤' },
   ];
 

@@ -33,7 +33,7 @@ const BookCard: React.FC<BookCardProps> = ({
                    '/images/placeholder-book.svg';
 
   const handleBuyNow = () => {
-    initiatePurchase(book);
+    initiatePurchase(book.id);
   };
 
   if (variant === 'list') {

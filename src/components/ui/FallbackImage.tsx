@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface FallbackImageProps {
   src: string;
@@ -54,18 +55,24 @@ export default function FallbackImage({
   }
 
   return (
-    <img
+    <Image
       src={currentSrc}
       alt={alt}
       className={className}
-      width={width}
-      height={height}
+      width={width || 400}
+      height={height || 600}
       onError={handleImageError}
       style={{
         objectFit: 'cover',
         width: '100%',
         height: '100%',
       }}
+      // Optimize external images
+      unoptimized={currentSrc.startsWith('http')}
+      // Add priority for above-the-fold images
+      priority={false}
+      // Add loading optimization
+      loading="lazy"
     />
   );
 } 

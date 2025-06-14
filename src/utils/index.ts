@@ -264,10 +264,18 @@ export const getImageUrl = (path: string): string => {
 
 // DEPRECATED: Backend now returns ready-to-use URLs with proper CORS
 // This function is kept for backward compatibility only
-export const getImageUrlAlternatives = (path: string): string[] => {
-  // No alternatives needed - backend provides correct URLs
-  return [];
-};
+export function getImageUrlAlternatives(imagePath: string): string[] {
+  if (!imagePath) return [];
+  
+  // DEPRECATED: This function is kept for backward compatibility
+  // Backend now returns proper image URLs with CORS headers
+  const alternatives = [
+    `/storage/book-images/${imagePath}`,
+    `/book-images/${imagePath}`,
+  ];
+  
+  return alternatives;
+}
 
 // Error message extractor
 export const extractErrorMessage = (error: unknown): string => {
