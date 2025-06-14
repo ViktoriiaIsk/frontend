@@ -100,11 +100,42 @@ export class BooksService {
   static async getBook(id: number): Promise<Book> {
     try {
       console.log(`Fetching book with ID: ${id}`);
-      const response = await api.get<Book>(`/books/${id}`);
-      console.log('Book response:', response.data);
-      return response.data;
+      console.log(`Full URL: ${api.defaults.baseURL}/books/${id}`);
+      
+      const response = await api.get<ApiResponse<Book> | Book>(`/books/${id}`);
+      console.log('Book response status:', response.status);
+      console.log('Book response data:', response.data);
+      
+      // Handle both response.data.data and response.data structures
+      let book: Book;
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        // API wrapped response
+        book = (response.data as ApiResponse<Book>).data;
+        console.log('Using wrapped response data:', book);
+      } else {
+        // Direct book data
+        book = response.data as Book;
+        console.log('Using direct response data:', book);
+      }
+      
+      // Validate that we have book data
+      if (!book || !book.id) {
+        console.error('Invalid book data received:', book);
+        throw new Error('Invalid book data from server');
+      }
+      
+      return book;
     } catch (error: unknown) {
-      console.error('Get book error:', error);
+      console.error('Get book error details:', error);
+      
+      // More detailed error logging
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as any;
+        console.error('Response status:', axiosError.response?.status);
+        console.error('Response data:', axiosError.response?.data);
+        console.error('Request URL:', axiosError.config?.url);
+      }
+      
       throw error;
     }
   }

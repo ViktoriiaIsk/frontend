@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BooksService } from '@/lib/services/books';
 import { AuthService } from '@/lib/services/auth';
+import { useDeleteBook } from '@/hooks/useBooks';
+import { extractErrorMessage } from '@/utils';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 import BookCard from '@/components/books/BookCard';
@@ -14,11 +16,15 @@ import type { Book, User } from '@/types';
 
 // Client component to handle user authentication and book ownership
 export default function BookDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
   const [book, setBook] = useState<Book | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  
+  // Delete book hook
+  const { mutate: deleteBook, isPending: isDeleting } = useDeleteBook();
 
   useEffect(() => {
     const fetchData = async (retryCount = 0) => {
@@ -26,8 +32,11 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
         const resolvedParams = await params;
         const bookId = parseInt(resolvedParams.id);
         
+        console.log(`Attempting to fetch book with ID: ${bookId} (attempt ${retryCount + 1})`);
+        
         // Fetch book data with retry logic for newly created books
         const bookData = await BooksService.getBook(bookId);
+        console.log('Successfully fetched book data:', bookData);
         setBook(bookData);
         
         // Try to get current user (may fail if not authenticated)
@@ -61,6 +70,27 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
 
     fetchData();
   }, [params]);
+
+  // Handle book deletion
+  const handleDelete = () => {
+    if (!book) return;
+    
+    const confirmed = confirm(
+      `Are you sure you want to delete "${book.title}"? This action cannot be undone.`
+    );
+    
+    if (confirmed) {
+      deleteBook(book.id, {
+        onSuccess: () => {
+          router.push('/books');
+        },
+        onError: (error: unknown) => {
+          const errorMessage = extractErrorMessage(error);
+          alert(`Failed to delete book: ${errorMessage}`);
+        }
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -203,16 +233,13 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                       </Button>
                     </Link>
                     <Button 
-                      variant="secondary" 
+                      variant="danger" 
                       className="flex-1"
-                      onClick={() => {
-                        if (confirm('Are you sure you want to delete this book?')) {
-                          // TODO: Implement delete functionality
-                          alert('Delete functionality coming soon');
-                        }
-                      }}
+                      onClick={handleDelete}
+                      loading={isDeleting}
+                      disabled={isDeleting}
                     >
-                      Delete
+                      {isDeleting ? 'Deleting...' : 'Delete'}
                     </Button>
                   </div>
                 </div>
