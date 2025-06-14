@@ -7,6 +7,7 @@ import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import OrderList from '@/components/orders/OrderList';
 import Link from 'next/link';
 
 // Helper to format date in readable way
@@ -104,9 +105,8 @@ export default function ProfilePage() {
             ))}
           </div>
         )}
-        {/* User Orders (TODO) */}
-        <h2 className="text-2xl font-bold text-neutral-900 mb-4">My Orders</h2>
-        <div className="text-neutral-500">(Order history coming soon)</div>
+        {/* User Orders */}
+        <OrderList className="mb-10" />
       </div>
       <Footer />
     </div>

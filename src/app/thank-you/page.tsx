@@ -1,0 +1,193 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { CheckCircleIcon, ArrowRightIcon, ShoppingBagIcon } from '@heroicons/react/24/solid';
+import { Order } from '@/types';
+import { OrderService } from '@/lib/services/orders';
+import { PaymentService } from '@/lib/services/payment';
+
+export default function ThankYouPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const orderId = searchParams.get('order_id');
+  const paymentIntentId = searchParams.get('payment_intent');
+
+  useEffect(() => {
+    if (!orderId) {
+      setError('Не знайдено інформацію про замовлення');
+      setLoading(false);
+      return;
+    }
+
+    const fetchOrderDetails = async () => {
+      try {
+        const orderData = await OrderService.getOrder(parseInt(orderId));
+        setOrder(orderData);
+      } catch (err) {
+        console.error('Error fetching order:', err);
+        setError('Не вдалося завантажити деталі замовлення');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrderDetails();
+  }, [orderId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Завантаження деталей замовлення...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center bg-white rounded-lg shadow-lg p-8">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <ShoppingBagIcon className="w-8 h-8 text-red-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Помилка</h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => router.push('/')}
+            className="w-full bg-gray-900 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+          >
+            Повернутися на головну
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="container mx-auto px-4 py-16">
+        <div className="max-w-2xl mx-auto">
+          {/* Success Header */}
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircleIcon className="w-12 h-12 text-green-600" />
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              Дякуємо за покупку!
+            </h1>
+            <p className="text-xl text-gray-600">
+              Ваше замовлення успішно оформлено
+            </p>
+          </div>
+
+          {/* Order Details Card */}
+          <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <div className="border-b border-gray-200 pb-6 mb-6">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                Деталі замовлення
+              </h2>
+              <p className="text-gray-600">
+                Номер замовлення: <span className="font-mono font-medium">#{order.id}</span>
+              </p>
+              <p className="text-gray-600">
+                Дата: {OrderService.formatOrderDate(order.created_at)}
+              </p>
+            </div>
+
+            {/* Book Information */}
+            <div className="flex items-start space-x-4 mb-6">
+              {order.book.first_image ? (
+                <img
+                  src={order.book.first_image}
+                  alt={order.book.title}
+                  className="w-20 h-28 object-cover rounded-lg shadow-md"
+                />
+              ) : (
+                <div className="w-20 h-28 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <ShoppingBagIcon className="w-8 h-8 text-gray-400" />
+                </div>
+              )}
+              
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  {order.book.title}
+                </h3>
+                <p className="text-gray-600 mb-2">Автор: {order.book.author}</p>
+                <p className="text-gray-600 mb-2">Стан: {order.book.condition}</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {PaymentService.formatCurrency(parseFloat(order.total_amount) * 100)}
+                </p>
+              </div>
+            </div>
+
+            {/* Shipping Address */}
+            <div className="border-t border-gray-200 pt-6">
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                Адреса доставки
+              </h4>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-gray-800">{order.shipping_address.street}</p>
+                <p className="text-gray-800">
+                  {order.shipping_address.city}, {order.shipping_address.postal_code}
+                </p>
+                <p className="text-gray-800">{order.shipping_address.country}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Information Card */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
+            <h3 className="text-lg font-semibold text-blue-900 mb-3">
+              Що далі?
+            </h3>
+            <ul className="space-y-2 text-blue-800">
+              <li>• Ви отримаєте підтвердження на email протягом декількох хвилин</li>
+              <li>• Продавець зв'яжеться з вами для узгодження доставки</li>
+              <li>• Відстежити статус замовлення можна в особистому кабінеті</li>
+              <li>• За питаннями звертайтеся до служби підтримки</li>
+            </ul>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button
+              onClick={() => router.push('/profile')}
+              className="flex items-center justify-center space-x-2 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+            >
+              <span>Мої замовлення</span>
+              <ArrowRightIcon className="w-4 h-4" />
+            </button>
+            
+            <button
+              onClick={() => router.push('/')}
+              className="flex items-center justify-center space-x-2 bg-gray-900 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+            >
+              <span>Продовжити покупки</span>
+              <ArrowRightIcon className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Contact Support */}
+          <div className="text-center mt-8">
+            <p className="text-gray-600">
+              Маєте питання? {' '}
+              <a 
+                href="mailto:support@bookswap.com" 
+                className="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Зверніться до служби підтримки
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+} 

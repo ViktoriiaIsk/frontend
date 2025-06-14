@@ -111,7 +111,11 @@ export const useAuthStore = create<AuthState>()(
         const { token } = get();
         
         if (!token) {
-          set({ isAuthenticated: false });
+          set({ 
+            isAuthenticated: false,
+            isLoading: false,
+            user: null 
+          });
           return;
         }
 
@@ -134,8 +138,14 @@ export const useAuthStore = create<AuthState>()(
           });
           
         } catch (error) {
-          // Token is invalid, clear auth
-          get().logout();
+          // Token is invalid, clear auth but don't redirect
+          set({ 
+            user: null, 
+            token: null, 
+            isAuthenticated: false,
+            isLoading: false
+          });
+          removeAuthToken();
         }
       },
 

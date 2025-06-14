@@ -73,10 +73,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Clear stored token
       removeAuthToken();
-      // Redirect to login (only in browser)
-      if (typeof window !== 'undefined') {
-        window.location.href = '/auth/login';
-      }
+      // Don't automatically redirect to login - let components handle it
+      // This prevents unwanted redirects on public pages
     }
 
     // Handle 403 errors (forbidden)

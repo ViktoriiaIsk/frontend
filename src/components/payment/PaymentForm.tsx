@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { PaymentService } from '@/lib/services/payment';
 import { Book } from '@/types';
@@ -18,6 +19,7 @@ interface PaymentFormProps {
 const PaymentForm: React.FC<PaymentFormProps> = ({ book, onSuccess, onError }) => {
   const stripe = useStripe();
   const elements = useElements();
+  const router = useRouter();
   const [processing, setProcessing] = useState(false);
 
   // Default shipping address for Belgium
@@ -69,6 +71,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ book, onSuccess, onError }) =
       );
 
       if (result.success) {
+        // Redirect to thank you page with order details
+        const searchParams = new URLSearchParams({
+          order_id: result.orderId?.toString() || '',
+          payment_intent: result.paymentIntentId || ''
+        });
+        router.push(`/thank-you?${searchParams.toString()}`);
         onSuccess();
       } else if (result.requiresAction && result.clientSecret) {
         // Handle 3D Secure
@@ -77,6 +85,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ book, onSuccess, onError }) =
         if (confirmError) {
           onError(confirmError.message || 'Payment confirmation failed');
         } else {
+          // Redirect to thank you page after 3D Secure success
+          const searchParams = new URLSearchParams({
+            order_id: result.orderId?.toString() || '',
+            payment_intent: result.paymentIntentId || ''
+          });
+          router.push(`/thank-you?${searchParams.toString()}`);
           onSuccess();
         }
       } else {

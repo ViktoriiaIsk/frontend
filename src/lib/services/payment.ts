@@ -42,7 +42,7 @@ export class PaymentService {
     bookId: number,
     paymentMethodId: string,
     shippingAddress: ShippingAddress
-  ): Promise<{ success: boolean; error?: string; requiresAction?: boolean; clientSecret?: string }> {
+  ): Promise<{ success: boolean; error?: string; requiresAction?: boolean; clientSecret?: string; orderId?: number; paymentIntentId?: string }> {
     try {
       const stripe = await this.getStripeInstance();
       if (!stripe) {
@@ -74,7 +74,11 @@ export class PaymentService {
           order_id: intentResponse.order_id,
         });
 
-        return { success: true };
+        return { 
+          success: true, 
+          orderId: intentResponse.order_id,
+          paymentIntentId: paymentIntent.id 
+        };
       }
 
       if (paymentIntent?.status === 'requires_action') {
