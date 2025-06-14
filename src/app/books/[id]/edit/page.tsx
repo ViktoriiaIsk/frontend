@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import Image from 'next/image';
 
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import FallbackImage from '@/components/ui/FallbackImage';
 import { useCategories, useUpdateBook, useDeleteBook } from '@/hooks/useBooks';
 import { CreateBookData, BOOK_CONDITIONS, BookCondition, Book } from '@/types';
 import { extractErrorMessage } from '@/utils';
@@ -391,14 +391,11 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                   {book.images.map((image, index) => (
-                    <div key={index} className="relative">
-                      <Image
-                        src={image.image_url || '/images/placeholder-book.svg'}
+                    <div key={index} className="relative aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden">
+                      <FallbackImage
+                        src={image.url || '/images/placeholder-book.svg'}
                         alt={`${book.title} - Image ${index + 1}`}
-                        width={100}
-                        height={120}
-                        className="w-full h-full object-cover rounded"
-                        unoptimized
+                        className="w-full h-full object-cover"
                       />
                     </div>
                   ))}
@@ -441,14 +438,11 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
               {previewUrls.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                   {previewUrls.map((url, index) => (
-                    <div key={index} className="relative">
-                      <Image
+                    <div key={index} className="relative aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden">
+                      <FallbackImage
                         src={url}
                         alt={`New Preview ${index + 1}`}
-                        width={100}
-                        height={120}
-                        className="w-full h-full object-cover rounded"
-                        unoptimized
+                        className="w-full h-full object-cover"
                       />
                       <button
                         type="button"

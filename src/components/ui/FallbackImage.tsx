@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 
 interface FallbackImageProps {
   src: string;
@@ -10,10 +9,11 @@ interface FallbackImageProps {
   fallback?: string;
   width?: number;
   height?: number;
+  onClick?: () => void;
 }
 
 /**
- * Simple fallback image component using regular img tag
+ * Simple fallback image component using regular img tag for better compatibility
  * Backend now returns ready-to-use image URLs with proper CORS headers
  */
 export default function FallbackImage({ 
@@ -23,6 +23,7 @@ export default function FallbackImage({
   fallback = '/images/placeholder-book.svg',
   width,
   height,
+  onClick,
 }: FallbackImageProps) {
   const [currentSrc, setCurrentSrc] = useState(() => {
     if (!src || src === 'null' || src === 'undefined') {
@@ -54,25 +55,21 @@ export default function FallbackImage({
     return null;
   }
 
+  // Use regular img tag for better compatibility with external images
   return (
-    <Image
+    <img
       src={currentSrc}
       alt={alt}
       className={className}
-      width={width || 400}
-      height={height || 600}
       onError={handleImageError}
+      onClick={onClick}
       style={{
         objectFit: 'cover',
         width: '100%',
         height: '100%',
       }}
-      // Optimize external images
-      unoptimized={currentSrc.startsWith('http')}
-      // Add priority for above-the-fold images
-      priority={false}
-      // Add loading optimization
       loading="lazy"
+      crossOrigin="anonymous"
     />
   );
 } 
