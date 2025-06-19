@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -27,9 +27,9 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 /**
- * Register page component
+ * Register page component content
  */
-const RegisterPage: React.FC = () => {
+const RegisterPageContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -254,6 +254,39 @@ const RegisterPage: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Loading fallback component
+function RegisterPageFallback() {
+  return (
+    <div className="min-h-screen bg-accent-cream flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <Link href="/" className="inline-block">
+            <div className="flex items-center justify-center space-x-2">
+              <span className="text-3xl">📖</span>
+              <span className="text-2xl font-bold text-primary-700">BookSwap</span>
+            </div>
+          </Link>
+          <div className="mt-6">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
+            <p className="text-neutral-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Register page component with Suspense boundary
+ */
+const RegisterPage: React.FC = () => {
+  return (
+    <Suspense fallback={<RegisterPageFallback />}>
+      <RegisterPageContent />
+    </Suspense>
   );
 };
 

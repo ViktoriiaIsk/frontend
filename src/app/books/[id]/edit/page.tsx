@@ -75,6 +75,51 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
     checkAuth();
   }, [checkAuth]);
 
+  // Load book data
+  useEffect(() => {
+    // Skip loading if not authenticated
+    if (!isAuthenticated && !authLoading) {
+      return;
+    }
+    
+    const loadBook = async () => {
+      try {
+        const resolvedParams = await params;
+        const bookId = parseInt(resolvedParams.id);
+        
+        // Fetch book data
+        const bookData = await BooksService.getBook(bookId);
+        
+        // Check if user is the owner
+        const currentUser = await AuthService.getCurrentUser();
+        if (bookData.owner_id !== currentUser.id) {
+          setError('You are not authorized to edit this book');
+          return;
+        }
+        
+        setBook(bookData);
+        
+        // Populate form with existing data
+        reset({
+          title: bookData.title,
+          author: bookData.author,
+          description: bookData.description,
+          price: bookData.price,
+          category_id: bookData.category_id,
+          condition: bookData.condition,
+        });
+        
+      } catch (err: unknown) {
+        console.error('Error loading book:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load book');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBook();
+  }, [params, reset, isAuthenticated, authLoading]);
+
   // Show auth required modal instead of automatic redirect
   if (!authLoading && !isAuthenticated) {
     return (
@@ -116,46 +161,6 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
       </div>
     );
   }
-
-  // Load book data
-  useEffect(() => {
-    const loadBook = async () => {
-      try {
-        const resolvedParams = await params;
-        const bookId = parseInt(resolvedParams.id);
-        
-        // Fetch book data
-        const bookData = await BooksService.getBook(bookId);
-        
-        // Check if user is the owner
-        const currentUser = await AuthService.getCurrentUser();
-        if (bookData.owner_id !== currentUser.id) {
-          setError('You are not authorized to edit this book');
-          return;
-        }
-        
-        setBook(bookData);
-        
-        // Populate form with existing data
-        reset({
-          title: bookData.title,
-          author: bookData.author,
-          description: bookData.description,
-          price: bookData.price,
-          category_id: bookData.category_id,
-          condition: bookData.condition,
-        });
-        
-      } catch (err: unknown) {
-        console.error('Error loading book:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load book');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadBook();
-  }, [params, reset]);
 
   // Show loading while checking auth
   if (authLoading) {

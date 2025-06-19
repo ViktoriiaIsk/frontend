@@ -1,16 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { BooksService } from '@/lib/services/books';
-import { useAuthStore } from '@/store/authStore';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 import BooksList from '@/components/books/BooksList';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
-import { Book, Category, PaginatedResponse } from '@/types';
+import { Book, Category } from '@/types';
 
 function buildQuery(params: Record<string, any>) {
   const q = Object.entries(params)
@@ -20,10 +19,8 @@ function buildQuery(params: Record<string, any>) {
   return q ? `?${q}` : '';
 }
 
-export default function BooksPage() {
-  const router = useRouter();
+function BooksContent() {
   const searchParams = useSearchParams();
-  const { isAuthenticated, isLoading: authLoading, checkAuth } = useAuthStore();
   
   const [books, setBooks] = useState<Book[]>([]);
   const [pagination, setPagination] = useState<any>(null);
@@ -41,22 +38,8 @@ export default function BooksPage() {
     max_price: searchParams?.get('max_price') ? parseInt(searchParams.get('max_price')!) : undefined,
   };
 
-  // Check authentication on page load
+  // Load data on mount and when search params change
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/auth/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
-
-  // Load data when authenticated
-  useEffect(() => {
-    if (!isAuthenticated || authLoading) return;
-    
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -84,28 +67,7 @@ export default function BooksPage() {
     };
 
     fetchData();
-  }, [isAuthenticated, authLoading, searchParams]);
-
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-accent-cream">
-        <Navigation />
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Checking authentication...</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  // Redirect if not authenticated (will be handled by useEffect above)
-  if (!isAuthenticated) {
-    return null;
-  }
+  }, [searchParams, filters]);
 
   // Show loading while fetching data
   if (loading) {
@@ -231,5 +193,29 @@ export default function BooksPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+// Loading fallback component
+function BooksPageFallback() {
+  return (
+    <div className="min-h-screen bg-accent-cream">
+      <Navigation />
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+export default function BooksPage() {
+  return (
+    <Suspense fallback={<BooksPageFallback />}>
+      <BooksContent />
+    </Suspense>
   );
 } 
