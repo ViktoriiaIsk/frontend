@@ -51,6 +51,20 @@ const CreateBookPage: React.FC = () => {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
+  // API hooks - MUST be called before any conditional returns
+  const { mutate: createBook, isPending: isCreating } = useCreateBook();
+  const { data: categoriesResponse, isLoading: isCategoriesLoading } = useCategories();
+
+  // Form setup - MUST be called before any conditional returns
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<CreateBookFormData>({
+    resolver: zodResolver(createBookSchema),
+  });
+
   // Check authentication on page load
   React.useEffect(() => {
     checkAuth();
@@ -82,20 +96,6 @@ const CreateBookPage: React.FC = () => {
   if (!isAuthenticated) {
     return null;
   }
-
-  // API hooks
-  const { mutate: createBook, isPending: isCreating } = useCreateBook();
-  const { data: categoriesResponse, isLoading: isCategoriesLoading } = useCategories();
-
-  // Form setup
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setError,
-  } = useForm<CreateBookFormData>({
-    resolver: zodResolver(createBookSchema),
-  });
 
   // Handle image selection with proper validation
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {

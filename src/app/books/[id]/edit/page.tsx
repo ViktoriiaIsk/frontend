@@ -50,10 +50,25 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
   const { isAuthenticated, isLoading: authLoading, checkAuth } = useAuthStore();
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState<string | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+
+  // API hooks - MUST be called before any conditional returns
+  const { data: categoriesResponse, isLoading: isCategoriesLoading } = useCategories();
+  const { mutate: updateBook, isPending: isUpdating } = useUpdateBook();
+  const { mutate: deleteBook, isPending: isDeleting } = useDeleteBook();
+
+  // Form setup - MUST be called before any conditional returns
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError: setFormError,
+    reset,
+  } = useForm<EditBookFormData>({
+    resolver: zodResolver(editBookSchema),
+  });
 
   // Check authentication on page load
   useEffect(() => {
@@ -66,22 +81,6 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
       router.push('/auth/login');
     }
   }, [isAuthenticated, authLoading, router]);
-
-  // API hooks
-  const { data: categoriesResponse, isLoading: isCategoriesLoading } = useCategories();
-  const { mutate: updateBook, isPending: isUpdating } = useUpdateBook();
-  const { mutate: deleteBook, isPending: isDeleting } = useDeleteBook();
-
-  // Form setup
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setError: setFormError,
-    reset,
-  } = useForm<EditBookFormData>({
-    resolver: zodResolver(editBookSchema),
-  });
 
   // Load book data
   useEffect(() => {
