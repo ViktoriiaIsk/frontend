@@ -68,9 +68,7 @@ const LoginForm: React.FC = () => {
     if (!validateForm()) return;
 
     try {
-      console.log('Attempting login with:', { email: formData.email, password: '***' });
       await login(formData);
-      console.log('Login successful, redirecting...');
       
       // Check for redirect parameter
       const redirectTo = searchParams.get('redirect');

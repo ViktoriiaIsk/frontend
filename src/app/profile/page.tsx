@@ -53,8 +53,8 @@ export default function ProfilePage() {
         return;
       }
       try {
-        const books = await BooksService.getUserBooks();
-        setUserBooks(books);
+        const books = await BooksService.getBooks();
+        setUserBooks(books.data || []);
       } catch (e: unknown) {
         setBooksError(e instanceof Error ? e.message : 'Failed to load your books');
       } finally {
@@ -154,7 +154,7 @@ export default function ProfilePage() {
                   }}
                   className="flex-1 sm:flex-none bg-red-100 text-red-700 hover:bg-red-200 border-red-200 text-xs sm:text-sm"
                 >
-                  Clear Local Orders
+                  Clear My Orders
                 </Button>
               </div>
             </div>

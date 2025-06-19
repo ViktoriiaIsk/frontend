@@ -22,108 +22,31 @@ export default function OrderList({ className = '' }: OrderListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchOrders = useCallback(async () => {
-    try {
+  useEffect(() => {
+    const fetchOrders = async () => {
       setLoading(true);
       setError(null);
-      console.log('OrderList: Fetching orders...');
       
-      const data = await OrderService.getUserOrders(currentPage, 10);
-      console.log('OrderList: Received data:', data);
-      
-      // Ensure data exists and has the expected structure
-      if (!data || !Array.isArray(data.data)) {
-        console.warn('OrderList: Invalid orders data structure:', data);
+      try {
+        console.log('🔍 Fetching orders from localStorage only...');
         
-        // Try localStorage fallback immediately
+        // Get orders from localStorage only (no backend)
         const localOrders = LocalOrdersService.getLocalOrders();
-        console.log(`OrderList: Found ${localOrders.length} orders in localStorage`);
+        console.log('📦 Local orders found:', localOrders.length);
+        console.log('📋 Local orders:', localOrders);
         
-        if (localOrders.length > 0) {
-          setOrders(localOrders);
-          setTotalPages(1);
-          return;
-        }
-        
-        setOrders([]);
-        setTotalPages(1);
-        return;
-      }
-      
-      // Check if we have valid orders (not just empty objects)
-      const validOrdersCount = data.data.filter(order => 
-        order && 
-        typeof order === 'object' && 
-        order.id && 
-        order.book_id && 
-        order.total_amount
-      ).length;
-      
-      console.log(`OrderList: Found ${validOrdersCount} valid orders out of ${data.data.length} total`);
-      
-      // If we got no valid orders OR empty data, try the fallback method
-      if ((validOrdersCount === 0 || data.data.length === 0) && currentPage === 1) {
-        console.log('OrderList: No valid orders from main endpoint, trying fallbacks...');
-        
-        // First try local storage
-        const localOrders = LocalOrdersService.getLocalOrders();
-        console.log(`OrderList: Found ${localOrders.length} orders in localStorage`);
-        
-        if (localOrders.length > 0) {
-          setOrders(localOrders);
-          setTotalPages(1);
-          return;
-        }
-        
-        // If no local orders, try backend fallback
-        try {
-          const fallbackOrders = await OrderService.getRecentOrders(10);
-          console.log(`OrderList: Got ${fallbackOrders.length} orders from backend fallback`);
-          
-          if (fallbackOrders.length > 0) {
-            setOrders(fallbackOrders);
-            setTotalPages(1); // Since we're getting a limited set
-            return;
-          }
-        } catch (fallbackError) {
-          console.error('OrderList: Backend fallback method also failed:', fallbackError);
-        }
-      }
-      
-      // Use the filtered valid orders instead of all data
-      setOrders(data.data.filter(order => 
-        order && 
-        typeof order === 'object' && 
-        order.id && 
-        order.book_id && 
-        order.total_amount
-      ));
-      setTotalPages(data.last_page || 1);
-    } catch (err) {
-      console.error('OrderList: Error fetching orders:', err);
-      
-      // Try localStorage as final fallback
-      console.log('OrderList: Trying localStorage as final fallback...');
-      const localOrders = LocalOrdersService.getLocalOrders();
-      console.log(`OrderList: Found ${localOrders.length} orders in localStorage`);
-      
-      if (localOrders.length > 0) {
         setOrders(localOrders);
-        setTotalPages(1);
-        setError(null); // Clear error since we found local orders
-      } else {
-        setError('Failed to load orders from server and no local orders found');
+      } catch (error) {
+        console.error('❌ Error fetching local orders:', error);
+        setError('Failed to load orders');
         setOrders([]);
-        setTotalPages(1);
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage]);
+    };
 
-  useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
+  }, []);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -136,6 +59,10 @@ export default function OrderList({ className = '' }: OrderListProps) {
       default:
         return <ClockIcon className="w-5 h-5 text-gray-500" />;
     }
+  };
+
+  const handleRefresh = () => {
+    window.location.reload();
   };
 
   if (loading && orders.length === 0) {
@@ -160,7 +87,7 @@ export default function OrderList({ className = '' }: OrderListProps) {
           </div>
           <p className="text-sm sm:text-base text-red-600 mb-4">{error}</p>
           <button
-            onClick={fetchOrders}
+            onClick={handleRefresh}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base"
           >
             Try Again
@@ -259,7 +186,13 @@ export default function OrderList({ className = '' }: OrderListProps) {
                 
                 <div className="text-left sm:text-right flex-shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-start">
                   <p className="text-lg sm:text-xl font-bold text-gray-900">
-                    {PaymentService.formatCurrency(parseFloat(order.total_amount) * 100)}
+                    {order.total_amount && !isNaN(parseFloat(order.total_amount)) ? 
+                      PaymentService.formatCurrency(parseFloat(order.total_amount) * 100) :
+                      (order.book?.price && !isNaN(parseFloat(order.book.price)) ?
+                        PaymentService.formatCurrency(parseFloat(order.book.price) * 100) :
+                        'Price not available'
+                      )
+                    }
                   </p>
                   <ChevronRightIcon className="w-5 h-5 text-gray-400 mt-0 sm:mt-2" />
                 </div>

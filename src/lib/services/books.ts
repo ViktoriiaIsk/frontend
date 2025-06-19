@@ -22,14 +22,11 @@ export class BooksService {
   static async getBooks(filters: BookFilters = {}): Promise<PaginatedResponse<Book>> {
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('BooksService.getBooks called with filters:', filters);
       }
       
       const queryString = buildQueryString(filters);
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('Generated query string:', queryString);
-        console.log('Full URL:', `${endpoints.books.list}${queryString}`);
       }
       
       const response = await api.get<PaginatedResponse<Book>>(
@@ -43,10 +40,6 @@ export class BooksService {
         const searchTerm = filters.search.toLowerCase().trim();
         
         if (process.env.NODE_ENV === 'development') {
-          console.log('=== CLIENT-SIDE FILTERING ===');
-          console.log('Search term:', searchTerm);
-          console.log('Books before filtering:', books.length);
-          console.log('Sample book data:', books[0]);
         }
         
         books = books.filter((book, index) => {
@@ -59,7 +52,7 @@ export class BooksService {
                          description.includes(searchTerm);
           
           if (process.env.NODE_ENV === 'development' && index < 3) {
-            console.log(`Book ${index + 1}:`, {
+            console.log('Search debug:', {
               title: book.title,
               author: book.author,
               matches,
@@ -73,8 +66,6 @@ export class BooksService {
         });
         
         if (process.env.NODE_ENV === 'development') {
-          console.log('Books after filtering:', books.length);
-          console.log('=== END FILTERING ===');
         }
       }
       
@@ -99,23 +90,17 @@ export class BooksService {
    */
   static async getBook(id: number): Promise<Book> {
     try {
-      console.log(`Fetching book with ID: ${id}`);
-      console.log(`Full URL: ${api.defaults.baseURL}/books/${id}`);
       
       const response = await api.get<ApiResponse<Book> | Book>(`/books/${id}`);
-      console.log('Book response status:', response.status);
-      console.log('Book response data:', response.data);
       
       // Handle both response.data.data and response.data structures
       let book: Book;
       if (response.data && typeof response.data === 'object' && 'data' in response.data) {
         // API wrapped response
         book = (response.data as ApiResponse<Book>).data;
-        console.log('Using wrapped response data:', book);
       } else {
         // Direct book data
         book = response.data as Book;
-        console.log('Using direct response data:', book);
       }
       
       // Validate that we have book data
@@ -241,29 +226,24 @@ export class BooksService {
    */
   static async getCategories(): Promise<Category[]> {
     try {
-      console.log('Fetching categories from:', `${api.defaults.baseURL}${endpoints.categories.list}`);
       
       const response = await api.get<ApiResponse<Category[]>>(
         endpoints.categories.list
       );
       
-      console.log('Categories response:', response.data);
       
       // Handle both response.data.data and response.data structures
       const categories = response.data.data || response.data;
       
       // Validate that we have categories data
       if (!Array.isArray(categories)) {
-        console.warn('Invalid categories data from server, using fallback:', categories);
         return this.getFallbackCategories();
       }
       
       if (categories.length === 0) {
-        console.warn('No categories returned from server, using fallback');
         return this.getFallbackCategories();
       }
       
-      console.log(`Successfully loaded ${categories.length} categories`);
       return categories;
     } catch (error) {
       console.error('Error fetching categories, using fallback:', error);
@@ -331,7 +311,6 @@ export class BooksService {
       
       // Validate that we have reviews data
       if (!Array.isArray(reviews)) {
-        console.warn('Invalid reviews data from server:', reviews);
         return [];
       }
       
@@ -434,17 +413,27 @@ export class BooksService {
    */
   static async getUserBooks(): Promise<Book[]> {
     try {
-      console.log('Fetching user books...');
-      const response = await api.get<ApiResponse<Book[]>>('/user/books');
-      console.log('User books response:', response.data);
+      
+      // Get current user ID from token
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        return [];
+      }
+      
+      // Get all books and filter by current user
+      const response = await api.get<PaginatedResponse<Book>>('/books');
       
       // Handle both response.data.data and response.data structures
-      const books = response.data.data || response.data;
+      const allBooks = response.data.data || response.data;
       
-      if (Array.isArray(books)) {
-        return books;
+      if (Array.isArray(allBooks)) {
+        // Filter books by current user (owner_id should match current user)
+        const userBooks = allBooks.filter(book => 
+          book.owner_id === parseInt(userId)
+        );
+        
+        return userBooks;
       } else {
-        console.warn('Unexpected user books response format:', books);
         return [];
       }
     } catch (error: any) {
@@ -452,14 +441,36 @@ export class BooksService {
       console.error('Error status:', error?.status);
       console.error('Error response:', error?.response?.data);
       
-      // If endpoint doesn't exist (404), return empty array
-      if (error?.status === 404 || error?.response?.status === 404) {
-        console.warn('User books endpoint not found (404), returning empty array');
+      // If authentication failed, return empty array
+      if (error?.status === 401 || error?.response?.status === 401) {
         return [];
       }
       
       // For other errors, also return empty array to prevent UI crashes
       return [];
+    }
+  }
+
+  /**
+   * Get current user ID from stored token
+   */
+  private static getCurrentUserId(): string | null {
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      // Try to get user ID from stored auth token
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+      if (!token) return null;
+      
+      // Decode JWT token to get user ID (basic decode, not verified)
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      
+      const payload = JSON.parse(atob(parts[1]));
+      return payload.sub || payload.user_id || payload.id || null;
+    } catch (error) {
+      console.error('Failed to extract user ID from token:', error);
+      return null;
     }
   }
 } 

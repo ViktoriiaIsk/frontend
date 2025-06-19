@@ -54,11 +54,9 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
         const resolvedParams = await params;
         const bookId = parseInt(resolvedParams.id);
         
-        console.log(`Attempting to fetch book with ID: ${bookId} (attempt ${retryCount + 1})`);
         
         // Fetch book data with retry logic for newly created books
         const bookData = await BooksService.getBook(bookId);
-        console.log('Successfully fetched book data:', bookData);
         setBook(bookData);
         
         // Try to get current user (may fail if not authenticated)
@@ -74,7 +72,6 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
         
         // Retry up to 3 times with increasing delays for newly created books
         if (retryCount < 3) {
-          console.log(`Retrying book fetch (attempt ${retryCount + 1}/3)...`);
           setTimeout(() => {
             fetchData(retryCount + 1);
           }, (retryCount + 1) * 1000); // 1s, 2s, 3s delays
@@ -129,7 +126,6 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   const handlePaymentSuccess = () => {
     // Removed the alert notification - direct redirect to thank you page
     // The PaymentForm component will handle the redirect internally
-    console.log('Payment successful - user will be redirected to thank you page');
   };
 
   // Handle payment error

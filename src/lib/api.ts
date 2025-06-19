@@ -4,10 +4,7 @@ import { ApiError, BookFilters } from '@/types';
 // Base API configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://13.37.117.93/api';
 
-// Debug: log the API URL in development
-if (process.env.NODE_ENV === 'development') {
-  console.log('API_BASE_URL:', API_BASE_URL);
-}
+// API Base URL configured
 
 // Create axios instance
 export const api = axios.create({
@@ -27,15 +24,11 @@ api.interceptors.request.use(
     const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Request with token:', config.method?.toUpperCase(), config.url, 'Token:', token.substring(0, 20) + '...');
-      }
     } else {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Request without token:', config.method?.toUpperCase(), config.url);
-        if (config.url?.includes('/login')) {
-          console.log('Login request data:', config.data);
-        }
+      if (config.url?.includes('/login') || config.url?.includes('/register')) {
+        // Ensure proper headers for auth requests
+        config.headers['Accept'] = 'application/json';
+        config.headers['Content-Type'] = 'application/json';
       }
     }
     return config;
@@ -48,30 +41,9 @@ api.interceptors.request.use(
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Log response structure for debugging (only in development)
-          if (process.env.NODE_ENV === 'development') {
-        // Only log non-sensitive responses
-        if (!response.config.url?.includes('login') && !response.config.url?.includes('register')) {
-          console.log('API Response:', {
-            url: response.config.url,
-            method: response.config.method,
-            status: response.status,
-            dataKeys: Object.keys(response.data || {})
-          });
-        }
-      }
     return response;
   },
   (error: AxiosError) => {
-    // Log error details for debugging (only in development)
-    if (process.env.NODE_ENV === 'development') {
-      console.error('API Error:', {
-        url: error.config?.url,
-        method: error.config?.method,
-        status: error.response?.status,
-        data: error.response?.data
-      });
-    }
 
     const apiError: ApiError = {
       message: 'An error occurred',
@@ -82,6 +54,18 @@ api.interceptors.response.use(
       const data = error.response.data as Record<string, unknown>;
       apiError.message = (data.message as string) || 'An error occurred';
       apiError.errors = data.errors as Record<string, string[]>;
+    }
+
+    // Handle specific error types with better messaging
+    if (!error.response) {
+      if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        apiError.message = 'Unable to connect to server. Please check your internet connection and try again.';
+      } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        apiError.message = 'Request timeout. The server is taking too long to respond.';
+      } else {
+        apiError.message = 'Network error - please check your connection and server status';
+      }
+      return Promise.reject(apiError);
     }
 
     // Handle 401 errors (unauthorized)
@@ -109,18 +93,7 @@ api.interceptors.response.use(
 
     // Handle 500 errors (server error)
     if (error.response?.status === 500) {
-      apiError.message = 'Server error occurred';
-    }
-
-    // Handle network errors
-    if (!error.response) {
-      if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
-        apiError.message = 'Unable to connect to server. Please try again later.';
-      } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-        apiError.message = 'Request timeout. Please try again.';
-      } else {
-        apiError.message = 'Network error - please check your connection';
-      }
+      apiError.message = 'Server error occurred. Please try again later.';
     }
 
     return Promise.reject(apiError);
@@ -220,8 +193,8 @@ export const endpoints = {
     profile: '/user/profile',
     updateProfile: '/user/profile',
     changePassword: '/user/change-password',
-    books: '/user/books',
-    orders: '/user/orders',
+    books: '/books', // Use general books endpoint with user filter
+    orders: '/orders', // Use general orders endpoint with user authentication
   },
 };
 
@@ -256,7 +229,6 @@ export const buildQueryString = (filters: BookFilters): string => {
     }
   
   const queryString = params.toString();
-  console.log('Generated query string:', queryString);
   
   return queryString ? `?${queryString}` : '';
 };

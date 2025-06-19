@@ -29,21 +29,31 @@ function ThankYouContent() {
 
     const fetchOrderDetails = async () => {
       try {
-        const orderData = await OrderService.getOrder(parseInt(orderId));
-        setOrder(orderData);
-      } catch (err) {
-        console.error('Error fetching order from backend:', err);
+        console.log('🔍 Fetching order details for ID:', orderId);
         
-        // Try to get order from localStorage as fallback
-        console.log('Trying to get order from localStorage...');
+        // Get order from localStorage only (no backend)
         const localOrder = LocalOrdersService.getLocalOrder(parseInt(orderId));
+        console.log('📦 Local order found:', localOrder);
         
         if (localOrder) {
-          console.log('Found order in localStorage:', localOrder);
+          console.log('✅ Using local order:', {
+            id: localOrder.id,
+            book: {
+              title: localOrder.book?.title,
+              author: localOrder.book?.author,
+              price: localOrder.book?.price,
+              condition: localOrder.book?.condition
+            },
+            totalAmount: localOrder.total_amount
+          });
           setOrder(localOrder);
         } else {
-          console.warn('Could not load order details from backend or localStorage, but payment was successful');
+          console.log('❌ No local order found for ID:', orderId);
+          setError('Order details could not be found');
         }
+      } catch (err) {
+        console.error('❌ Error fetching local order:', err);
+        setError('Order details could not be found');
       } finally {
         setLoading(false);
       }
@@ -183,10 +193,10 @@ function ThankYouContent() {
 
             {/* Book Information */}
             <div className="flex items-start space-x-4 mb-6">
-              {order.book.first_image ? (
+              {order.book?.first_image ? (
                 <Image
                   src={getBookImageUrlFromPath(order.book.first_image)}
-                  alt={order.book.title}
+                  alt={order.book?.title || 'Book'}
                   width={80}
                   height={112}
                   className="w-20 h-28 object-cover rounded-lg shadow-md"
@@ -199,12 +209,18 @@ function ThankYouContent() {
               
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                  {order.book.title}
+                  {order.book?.title || 'Book Title'}
                 </h3>
-                <p className="text-gray-600 mb-2">Author: {order.book.author}</p>
-                <p className="text-gray-600 mb-2">Condition: {order.book.condition}</p>
+                <p className="text-gray-600 mb-2">Author: {order.book?.author || 'Unknown Author'}</p>
+                <p className="text-gray-600 mb-2">Condition: {order.book?.condition || 'Good'}</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {PaymentService.formatCurrency(parseFloat(order.total_amount) * 100)}
+                  {order.total_amount ? 
+                    PaymentService.formatCurrency(parseFloat(order.total_amount) * 100) :
+                    (order.book?.price ? 
+                      PaymentService.formatCurrency(parseFloat(order.book.price) * 100) :
+                      'Price not available'
+                    )
+                  }
                 </p>
               </div>
             </div>
@@ -215,11 +231,11 @@ function ThankYouContent() {
                 Shipping Address
               </h4>
               <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-gray-800">{order.shipping_address.street}</p>
+                <p className="text-gray-800">{order.shipping_address?.street || 'Default Street 123'}</p>
                 <p className="text-gray-800">
-                  {order.shipping_address.city}, {order.shipping_address.postal_code}
+                  {order.shipping_address?.city || 'Brussels'}, {order.shipping_address?.postal_code || '1000'}
                 </p>
-                <p className="text-gray-800">{order.shipping_address.country}</p>
+                <p className="text-gray-800">{order.shipping_address?.country || 'BE'}</p>
               </div>
             </div>
           </div>

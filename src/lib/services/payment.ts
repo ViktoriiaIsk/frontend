@@ -107,9 +107,7 @@ export class PaymentService {
    */
   static async createPaymentIntent(data: PaymentIntentData): Promise<PaymentIntentResponse> {
     try {
-      console.log('Creating payment intent with data:', data);
       const response = await api.post<any>('/payment/create-intent', data);
-      console.log('Payment intent response:', response.data);
       
       // Extract client_secret from the nested structure
       const clientSecret = response.data.payment_intent?.client_secret || 

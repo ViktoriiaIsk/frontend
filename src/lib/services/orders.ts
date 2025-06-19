@@ -7,6 +7,7 @@ import { Order, ApiResponse, PaginatedResponse } from '@/types';
 export class OrderService {
   /**
    * Get user orders with pagination
+   * First tries localStorage, then falls back to backend
    * @param page - Page number
    * @param perPage - Items per page
    * @returns Promise with paginated orders
@@ -15,24 +16,40 @@ export class OrderService {
     page: number = 1, 
     perPage: number = 10
   ): Promise<PaginatedResponse<Order>> {
-    try {
-      console.log(`Fetching user orders - page: ${page}, perPage: ${perPage}`);
+    
+    // First try localStorage (primary source for orders)
+    if (typeof window !== 'undefined') {
+      const { LocalOrdersService } = await import('./localOrders');
+      const localOrders = LocalOrdersService.getLocalOrders();
       
-      // Try /user/orders endpoint first, then fallback to /orders
-      let response;
-      try {
-        console.log('Trying /user/orders endpoint...');
-        response = await api.get<PaginatedResponse<Order>>(
-          `${endpoints.user.orders}?page=${page}&per_page=${perPage}`
-        );
-        console.log('User orders response from /user/orders:', response.data);
-      } catch (userOrdersError: any) {
-        console.log('Failed to fetch from /user/orders, trying /orders...', userOrdersError?.status);
-        response = await api.get<PaginatedResponse<Order>>(
-          `${endpoints.orders.list}?page=${page}&per_page=${perPage}`
-        );
-        console.log('User orders response from /orders:', response.data);
+      if (localOrders.length > 0) {
+        
+        // Calculate pagination for local orders
+        const startIndex = (page - 1) * perPage;
+        const endIndex = startIndex + perPage;
+        const paginatedOrders = localOrders.slice(startIndex, endIndex);
+        
+        return {
+          data: paginatedOrders,
+          current_page: page,
+          last_page: Math.ceil(localOrders.length / perPage),
+          per_page: perPage,
+          total: localOrders.length,
+          links: {
+            first: '',
+            last: '',
+            prev: page > 1 ? '' : undefined,
+            next: page < Math.ceil(localOrders.length / perPage) ? '' : undefined
+          }
+        };
       }
+    }
+    
+    // Fallback to backend if no local orders found
+    try {
+      const response = await api.get<PaginatedResponse<Order>>(
+        `${endpoints.orders.list}?page=${page}&per_page=${perPage}`
+      );
       
       // Check if we have valid data structure
       if (response.data && response.data.data) {
@@ -47,7 +64,7 @@ export class OrderService {
           const hasRequiredFields = order.book_id && order.total_amount;
           
           if (!hasRequiredFields) {
-            console.warn(`Order ${order.id} missing required fields:`, {
+            console.log('Order missing required fields:', {
               book_id: order.book_id,
               total_amount: order.total_amount
             });
@@ -57,7 +74,6 @@ export class OrderService {
           return true;
         });
         
-        console.log(`Filtered ${validOrders.length} valid orders from ${response.data.data.length} total`);
         
         return {
           ...response.data,
@@ -67,29 +83,24 @@ export class OrderService {
       
       return response.data;
     } catch (error: any) {
-      console.error('Get user orders error:', error);
+      console.error('Backend orders error:', error);
       console.error('Error status:', error?.status);
       console.error('Error response:', error?.response?.data);
       
-      // If orders endpoint doesn't exist, return empty result
-      if (error?.status === 404 || error?.response?.status === 404) {
-        console.warn('Orders endpoint not found (404), returning empty orders');
-        return {
-          data: [],
-          current_page: 1,
-          last_page: 1,
-          per_page: perPage,
-          total: 0,
-          links: {
-            first: '',
-            last: '',
-            prev: undefined,
-            next: undefined
-          }
-        };
-      }
-      
-      throw error;
+      // Backend failed, return empty result since we already checked localStorage
+      return {
+        data: [],
+        current_page: 1,
+        last_page: 1,
+        per_page: perPage,
+        total: 0,
+        links: {
+          first: '',
+          last: '',
+          prev: undefined,
+          next: undefined
+        }
+      };
     }
   }
 
@@ -104,12 +115,10 @@ export class OrderService {
         endpoints.orders.show(orderId)
       );
       
-      console.log('Get order response:', response.data);
       
       // Handle both response.data.data and response.data structures
       const order = response.data.data || response.data;
       
-      console.log('Extracted order:', order);
       
       // Check if order data is valid
       if (!order || !order.id) {
@@ -136,14 +145,12 @@ export class OrderService {
     const maxAttempts = limit * 3; // Try 3x the limit to account for gaps
     const startId = 50; // Start from ID 50 and work backwards
     
-    console.log(`Trying to fetch recent orders starting from ID ${startId}...`);
     
     for (let i = startId; i >= 1 && orders.length < limit && (startId - i) < maxAttempts; i--) {
       try {
         const order = await this.getOrder(i);
         if (order && order.id) {
           orders.push(order);
-          console.log(`Found order ${order.id}`);
         }
       } catch {
         // Order doesn't exist, continue
@@ -151,7 +158,6 @@ export class OrderService {
       }
     }
     
-    console.log(`Found ${orders.length} orders via fallback method`);
     
     // Sort by creation date (newest first)
     return orders.sort((a, b) => 

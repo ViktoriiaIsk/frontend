@@ -184,8 +184,6 @@ const CreateBookPage: React.FC = () => {
   const onSubmit = async (data: CreateBookFormData) => {
       createBook(data, {
         onSuccess: async (createdBook) => {
-          console.log('Book created:', createdBook);
-          console.log('Selected images:', selectedImages);
           
           let finalBook = createdBook;
           
@@ -193,10 +191,8 @@ const CreateBookPage: React.FC = () => {
           if (selectedImages.length > 0) {
             try {
               const uploadResult = await BooksService.uploadBookImages(createdBook.id, selectedImages);
-              console.log('Upload result:', uploadResult);
               // Fetch updated book after image upload
               finalBook = await BooksService.getBook(createdBook.id);
-              console.log('Updated book after image upload:', finalBook);
             } catch (imgErr) {
               console.error('Image upload error:', imgErr);
               alert('Book created, but failed to upload images.');

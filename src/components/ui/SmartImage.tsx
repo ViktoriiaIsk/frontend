@@ -54,6 +54,7 @@ export default function SmartImage({
   const handleImageError = () => {
     if (hasFailed) return; // Prevent infinite loops
     
+    
     const nextIndex = alternativeIndex + 1;
     
     if (nextIndex < alternatives.length) {
