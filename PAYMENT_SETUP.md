@@ -28,15 +28,20 @@ Create a `.env.local` file in the project root with:
 
 ```env
 # API Configuration
+# Development: direct connection to backend
 NEXT_PUBLIC_API_BASE_URL=http://13.37.117.93/api
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Production: use Next.js proxy (set in Vercel)
+# NEXT_PUBLIC_API_BASE_URL=/api
+# NEXT_PUBLIC_APP_URL=https://bookswap-save-planet.vercel.app
 
 # Stripe Configuration (Test Mode)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
 
 # Regional Settings
 NEXT_PUBLIC_DEFAULT_CURRENCY=EUR
-NEXT_PUBLIC_DEFAULT_LOCALE=nl-BE
+NEXT_PUBLIC_DEFAULT_LOCALE=en-US
 NEXT_PUBLIC_DEFAULT_COUNTRY=BE
 
 # Development

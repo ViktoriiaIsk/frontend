@@ -1,8 +1,12 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { ApiError, BookFilters } from '@/types';
 
-// Base API configuration - using your actual API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://13.37.117.93/api';
+// Base API configuration - use proxy for production, direct for development
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || (
+  process.env.NODE_ENV === 'production' 
+    ? '/api'  // Use Next.js proxy in production
+    : 'http://13.37.117.93/api'   // Direct connection in development
+);
 
 // Debug: log the API URL in development
 if (process.env.NODE_ENV === 'development') {
@@ -114,7 +118,13 @@ api.interceptors.response.use(
 
     // Handle network errors
     if (!error.response) {
-      apiError.message = 'Network error - please check your connection';
+      if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        apiError.message = 'Unable to connect to server. Please try again later.';
+      } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        apiError.message = 'Request timeout. Please try again.';
+      } else {
+        apiError.message = 'Network error - please check your connection';
+      }
     }
 
     return Promise.reject(apiError);
