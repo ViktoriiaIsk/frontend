@@ -22,6 +22,13 @@ export default function SmartImage({
     if (!src || src === 'null' || src === 'undefined') {
       return fallback;
     }
+    
+    // Convert direct backend URLs to proxy URLs
+    if (src.includes('13.37.117.93')) {
+      const path = src.replace('http://13.37.117.93/', '').replace('https://13.37.117.93/', '');
+      return `/api/proxy/${path}`;
+    }
+    
     return src;
   });
   const [alternativeIndex, setAlternativeIndex] = useState(-1);
@@ -46,7 +53,14 @@ export default function SmartImage({
       return;
     }
     
-    setCurrentSrc(src);
+    // Convert direct backend URLs to proxy URLs
+    let proxiedSrc = src;
+    if (src.includes('13.37.117.93')) {
+      const path = src.replace('http://13.37.117.93/', '').replace('https://13.37.117.93/', '');
+      proxiedSrc = `/api/proxy/${path}`;
+    }
+    
+    setCurrentSrc(proxiedSrc);
     setAlternativeIndex(-1);
     setHasFailed(false);
   }, [src, fallback]);

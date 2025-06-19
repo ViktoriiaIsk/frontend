@@ -1,51 +1,27 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // Disable image optimization to avoid proxy issues
+    unoptimized: true,
     remotePatterns: [
-      // HTTP for development
+      // Allow all domains for development
       {
         protocol: "http",
-        hostname: "13.37.117.93",
-        port: "",
-        pathname: "/book-images/**",
-      },
-      {
-        protocol: "http",
-        hostname: "13.37.117.93",
-        port: "",
-        pathname: "/storage/**",
-      },
-      // HTTPS for production
-      {
-        protocol: "https",
-        hostname: "13.37.117.93",
-        port: "",
-        pathname: "/book-images/**",
+        hostname: "**",
       },
       {
         protocol: "https",
-        hostname: "13.37.117.93",
-        port: "",
-        pathname: "/storage/**",
+        hostname: "**",
       },
     ],
     // Add error handling for external images
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // Disable image optimization for external images if they cause issues
-    unoptimized: false,
   },
 
-  // API Proxy to handle HTTPS/HTTP mixed content issues
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "http://13.37.117.93/api/:path*",
-      },
-    ];
-  },
+  // API Proxy is now handled by pages/api/proxy/[...path].ts
+  // Removed rewrites to avoid conflicts with the new proxy API
 
   // Turbopack configuration for Next.js 15
   turbopack: {

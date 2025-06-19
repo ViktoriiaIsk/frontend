@@ -28,16 +28,15 @@ Create a `.env.local` file in the project root with:
 
 ```env
 # API Configuration
-# Development: direct connection to backend
-NEXT_PUBLIC_API_BASE_URL=http://13.37.117.93/api
+# Development and Production: use Next.js proxy
+NEXT_PUBLIC_API_BASE_URL=/api/proxy/api
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-# Production: use Next.js proxy (set in Vercel)
-# NEXT_PUBLIC_API_BASE_URL=/api
+# Production URL (set in Vercel)
 # NEXT_PUBLIC_APP_URL=https://bookswap-save-planet.vercel.app
 
-# Image Configuration
-NEXT_PUBLIC_IMAGE_BASE_URL=http://13.37.117.93
+# Image Configuration - also use proxy
+NEXT_PUBLIC_IMAGE_BASE_URL=/api/proxy
 
 # Stripe Configuration (Test Mode)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
@@ -73,9 +72,16 @@ NODE_ENV=development
 
 **Note**: Use any future expiry date (e.g., 12/34), any 3-digit CVC, and any postal code.
 
-### 3. Backend API Endpoints Required
+### 3. API Proxy Configuration
 
-The frontend expects these backend endpoints:
+The frontend now uses a proxy API to handle HTTPS/HTTP mixed content issues:
+
+**Proxy Endpoints:**
+
+- Frontend API calls: `/api/proxy/api/...` → Backend: `http://13.37.117.93/api/...`
+- Image requests: `/api/proxy/storage/...` → Backend: `http://13.37.117.93/storage/...`
+
+**Backend API Endpoints Required:**
 
 ```
 POST /api/payment/create-checkout-session

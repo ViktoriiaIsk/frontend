@@ -257,7 +257,7 @@ export const getBookImageUrl = (bookId: number | string, imageName: string): str
   // If already a complete URL, return as is
   if (imageName.startsWith('http')) return imageName;
   
-  const imageBaseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'http://13.37.117.93';
+  const imageBaseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '/api/proxy';
   return `${imageBaseUrl}/storage/books/${bookId}/${imageName}`;
 };
 
@@ -268,7 +268,7 @@ export const getBookImageUrlFromPath = (imagePath: string): string => {
   // If already a complete URL, return as is
   if (imagePath.startsWith('http')) return imagePath;
   
-  const imageBaseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'http://13.37.117.93';
+  const imageBaseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '/api/proxy';
   return `${imageBaseUrl}/storage/books/${imagePath}`;
 };
 
@@ -280,20 +280,19 @@ export const getImageUrl = (path: string): string => {
   if (path.startsWith('http')) return path;
   
   // Fallback for old image paths (should not be needed anymore)
-  const backendUrl = 'http://13.37.117.93';
+  const backendUrl = '/api/proxy';
   return `${backendUrl}/storage/book-images/${path}`;
 };
 
-// DEPRECATED: Backend now returns ready-to-use URLs with proper CORS
-// This function is kept for backward compatibility only
+// Image URL alternatives using proxy
 export function getImageUrlAlternatives(imagePath: string): string[] {
   if (!imagePath) return [];
   
-  // DEPRECATED: This function is kept for backward compatibility
-  // Backend now returns proper image URLs with CORS headers
+  // Use proxy for all alternative image URLs
   const alternatives = [
-    `/storage/book-images/${imagePath}`,
-    `/book-images/${imagePath}`,
+    `/api/proxy/storage/book-images/${imagePath}`,
+    `/api/proxy/book-images/${imagePath}`,
+    `/api/proxy/storage/books/${imagePath}`,
   ];
   
   return alternatives;
