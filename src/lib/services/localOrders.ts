@@ -8,6 +8,13 @@ export class LocalOrdersService {
   private static readonly STORAGE_KEY = 'bookswap_local_orders';
 
   /**
+   * Check if we're in browser environment
+   */
+  private static isBrowser(): boolean {
+    return typeof window !== 'undefined';
+  }
+
+  /**
    * Save order to localStorage
    */
   static saveOrder(orderData: {
@@ -24,6 +31,11 @@ export class LocalOrdersService {
       country: string;
     };
   }): void {
+    if (!this.isBrowser()) {
+      console.warn('localStorage not available on server');
+      return;
+    }
+
     try {
       const existingOrders = this.getLocalOrders();
       
@@ -60,6 +72,11 @@ export class LocalOrdersService {
    * Get orders from localStorage
    */
   static getLocalOrders(): Order[] {
+    if (!this.isBrowser()) {
+      // Return empty array on server-side to prevent SSR issues
+      return [];
+    }
+
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (!stored) return [];
@@ -76,6 +93,11 @@ export class LocalOrdersService {
    * Clear all local orders
    */
   static clearLocalOrders(): void {
+    if (!this.isBrowser()) {
+      console.warn('localStorage not available on server');
+      return;
+    }
+
     try {
       localStorage.removeItem(this.STORAGE_KEY);
       console.log('Local orders cleared');
@@ -88,6 +110,11 @@ export class LocalOrdersService {
    * Update order status
    */
   static updateOrderStatus(orderId: number, status: 'pending' | 'completed' | 'cancelled'): void {
+    if (!this.isBrowser()) {
+      console.warn('localStorage not available on server');
+      return;
+    }
+
     try {
       const orders = this.getLocalOrders();
       const orderIndex = orders.findIndex(order => order.id === orderId);
@@ -107,6 +134,10 @@ export class LocalOrdersService {
    * Get order by ID from localStorage
    */
   static getLocalOrder(orderId: number): Order | null {
+    if (!this.isBrowser()) {
+      return null;
+    }
+
     try {
       const orders = this.getLocalOrders();
       return orders.find(order => order.id === orderId) || null;

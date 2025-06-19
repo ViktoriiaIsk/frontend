@@ -28,6 +28,15 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [booksError, setBooksError] = useState<string | null>(null);
+  // State for local orders count (client-side only)
+  const [localOrdersCount, setLocalOrdersCount] = useState<number>(0);
+  const [isClient, setIsClient] = useState(false);
+
+  // Set client flag and get local orders count after mount
+  useEffect(() => {
+    setIsClient(true);
+    setLocalOrdersCount(LocalOrdersService.getLocalOrders().length);
+  }, []);
 
   // Fetch user profile and books on mount
   useEffect(() => {
@@ -54,6 +63,13 @@ export default function ProfilePage() {
     };
     fetchData();
   }, []);
+
+  // Update local orders count when needed
+  const refreshLocalOrders = () => {
+    if (isClient) {
+      setLocalOrdersCount(LocalOrdersService.getLocalOrders().length);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-accent-cream">
@@ -112,13 +128,16 @@ export default function ProfilePage() {
             <h2 className="text-xl sm:text-2xl font-bold text-neutral-900">My Orders</h2>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
               <span className="text-xs sm:text-sm text-gray-600">
-                Local orders: {LocalOrdersService.getLocalOrders().length}
+                Local orders: {isClient ? localOrdersCount : '...'}
               </span>
               <div className="flex gap-2 w-full sm:w-auto">
                 <Button
                   size="sm"
                   variant="secondary"
-                  onClick={() => window.location.reload()}
+                  onClick={() => {
+                    refreshLocalOrders();
+                    window.location.reload();
+                  }}
                   className="flex-1 sm:flex-none text-xs sm:text-sm"
                 >
                   Refresh
@@ -129,6 +148,7 @@ export default function ProfilePage() {
                   onClick={() => {
                     if (confirm('Are you sure you want to clear all local orders? This cannot be undone.')) {
                       LocalOrdersService.clearLocalOrders();
+                      refreshLocalOrders();
                       window.location.reload();
                     }
                   }}
