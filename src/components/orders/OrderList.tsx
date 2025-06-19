@@ -28,7 +28,7 @@ export default function OrderList({ className = '' }: OrderListProps) {
       setError(null);
       
       try {
-        console.log('🔍 Fetching orders from localStorage only...');
+  
         
         // Get orders from localStorage only (no backend)
         const localOrders = LocalOrdersService.getLocalOrders();
@@ -36,8 +36,8 @@ export default function OrderList({ className = '' }: OrderListProps) {
         console.log('📋 Local orders:', localOrders);
         
         setOrders(localOrders);
-      } catch (error) {
-        console.error('❌ Error fetching local orders:', error);
+              } catch (error) {
+          console.error('Error fetching local orders:', error);
         setError('Failed to load orders');
         setOrders([]);
       } finally {

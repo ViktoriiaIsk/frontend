@@ -175,7 +175,11 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
         <Navigation />
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="text-center py-12">
-            <div className="text-6xl mb-4">❌</div>
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
             <h1 className="text-2xl font-bold text-neutral-900 mb-2">Book Not Found</h1>
             <p className="text-neutral-600 mb-6">{error || "The book you're looking for doesn't exist or has been removed."}</p>
             <div className="flex gap-4 justify-center">
@@ -283,7 +287,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
               {bookCategory && (
                 <div className="mb-4">
                 <div className="inline-flex items-center px-3 py-1 bg-primary-100 text-primary-800 rounded-lg text-sm font-medium">
-                    📚 {bookCategory.name}
+                    {bookCategory.name}
                   </div>
                   {bookCategory.description && (
                     <p className="text-sm text-neutral-500 mt-2 italic">

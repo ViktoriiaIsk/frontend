@@ -29,30 +29,17 @@ function ThankYouContent() {
 
     const fetchOrderDetails = async () => {
       try {
-        console.log('🔍 Fetching order details for ID:', orderId);
+  
         
         // Get order from localStorage only (no backend)
         const localOrder = LocalOrdersService.getLocalOrder(parseInt(orderId));
-        console.log('📦 Local order found:', localOrder);
-        
         if (localOrder) {
-          console.log('✅ Using local order:', {
-            id: localOrder.id,
-            book: {
-              title: localOrder.book?.title,
-              author: localOrder.book?.author,
-              price: localOrder.book?.price,
-              condition: localOrder.book?.condition
-            },
-            totalAmount: localOrder.total_amount
-          });
           setOrder(localOrder);
         } else {
-          console.log('❌ No local order found for ID:', orderId);
           setError('Order details could not be found');
         }
       } catch (err) {
-        console.error('❌ Error fetching local order:', err);
+        console.error('Error fetching local order:', err);
         setError('Order details could not be found');
       } finally {
         setLoading(false);

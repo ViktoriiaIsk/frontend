@@ -97,7 +97,7 @@ export const useAuthStore = create<AuthState>()(
           
           // Validate that we have the required data
           if (!user || !token) {
-            console.error('❌ Validation failed: Missing user or token', { user: !!user, token: !!token });
+            console.error('Validation failed: Missing user or token', { user: !!user, token: !!token });
             throw new Error('Invalid response format from server - missing user or token');
           }
           

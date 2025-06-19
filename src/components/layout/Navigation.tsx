@@ -35,14 +35,14 @@ const Navigation: React.FC = () => {
 
   // Public navigation items (always visible)
   const publicNavItems = [
-    { href: '/', label: 'Home', icon: '🏠' },
-    { href: '/books', label: 'Books', icon: '📚' },
+    { href: '/', label: 'Home' },
+    { href: '/books', label: 'Books' },
   ];
 
   // Authenticated user navigation items
   const authNavItems = [
-    { href: '/books/create', label: 'Sell Book', icon: '💰' },
-    { href: '/profile', label: 'Profile', icon: '👤' },
+    { href: '/books/create', label: 'Sell Book' },
+    { href: '/profile', label: 'Profile' },
   ];
 
   // Combine navigation items based on auth status
@@ -101,7 +101,11 @@ const Navigation: React.FC = () => {
             href="/" 
             className="flex items-center space-x-2 font-bold text-xl text-primary-700"
           >
-            <span className="text-2xl">📖</span>
+            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/>
+              </svg>
+            </div>
             <span>BookSwap</span>
           </Link>
 
@@ -120,7 +124,6 @@ const Navigation: React.FC = () => {
                     : 'text-neutral-600 hover:text-primary-700'
                 )}
               >
-                <span className="mr-2">{item.icon}</span>
                 {item.label}
               </Link>
             ))}
@@ -225,7 +228,6 @@ const Navigation: React.FC = () => {
                       : 'text-neutral-600'
                   )}
                 >
-                  <span className="mr-3 text-lg">{item.icon}</span>
                   {item.label}
                 </Link>
               ))}
@@ -250,7 +252,6 @@ const Navigation: React.FC = () => {
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-3 rounded-xl font-medium transition-all duration-200 text-red-600 hover:bg-red-50 mobile-touch-target"
                     >
-                      <span className="mr-3 text-lg">🚪</span>
                       Logout
                     </button>
                   </>
@@ -259,18 +260,16 @@ const Navigation: React.FC = () => {
                     <button
                       onClick={handleLogin}
                       className="w-full text-left px-4 py-3 rounded-xl font-medium transition-all duration-200 text-neutral-600 hover:bg-primary-50 hover:text-primary-700 mobile-touch-target"
-                    >
-                      <span className="mr-3 text-lg">🔑</span>
-                      Sign In
-                    </button>
+                                          >
+                        Sign In
+                      </button>
                     <Link
                       href="/auth/register"
                       onClick={handleMenuItemClick}
                       className="flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-200 text-primary-600 hover:bg-primary-50 hover:text-primary-700 mobile-touch-target"
-                    >
-                      <span className="mr-3 text-lg">👤</span>
-                      Sign Up
-                    </Link>
+                                          >
+                        Sign Up
+                      </Link>
                   </div>
                 )}
               </div>

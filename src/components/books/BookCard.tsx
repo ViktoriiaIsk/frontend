@@ -200,7 +200,7 @@ const BookCard: React.FC<BookCardProps> = ({
                 className="w-full"
                 onClick={handleBuyNow}
               >
-                🛒 Buy Now
+                Buy Now
               </Button>
             ) : (
               <Button variant="secondary" size="sm" className="w-full" disabled>

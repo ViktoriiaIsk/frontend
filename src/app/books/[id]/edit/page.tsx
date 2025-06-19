@@ -305,7 +305,11 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
         <Navigation />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="text-center py-12">
-            <div className="text-6xl mb-4">❌</div>
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
             <h1 className="text-2xl font-bold text-neutral-900 mb-2">Cannot Edit Book</h1>
             <p className="text-neutral-600 mb-6">{error || "Book not found or you don't have permission to edit it."}</p>
             <Button onClick={() => router.back()}>Go Back</Button>

@@ -53,8 +53,8 @@ export default function ProfilePage() {
         return;
       }
       try {
-        const books = await BooksService.getBooks();
-        setUserBooks(books.data || []);
+        const books = await BooksService.getUserBooks();
+        setUserBooks(books || []);
       } catch (e: unknown) {
         setBooksError(e instanceof Error ? e.message : 'Failed to load your books');
       } finally {

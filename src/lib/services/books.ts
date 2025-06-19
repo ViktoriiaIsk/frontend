@@ -413,9 +413,9 @@ export class BooksService {
    */
   static async getUserBooks(): Promise<Book[]> {
     try {
-      
       // Get current user ID from token
       const userId = this.getCurrentUserId();
+      
       if (!userId) {
         return [];
       }
@@ -428,9 +428,9 @@ export class BooksService {
       
       if (Array.isArray(allBooks)) {
         // Filter books by current user (owner_id should match current user)
-        const userBooks = allBooks.filter(book => 
-          book.owner_id === parseInt(userId)
-        );
+        const userBooks = allBooks.filter(book => {
+          return book.owner_id === parseInt(userId);
+        });
         
         return userBooks;
       } else {
@@ -438,8 +438,6 @@ export class BooksService {
       }
     } catch (error: any) {
       console.error('Error fetching user books:', error);
-      console.error('Error status:', error?.status);
-      console.error('Error response:', error?.response?.data);
       
       // If authentication failed, return empty array
       if (error?.status === 401 || error?.response?.status === 401) {
@@ -452,24 +450,44 @@ export class BooksService {
   }
 
   /**
-   * Get current user ID from stored token
+   * Get current user ID from stored auth token or user info
    */
   private static getCurrentUserId(): string | null {
     if (typeof window === 'undefined') return null;
     
     try {
-      // Try to get user ID from stored auth token
+      // Method 1: Try to get user from auth store/localStorage
+      const userDataStr = localStorage.getItem('auth-storage');
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        if (userData?.state?.user?.id) {
+          return userData.state.user.id.toString();
+        }
+      }
+      
+      // Method 2: Try JWT token decode (if it's actually JWT)
       const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-      if (!token) return null;
+      if (token && token.includes('.')) {
+        // Only try JWT decode if token has dots (JWT format)
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          const userId = payload.sub || payload.user_id || payload.id;
+          if (userId) {
+            return userId.toString();
+          }
+        }
+      }
       
-      // Decode JWT token to get user ID (basic decode, not verified)
-      const parts = token.split('.');
-      if (parts.length !== 3) return null;
-      
-      const payload = JSON.parse(atob(parts[1]));
-      return payload.sub || payload.user_id || payload.id || null;
+      // Method 3: Use token itself as user identifier (fallback)
+      if (token) {
+        // Create a simple hash of the token for user identification
+        const simpleHash = token.substring(0, 8) + token.length;
+        return simpleHash;
+      }
+      return null;
     } catch (error) {
-      console.error('Failed to extract user ID from token:', error);
+      console.error('Failed to extract user ID:', error);
       return null;
     }
   }
