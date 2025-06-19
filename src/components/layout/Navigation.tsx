@@ -55,6 +55,7 @@ const Navigation: React.FC = () => {
    * Check if the current path matches the nav item
    */
   const isActive = (href: string) => {
+    if (!pathname) return false;
     if (href === '/') {
       return pathname === '/';
     }

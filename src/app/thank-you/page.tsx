@@ -17,8 +17,8 @@ function ThankYouContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const orderId = searchParams.get('order_id');
-  const paymentIntentId = searchParams.get('payment_intent');
+  const orderId = searchParams?.get('order_id');
+  const paymentIntentId = searchParams?.get('payment_intent');
 
   useEffect(() => {
     if (!orderId) {

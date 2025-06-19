@@ -29,14 +29,21 @@ function BooksContent() {
   const [error, setError] = useState<string | null>(null);
 
   // Parse filters from URL - memoized to prevent re-renders
-  const filters = useMemo(() => ({
-    search: searchParams?.get('search') || '',
-    category_id: searchParams?.get('category') ? parseInt(searchParams.get('category')!) : undefined,
-    page: searchParams?.get('page') ? parseInt(searchParams.get('page')!) : 1,
-    per_page: 12,
-    min_price: searchParams?.get('min_price') ? parseInt(searchParams.get('min_price')!) : undefined,
-    max_price: searchParams?.get('max_price') ? parseInt(searchParams.get('max_price')!) : undefined,
-  }), [searchParams]);
+  const filters = useMemo(() => {
+    const categoryParam = searchParams?.get('category');
+    const pageParam = searchParams?.get('page');
+    const minPriceParam = searchParams?.get('min_price');
+    const maxPriceParam = searchParams?.get('max_price');
+    
+    return {
+      search: searchParams?.get('search') || '',
+      category_id: categoryParam ? parseInt(categoryParam) : undefined,
+      page: pageParam ? parseInt(pageParam) : 1,
+      per_page: 12,
+      min_price: minPriceParam ? parseInt(minPriceParam) : undefined,
+      max_price: maxPriceParam ? parseInt(maxPriceParam) : undefined,
+    };
+  }, [searchParams]);
 
   // Load data on mount and when search params change
   useEffect(() => {

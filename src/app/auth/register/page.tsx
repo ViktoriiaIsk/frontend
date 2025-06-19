@@ -62,7 +62,7 @@ const RegisterPageContent: React.FC = () => {
       await registerUser(registerData);
       
       // Check for redirect parameter
-      const redirectTo = searchParams.get('redirect');
+      const redirectTo = searchParams?.get('redirect');
       router.push(redirectTo || '/profile'); // Redirect to intended page or profile
     } catch (error: unknown) {
       const errorMessage = extractErrorMessage(error);
@@ -217,7 +217,7 @@ const RegisterPageContent: React.FC = () => {
               </Link>
               
               {/* Back button if redirect parameter exists */}
-              {searchParams.get('redirect') && (
+              {searchParams?.get('redirect') && (
                 <Button
                   type="button"
                   onClick={() => router.back()}

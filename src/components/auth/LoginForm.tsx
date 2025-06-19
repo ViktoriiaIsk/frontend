@@ -71,7 +71,7 @@ const LoginForm: React.FC = () => {
       await login(formData);
       
       // Check for redirect parameter
-      const redirectTo = searchParams.get('redirect');
+      const redirectTo = searchParams?.get('redirect');
       router.push(redirectTo || '/'); // Redirect to intended page or home
     } catch (error: unknown) {
       const errorMessage = extractErrorMessage(error);
@@ -210,7 +210,7 @@ const LoginForm: React.FC = () => {
               </p>
               
               {/* Back button if redirect parameter exists */}
-              {searchParams.get('redirect') && (
+              {searchParams?.get('redirect') && (
                 <Button
                   type="button"
                   onClick={() => router.back()}
