@@ -36,6 +36,9 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 # NEXT_PUBLIC_API_BASE_URL=/api
 # NEXT_PUBLIC_APP_URL=https://bookswap-save-planet.vercel.app
 
+# Image Configuration
+NEXT_PUBLIC_IMAGE_BASE_URL=http://13.37.117.93
+
 # Stripe Configuration (Test Mode)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
 

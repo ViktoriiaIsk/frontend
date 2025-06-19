@@ -13,7 +13,7 @@ import Card from '@/components/ui/Card';
 import FallbackImage from '@/components/ui/FallbackImage';
 import { useCategories, useUpdateBook, useDeleteBook } from '@/hooks/useBooks';
 import { BOOK_CONDITIONS, BookCondition, Book } from '@/types';
-import { extractErrorMessage } from '@/utils';
+import { extractErrorMessage, getBookImageUrlFromPath } from '@/utils';
 import { BooksService } from '@/lib/services/books';
 import { AuthService } from '@/lib/services/auth';
 import { useAuthStore } from '@/store/authStore';
@@ -461,7 +461,7 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
                   {book.images.map((image, index) => (
                     <div key={index} className="relative aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden">
                       <FallbackImage
-                        src={image.url || '/images/placeholder-book.svg'}
+                        src={image.url ? getBookImageUrlFromPath(image.url) : '/images/placeholder-book.svg'}
                         alt={`${book.title} - Image ${index + 1}`}
                         className="w-full h-full object-cover"
                       />

@@ -8,6 +8,7 @@ import { Order } from '@/types';
 import { OrderService } from '@/lib/services/orders';
 import { LocalOrdersService } from '@/lib/services/localOrders';
 import { PaymentService } from '@/lib/services/payment';
+import { getBookImageUrlFromPath } from '@/utils';
 
 function ThankYouContent() {
   const searchParams = useSearchParams();
@@ -184,7 +185,7 @@ function ThankYouContent() {
             <div className="flex items-start space-x-4 mb-6">
               {order.book.first_image ? (
                 <Image
-                  src={order.book.first_image}
+                  src={getBookImageUrlFromPath(order.book.first_image)}
                   alt={order.book.title}
                   width={80}
                   height={112}

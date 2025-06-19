@@ -1,10 +1,10 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { BooksService } from '@/lib/services/books';
 import { AuthService } from '@/lib/services/auth';
 import { useDeleteBook, useCategories } from '@/hooks/useBooks';
-import { extractErrorMessage } from '@/utils';
+import { extractErrorMessage, getBookImageUrlFromPath } from '@/utils';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 
@@ -32,6 +32,21 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   
   // Categories hook
   const { data: categories } = useCategories();
+
+  // Memoized values - must be before any conditional returns
+  const allImages = useMemo(() => book?.images || [], [book?.images]);
+  
+  const currentImage = useMemo(() => {
+    if (!book) return '/images/placeholder-book.svg';
+    
+    if (allImages[selectedImageIndex]?.url) {
+      return getBookImageUrlFromPath(allImages[selectedImageIndex].url);
+    }
+    if (book.first_image) {
+      return getBookImageUrlFromPath(book.first_image);
+    }
+    return '/images/placeholder-book.svg';
+  }, [book, allImages, selectedImageIndex]);
 
   useEffect(() => {
     const fetchData = async (retryCount = 0) => {
@@ -202,12 +217,8 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   // Check if current user is the owner of this book
-  const isOwner = currentUser && book.owner_id === currentUser.id;
-  
-  // Backend now returns ready-to-use image URLs with proper CORS headers
-  const allImages = book.images || [];
-  const currentImage = allImages[selectedImageIndex]?.url || book.first_image || '/images/placeholder-book.svg';
-  const isAvailable = book.status === 'available';
+  const isOwner = currentUser && book?.owner_id === currentUser.id;
+  const isAvailable = book?.status === 'available';
   
   // Find category by ID
   const bookCategory = categories?.find(cat => cat.id === book.category_id);
@@ -259,7 +270,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                     onClick={() => setSelectedImageIndex(index)}
                   >
                     <FallbackImage
-                      src={image.url || '/images/placeholder-book.svg'}
+                      src={image.url ? getBookImageUrlFromPath(image.url) : '/images/placeholder-book.svg'}
                       alt={`${book.title} - Image ${index + 1}`}
                       className="object-cover absolute inset-0"
                     />

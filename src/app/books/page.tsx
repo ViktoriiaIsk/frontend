@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BooksService } from '@/lib/services/books';
 import Navigation from '@/components/layout/Navigation';
@@ -28,15 +28,15 @@ function BooksContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Parse filters from URL
-  const filters = {
+  // Parse filters from URL - memoized to prevent re-renders
+  const filters = useMemo(() => ({
     search: searchParams?.get('search') || '',
     category_id: searchParams?.get('category') ? parseInt(searchParams.get('category')!) : undefined,
     page: searchParams?.get('page') ? parseInt(searchParams.get('page')!) : 1,
     per_page: 12,
     min_price: searchParams?.get('min_price') ? parseInt(searchParams.get('min_price')!) : undefined,
     max_price: searchParams?.get('max_price') ? parseInt(searchParams.get('max_price')!) : undefined,
-  };
+  }), [searchParams]);
 
   // Load data on mount and when search params change
   useEffect(() => {
@@ -67,7 +67,7 @@ function BooksContent() {
     };
 
     fetchData();
-  }, [searchParams, filters]);
+  }, [filters]);
 
   // Show loading while fetching data
   if (loading) {

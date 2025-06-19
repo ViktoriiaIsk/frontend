@@ -250,7 +250,29 @@ export const getBaseUrl = (): string => {
   return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 };
 
-// Image URL helper - DEPRECATED: Backend now returns ready-to-use image URLs
+// Book image URL helper
+export const getBookImageUrl = (bookId: number | string, imageName: string): string => {
+  if (!imageName) return '/images/placeholder-book.svg';
+  
+  // If already a complete URL, return as is
+  if (imageName.startsWith('http')) return imageName;
+  
+  const imageBaseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'http://13.37.117.93';
+  return `${imageBaseUrl}/storage/books/${bookId}/${imageName}`;
+};
+
+// Generic image URL helper for book images
+export const getBookImageUrlFromPath = (imagePath: string): string => {
+  if (!imagePath) return '/images/placeholder-book.svg';
+  
+  // If already a complete URL, return as is
+  if (imagePath.startsWith('http')) return imagePath;
+  
+  const imageBaseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'http://13.37.117.93';
+  return `${imageBaseUrl}/storage/books/${imagePath}`;
+};
+
+// Legacy Image URL helper - DEPRECATED: Backend now returns ready-to-use image URLs
 // This function is kept for backward compatibility only
 export const getImageUrl = (path: string): string => {
   if (!path) return '/images/placeholder-book.svg';

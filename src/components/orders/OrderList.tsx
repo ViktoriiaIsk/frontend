@@ -9,6 +9,7 @@ import { LocalOrdersService } from '@/lib/services/localOrders';
 import { PaymentService } from '@/lib/services/payment';
 import { ShoppingBagIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon, ClockIcon, XCircleIcon } from '@heroicons/react/24/solid';
+import { getBookImageUrlFromPath } from '@/utils';
 
 interface OrderListProps {
   className?: string;
@@ -228,7 +229,7 @@ export default function OrderList({ className = '' }: OrderListProps) {
                               <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
                   {order.book?.first_image ? (
                     <Image
-                      src={order.book.first_image}
+                      src={getBookImageUrlFromPath(order.book.first_image)}
                       alt={order.book.title || 'Book'}
                       width={256}
                       height={192}

@@ -42,10 +42,7 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination:
-          process.env.NODE_ENV === "production"
-            ? "https://13.37.117.93/api/:path*"
-            : "http://13.37.117.93/api/:path*",
+        destination: "http://13.37.117.93/api/:path*",
       },
     ];
   },

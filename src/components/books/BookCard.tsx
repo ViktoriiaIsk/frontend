@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Book } from '@/types';
-import { formatCurrency, truncateText } from '@/utils';
+import { formatCurrency, truncateText, getBookImageUrlFromPath } from '@/utils';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import FallbackImage from '@/components/ui/FallbackImage';
@@ -31,12 +31,19 @@ const BookCard: React.FC<BookCardProps> = ({
   // Check if current user is the owner
   const isOwner = currentUserId && book.owner_id === currentUserId;
   
-  // Get the primary image or first image from API
-  // Backend now returns ready-to-use URLs in image_url field
-  const imageUrl = book.first_image || 
-                   book.images?.[0]?.image_url || 
-                   book.images?.[0]?.url || // Fallback for backward compatibility
-                   '/images/placeholder-book.svg';
+  // Get the primary image or first image from API - memoized to prevent re-renders
+  const imageUrl = useMemo(() => {
+    if (book.first_image) {
+      return getBookImageUrlFromPath(book.first_image);
+    }
+    if (book.images?.[0]?.image_url) {
+      return getBookImageUrlFromPath(book.images[0].image_url);
+    }
+    if (book.images?.[0]?.url) {
+      return getBookImageUrlFromPath(book.images[0].url);
+    }
+    return '/images/placeholder-book.svg';
+  }, [book.first_image, book.images]);
 
   // Handle buy now click
   const handleBuyNow = () => {
