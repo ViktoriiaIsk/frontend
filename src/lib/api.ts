@@ -3,8 +3,8 @@ import { ApiError, BookFilters } from '@/types';
 
 // Base API configuration - use proxy for production, direct for development
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || (
-  process.env.NODE_ENV === 'production' 
-    ? '/api'  // Use Next.js proxy in production
+  typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
+    ? '/api'  // Use Next.js proxy on Vercel
     : 'http://13.37.117.93/api'   // Direct connection in development
 );
 
