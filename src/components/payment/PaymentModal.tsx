@@ -71,10 +71,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="text-center py-8">
               <LogIn className="w-16 h-16 text-blue-500 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-                Увійдіть для покупки
+                Login to Purchase
               </h3>
               <p className="text-neutral-600 mb-6">
-                Для здійснення покупки потрібно увійти в свій акаунт
+                You need to login to your account to make a purchase
               </p>
               <div className="space-y-3">
                 <Button
@@ -83,7 +83,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   size="lg"
                 >
                   <LogIn className="w-4 h-4 mr-2" />
-                  Увійти в акаунт
+                  Login
                 </Button>
                 <Button
                   onClick={onClose}
@@ -91,7 +91,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   className="w-full"
                   size="lg"
                 >
-                  Скасувати
+                  Cancel
                 </Button>
               </div>
             </div>

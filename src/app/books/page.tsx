@@ -1,10 +1,16 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { BooksService } from '@/lib/services/books';
+import { useAuthStore } from '@/store/authStore';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 import BooksList from '@/components/books/BooksList';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
+import { Book, Category, PaginatedResponse } from '@/types';
 
 function buildQuery(params: Record<string, any>) {
   const q = Object.entries(params)
@@ -14,20 +20,126 @@ function buildQuery(params: Record<string, any>) {
   return q ? `?${q}` : '';
 }
 
-// Next.js App Router: searchParams тепер асинхронні, треба await
-export default async function BooksPage(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const searchParams = await props.searchParams;
-  // SSR: отримуємо фільтри з URL
+export default function BooksPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, isLoading: authLoading, checkAuth } = useAuthStore();
+  
+  const [books, setBooks] = useState<Book[]>([]);
+  const [pagination, setPagination] = useState<any>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Parse filters from URL
   const filters = {
-    search: Array.isArray(searchParams?.search) ? searchParams.search[0] : (searchParams?.search || ''),
-    category_id: searchParams?.category ? parseInt(Array.isArray(searchParams.category) ? searchParams.category[0] : searchParams.category) : undefined,
-    page: searchParams?.page ? parseInt(Array.isArray(searchParams.page) ? searchParams.page[0] : searchParams.page) : 1,
+    search: searchParams?.get('search') || '',
+    category_id: searchParams?.get('category') ? parseInt(searchParams.get('category')!) : undefined,
+    page: searchParams?.get('page') ? parseInt(searchParams.get('page')!) : 1,
     per_page: 12,
-    min_price: searchParams?.min_price ? parseInt(Array.isArray(searchParams.min_price) ? searchParams.min_price[0] : searchParams.min_price) : undefined,
-    max_price: searchParams?.max_price ? parseInt(Array.isArray(searchParams.max_price) ? searchParams.max_price[0] : searchParams.max_price) : undefined,
+    min_price: searchParams?.get('min_price') ? parseInt(searchParams.get('min_price')!) : undefined,
+    max_price: searchParams?.get('max_price') ? parseInt(searchParams.get('max_price')!) : undefined,
   };
-  const booksResponse = await BooksService.getBooks(filters);
-  const categories = await BooksService.getCategories();
+
+  // Check authentication on page load
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/auth/login');
+    }
+  }, [isAuthenticated, authLoading, router]);
+
+  // Load data when authenticated
+  useEffect(() => {
+    if (!isAuthenticated || authLoading) return;
+    
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const [booksResponse, categoriesData] = await Promise.all([
+          BooksService.getBooks(filters),
+          BooksService.getCategories()
+        ]);
+        
+        setBooks(booksResponse.data);
+        setPagination({
+          current_page: booksResponse.current_page,
+          last_page: booksResponse.last_page,
+          total: booksResponse.total
+        });
+        setCategories(categoriesData);
+        
+      } catch (err) {
+        console.error('Error loading books:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load books');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [isAuthenticated, authLoading, searchParams]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-accent-cream">
+        <Navigation />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Checking authentication...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated (will be handled by useEffect above)
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  // Show loading while fetching data
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-accent-cream">
+        <Navigation />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading books...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-accent-cream">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">❌</div>
+            <h3 className="text-xl font-semibold text-neutral-900 mb-2">Error Loading Books</h3>
+            <p className="text-neutral-600 mb-6">{error}</p>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-accent-cream">
@@ -37,7 +149,7 @@ export default async function BooksPage(props: { searchParams: Promise<Record<st
           <h1 className="text-3xl font-bold text-neutral-900 mb-2">Browse Books</h1>
           <p className="text-lg text-neutral-600">Find your next great read from our collection</p>
         </div>
-        {/* SSR Filters */}
+        {/* Filters */}
         <Card className="mb-6">
           <form method="GET" className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div>
@@ -88,10 +200,10 @@ export default async function BooksPage(props: { searchParams: Promise<Record<st
               <Button type="submit" className="w-full">Apply Filters</Button>
             </div>
           </form>
-          </Card>
+        </Card>
         {/* Books List */}
-        {booksResponse.data.length ? (
-          <BooksList books={booksResponse.data} />
+        {books.length ? (
+          <BooksList books={books} />
         ) : (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📚</div>
@@ -103,17 +215,19 @@ export default async function BooksPage(props: { searchParams: Promise<Record<st
           </div>
         )}
         {/* Pagination */}
-        <div className="flex justify-center gap-2 mt-8">
-          {Array.from({ length: booksResponse.last_page }, (_, i) => i + 1).map((page) => (
-            <Link
-              key={page}
-              href={buildQuery({ ...filters, page })}
-              className={`px-4 py-2 rounded-lg border ${filters.page === page ? 'bg-primary-600 text-white' : 'bg-white text-primary-700'}`}
-            >
-              {page}
-            </Link>
-          ))}
-        </div>
+        {pagination && pagination.last_page > 1 && (
+          <div className="flex justify-center gap-2 mt-8">
+            {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map((page) => (
+              <Link
+                key={page}
+                href={buildQuery({ ...filters, page })}
+                className={`px-4 py-2 rounded-lg border ${filters.page === page ? 'bg-primary-600 text-white' : 'bg-white text-primary-700'}`}
+              >
+                {page}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
       <Footer />
     </div>

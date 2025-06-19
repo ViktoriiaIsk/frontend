@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -31,6 +31,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
  */
 const RegisterPage: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [serverError, setServerError] = useState<string | null>(null);
   
   // Auth store
@@ -60,8 +61,9 @@ const RegisterPage: React.FC = () => {
 
       await registerUser(registerData);
       
-      // Redirect to profile on success
-      router.push('/profile');
+      // Check for redirect parameter
+      const redirectTo = searchParams.get('redirect');
+      router.push(redirectTo || '/profile'); // Redirect to intended page or profile
     } catch (error: unknown) {
       const errorMessage = extractErrorMessage(error);
       
@@ -207,11 +209,26 @@ const RegisterPage: React.FC = () => {
             </div>
 
             {/* Login Link */}
-            <Link href="/auth/login">
-              <Button variant="secondary" className="w-full" size="lg">
-                Sign In
-              </Button>
-            </Link>
+            <div className="space-y-3">
+              <Link href="/auth/login">
+                <Button variant="secondary" className="w-full" size="lg">
+                  Sign In
+                </Button>
+              </Link>
+              
+              {/* Back button if redirect parameter exists */}
+              {searchParams.get('redirect') && (
+                <Button
+                  type="button"
+                  onClick={() => router.back()}
+                  variant="secondary"
+                  className="w-full border border-gray-300"
+                  size="sm"
+                >
+                  Go Back
+                </Button>
+              )}
+            </div>
           </form>
         </Card>
 

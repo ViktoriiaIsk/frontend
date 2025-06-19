@@ -10,10 +10,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "BookSwap - Online Book Marketplace",
-  description: "Online marketplace for buying and selling books. Find your next great read or sell your book collection.",
-  keywords: "books, buy books, sell books, online bookstore, used books, BookSwap",
-  authors: [{ name: "BookSwap Team" }],
+  title: 'BookSwap - Book Exchange Platform',
+  description: 'Buy and sell books online with BookSwap - the modern platform for book lovers',
+  keywords: 'books, exchange, buy, sell, reading, literature',
+  authors: [{ name: 'BookSwap Team' }],
   creator: "BookSwap",
   publisher: "BookSwap",
   formatDetection: {
@@ -21,31 +21,31 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://bookswap-save-planet.vercel.app"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "BookSwap - Online Book Marketplace",
-    description: "Online marketplace for buying and selling books. Find your next great read.",
-    url: "/",
-    siteName: "BookSwap",
+    title: 'BookSwap - Book Exchange Platform',
+    description: 'Buy and sell books online with BookSwap - the modern platform for book lovers',
+    url: 'https://bookswap-save-planet.vercel.app',
+    siteName: 'BookSwap',
     images: [
       {
-        url: "/og-image.jpg",
+        url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: "BookSwap - Платформа для обміну книг",
+        alt: "BookSwap - Book Exchange Platform",
       },
     ],
-    locale: "uk_UA",
-    type: "website",
+    locale: 'en_US',
+    type: 'website',
   },
   twitter: {
-    card: "summary_large_image",
-    title: "BookSwap - Online Book Marketplace",
-    description: "Online marketplace for buying and selling books",
-    images: ["/og-image.jpg"],
+    card: 'summary_large_image',
+    title: 'BookSwap - Book Exchange Platform',
+    description: 'Buy and sell books online with BookSwap - the modern platform for book lovers',
+    images: ['/og-image.jpg'],
   },
   robots: {
     index: true,
@@ -60,6 +60,11 @@ export const metadata: Metadata = {
   },
   verification: {
     google: process.env.GOOGLE_VERIFICATION,
+  },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
 };
 

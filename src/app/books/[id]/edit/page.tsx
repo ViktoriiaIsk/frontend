@@ -75,12 +75,47 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
     checkAuth();
   }, [checkAuth]);
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/auth/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
+  // Show auth required modal instead of automatic redirect
+  if (!authLoading && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-accent-cream">
+        <Navigation />
+        <div className="max-w-md mx-auto px-4 py-20">
+          <Card className="text-center p-8">
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.732 15.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-neutral-900 mb-4">
+              Authorization Required
+            </h2>
+            <p className="text-neutral-600 mb-6">
+              To edit books you need to login to your account.
+            </p>
+            <div className="space-y-3">
+              <Button 
+                onClick={() => router.push('/auth/login')}
+                className="w-full"
+                size="lg"
+              >
+                Login
+              </Button>
+              <Button 
+                onClick={() => router.back()}
+                variant="secondary"
+                className="w-full border border-gray-300"
+                size="lg"
+              >
+                Go Back
+              </Button>
+            </div>
+          </Card>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   // Load book data
   useEffect(() => {
@@ -121,6 +156,21 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
 
     loadBook();
   }, [params, reset]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-accent-cream">
+        <Navigation />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Checking authentication...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Handle image selection
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -228,26 +278,6 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
       });
     }
   };
-
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-accent-cream">
-        <Navigation />
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Checking authentication...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect if not authenticated (will be handled by useEffect above)
-  if (!isAuthenticated) {
-    return null;
-  }
 
   if (loading) {
     return (

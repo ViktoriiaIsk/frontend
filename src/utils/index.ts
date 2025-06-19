@@ -38,22 +38,22 @@ export const formatRelativeTime = (date: string | Date): string => {
   const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
   
   if (diffInSeconds < 60) {
-    return 'щойно';
+    return 'just now';
   }
   
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
-    return `${diffInMinutes} хв. тому`;
+    return `${diffInMinutes} min. ago`;
   }
   
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
-    return `${diffInHours} год. тому`;
+    return `${diffInHours} hr. ago`;
   }
   
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) {
-    return `${diffInDays} дні тому`;
+    return `${diffInDays} days ago`;
   }
   
   return formatDate(dateObj);
@@ -279,23 +279,25 @@ export function getImageUrlAlternatives(imagePath: string): string[] {
 
 // Error message extractor
 export const extractErrorMessage = (error: unknown): string => {
-  if (typeof error === 'string') return error;
+  if (typeof error === 'string') {
+    return error;
+  }
+  
+  if (error instanceof Error) {
+    return error.message;
+  }
   
   if (error && typeof error === 'object') {
-    const errorObj = error as Record<string, unknown>;
-    if (errorObj.message && typeof errorObj.message === 'string') {
-      return errorObj.message;
+    if ('message' in error && typeof error.message === 'string') {
+      return error.message;
     }
-    if (errorObj.errors && typeof errorObj.errors === 'object') {
-      const firstError = Object.values(errorObj.errors)[0];
-      if (Array.isArray(firstError) && firstError.length > 0) {
-        return String(firstError[0]);
-      }
-      return String(firstError);
+    
+    if ('error' in error && typeof error.error === 'string') {
+      return error.error;
     }
   }
   
-  return 'Виникла помилка';
+  return 'An error occurred';
 };
 
 // Color utilities
@@ -310,4 +312,5 @@ export const hexToRgb = (hex: string): { r: number; g: number; b: number } | nul
 
 export const rgbToHex = (r: number, g: number, b: number): string => {
   return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-}; 
+};
+

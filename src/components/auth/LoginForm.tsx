@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -15,6 +15,7 @@ import { extractErrorMessage } from '@/utils';
  */
 const LoginForm: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, isLoading } = useAuthStore();
   
   const [formData, setFormData] = useState<LoginCredentials>({
@@ -70,7 +71,10 @@ const LoginForm: React.FC = () => {
       console.log('Attempting login with:', { email: formData.email, password: '***' });
       await login(formData);
       console.log('Login successful, redirecting...');
-      router.push('/'); // Redirect to home after successful login
+      
+      // Check for redirect parameter
+      const redirectTo = searchParams.get('redirect');
+      router.push(redirectTo || '/'); // Redirect to intended page or home
     } catch (error: unknown) {
       const errorMessage = extractErrorMessage(error);
       
@@ -199,13 +203,26 @@ const LoginForm: React.FC = () => {
             </Button>
 
             {/* Register Link */}
-            <div className="text-center">
+            <div className="text-center space-y-3">
               <p className="text-sm text-neutral-600">
                 Don&apos;t have an account?{' '}
                 <Link href="/auth/register" className="text-primary-600 hover:text-primary-500 font-medium">
                   Sign up
                 </Link>
               </p>
+              
+              {/* Back button if redirect parameter exists */}
+              {searchParams.get('redirect') && (
+                <Button
+                  type="button"
+                  onClick={() => router.back()}
+                  variant="secondary"
+                  className="w-full border border-gray-300"
+                  size="sm"
+                >
+                  Go Back
+                </Button>
+              )}
             </div>
           </form>
         </Card>
