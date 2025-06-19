@@ -1,12 +1,8 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { ApiError, BookFilters } from '@/types';
 
-// Base API configuration - use proxy for production, direct for development
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || (
-  typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
-    ? '/api'  // Use Next.js proxy on Vercel
-    : 'http://13.37.117.93/api'   // Direct connection in development
-);
+// Base API configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://13.37.117.93/api';
 
 // Debug: log the API URL in development
 if (process.env.NODE_ENV === 'development') {
