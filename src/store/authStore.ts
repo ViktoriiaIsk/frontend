@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { api, setAuthToken, removeAuthToken, endpoints } from '@/lib/api';
+import { resetCsrfCookie } from '@/lib/csrf';
 import { LocalOrdersService } from '@/lib/services/localOrders';
 import { User, LoginCredentials, RegisterData, AuthResponse, ApiResponse } from '@/types';
 
@@ -140,6 +141,9 @@ export const useAuthStore = create<AuthState>()(
         
         // Clear authentication tokens
         removeAuthToken();
+        
+        // Reset CSRF cookie state
+        resetCsrfCookie();
         
         // Clear local orders for current user
         LocalOrdersService.clearOnLogout();

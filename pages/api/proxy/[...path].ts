@@ -47,6 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: req.method,
       headers,
       body,
+      credentials: 'include', // Forward cookies for Sanctum
     });
 
     console.log(`Proxy response: ${proxyRes.status} ${proxyRes.statusText}`);
@@ -58,9 +59,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Set CORS headers for the client
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-TOKEN, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    // Forward cookies from backend
+    const setCookieHeader = proxyRes.headers.get('set-cookie');
+    if (setCookieHeader) {
+      res.setHeader('Set-Cookie', setCookieHeader);
+    }
 
     // Set content type
     const contentType = proxyRes.headers.get('content-type');

@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { ApiError, BookFilters } from '@/types';
+import { initializeCsrfCookie, getCsrfToken } from '@/lib/csrf';
 
 // Base API configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/proxy/api';
@@ -12,16 +13,21 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    // 'X-Requested-With': 'XMLHttpRequest', // Removed due to CORS restrictions on backend
+    'X-Requested-With': 'XMLHttpRequest', // Required for Sanctum SPA
   },
-  withCredentials: false,
+  withCredentials: true, // Required for Sanctum SPA to send cookies
   timeout: 10000,
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and handle CSRF
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     console.log(`Making API request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    
+    // Initialize CSRF cookie for state-changing requests
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method?.toUpperCase() || '')) {
+      await initializeCsrfCookie();
+    }
     
     const token = getAuthToken();
     if (token) {
@@ -35,6 +41,16 @@ api.interceptors.request.use(
         config.headers['Content-Type'] = 'application/json';
       }
     }
+    
+    // Add CSRF token header if available
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+      config.headers['X-CSRF-TOKEN'] = csrfToken;
+    }
+    
+    // Add required headers for Sanctum SPA
+    config.headers['X-Requested-With'] = 'XMLHttpRequest';
+    config.headers['Accept'] = 'application/json';
     
     console.log('Request headers:', config.headers);
     return config;
