@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { CheckCircleIcon, ArrowRightIcon, ShoppingBagIcon } from '@heroicons/react/24/solid';
 import { Order } from '@/types';
 import { OrderService } from '@/lib/services/orders';
@@ -114,7 +115,7 @@ function ThankYouContent() {
               
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-blue-900 mb-3">
-                  What's Next?
+                  What is next?
                 </h3>
                 <ul className="space-y-2 text-blue-800">
                   <li>• You will receive a confirmation email shortly</li>
@@ -182,9 +183,11 @@ function ThankYouContent() {
             {/* Book Information */}
             <div className="flex items-start space-x-4 mb-6">
               {order.book.first_image ? (
-                <img
+                <Image
                   src={order.book.first_image}
                   alt={order.book.title}
+                  width={80}
+                  height={112}
                   className="w-20 h-28 object-cover rounded-lg shadow-md"
                 />
               ) : (
@@ -223,7 +226,7 @@ function ThankYouContent() {
           {/* Information Card */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
             <h3 className="text-lg font-semibold text-blue-900 mb-3">
-              What's Next?
+              What is next?
             </h3>
             <ul className="space-y-2 text-blue-800">
               <li>• You will receive a confirmation email within a few minutes</li>

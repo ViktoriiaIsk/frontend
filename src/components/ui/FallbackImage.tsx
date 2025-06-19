@@ -7,8 +7,6 @@ interface FallbackImageProps {
   alt: string;
   className?: string;
   fallback?: string;
-  width?: number;
-  height?: number;
   onClick?: () => void;
 }
 
@@ -21,8 +19,6 @@ export default function FallbackImage({
   alt,
   className = '',
   fallback = '/images/placeholder-book.svg',
-  width,
-  height,
   onClick,
 }: FallbackImageProps) {
   const [currentSrc, setCurrentSrc] = useState(() => {

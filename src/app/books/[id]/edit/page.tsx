@@ -12,10 +12,11 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import FallbackImage from '@/components/ui/FallbackImage';
 import { useCategories, useUpdateBook, useDeleteBook } from '@/hooks/useBooks';
-import { CreateBookData, BOOK_CONDITIONS, BookCondition, Book } from '@/types';
+import { BOOK_CONDITIONS, BookCondition, Book } from '@/types';
 import { extractErrorMessage } from '@/utils';
 import { BooksService } from '@/lib/services/books';
 import { AuthService } from '@/lib/services/auth';
+import { useAuthStore } from '@/store/authStore';
 
 // Helper function to get condition description
 const getConditionDescription = (condition: BookCondition): string => {
@@ -46,12 +47,25 @@ type EditBookFormData = z.infer<typeof editBookSchema>;
  */
 export default function EditBookPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading, checkAuth } = useAuthStore();
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState<string | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+
+  // Check authentication on page load
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/auth/login');
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   // API hooks
   const { data: categoriesResponse, isLoading: isCategoriesLoading } = useCategories();
@@ -215,6 +229,26 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
       });
     }
   };
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-accent-cream">
+        <Navigation />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Checking authentication...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated (will be handled by useEffect above)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (loading) {
     return (

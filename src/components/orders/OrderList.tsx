@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { Order } from '@/types';
 import { OrderService } from '@/lib/services/orders';
 import { LocalOrdersService } from '@/lib/services/localOrders';
@@ -19,11 +21,7 @@ export default function OrderList({ className = '' }: OrderListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [currentPage]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -120,7 +118,11 @@ export default function OrderList({ className = '' }: OrderListProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -175,13 +177,13 @@ export default function OrderList({ className = '' }: OrderListProps) {
           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-200">
             <ShoppingBagIcon className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
           </div>
-          <p className="text-sm sm:text-base text-gray-600 mb-4">You don't have any orders yet</p>
-          <a
+          <p className="text-sm sm:text-base text-gray-600 mb-4">You do not have any orders yet</p>
+          <Link
             href="/"
             className="inline-block bg-green-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base"
           >
             Start Shopping
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -223,20 +225,24 @@ export default function OrderList({ className = '' }: OrderListProps) {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
-                {order.book?.first_image ? (
-                  <img
-                    src={order.book.first_image}
-                    alt={order.book.title || 'Book'}
-                    className="w-full sm:w-16 h-48 sm:h-20 object-cover rounded-lg shadow-sm"
-                  />
-                ) : (
-                  <img
-                    src="/images/placeholder-book.svg"
-                    alt="Book placeholder"
-                    className="w-full sm:w-16 h-48 sm:h-20 object-cover rounded-lg shadow-sm"
-                  />
-                )}
+                              <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
+                  {order.book?.first_image ? (
+                    <Image
+                      src={order.book.first_image}
+                      alt={order.book.title || 'Book'}
+                      width={256}
+                      height={192}
+                      className="w-full sm:w-16 h-48 sm:h-20 object-cover rounded-lg shadow-sm"
+                    />
+                  ) : (
+                    <Image
+                      src="/images/placeholder-book.svg"
+                      alt="Book placeholder"
+                      width={256}
+                      height={192}
+                      className="w-full sm:w-16 h-48 sm:h-20 object-cover rounded-lg shadow-sm"
+                    />
+                  )}
                 
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-gray-900 truncate text-sm sm:text-base">

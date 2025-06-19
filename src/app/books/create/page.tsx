@@ -12,9 +12,10 @@ import Footer from '@/components/layout/Footer';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { useCreateBook, useCategories } from '@/hooks/useBooks';
-import { CreateBookData, BOOK_CONDITIONS, BookCondition } from '@/types';
+import { BOOK_CONDITIONS, BookCondition } from '@/types';
 import { extractErrorMessage } from '@/utils';
 import { BooksService } from '@/lib/services/books';
+import { useAuthStore } from '@/store/authStore';
 
 // Helper function to get condition description
 const getConditionDescription = (condition: BookCondition): string => {
@@ -45,9 +46,42 @@ type CreateBookFormData = z.infer<typeof createBookSchema>;
  */
 const CreateBookPage: React.FC = () => {
   const router = useRouter();
+  const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // Check authentication on page load
+  React.useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  // Redirect to login if not authenticated
+  React.useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/auth/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-accent-cream">
+        <Navigation />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Checking authentication...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated (will be handled by useEffect above)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   // API hooks
   const { mutate: createBook, isPending: isCreating } = useCreateBook();
@@ -289,7 +323,7 @@ const CreateBookPage: React.FC = () => {
                 <p className="text-red-600 text-sm mt-1">{errors.description.message}</p>
               )}
               <p className="text-sm text-neutral-500 mt-1">
-                Minimum 10 characters. Be honest about the book's condition.
+                Minimum 10 characters. Be honest about the book condition.
               </p>
             </div>
 

@@ -149,7 +149,7 @@ export const useAuthStore = create<AuthState>()(
             token: token
           });
           
-        } catch (error) {
+        } catch {
           // Token is invalid, clear auth but don't redirect
           set({ 
             user: null, 

@@ -1,4 +1,4 @@
-import { api, endpoints, buildQueryString, createFormData } from '@/lib/api';
+import { api, endpoints, buildQueryString } from '@/lib/api';
 import type {
   Book,
   CreateBookData,
@@ -241,24 +241,53 @@ export class BooksService {
    */
   static async getCategories(): Promise<Category[]> {
     try {
+      console.log('Fetching categories from:', `${api.defaults.baseURL}${endpoints.categories.list}`);
+      
       const response = await api.get<ApiResponse<Category[]>>(
         endpoints.categories.list
       );
+      
+      console.log('Categories response:', response.data);
       
       // Handle both response.data.data and response.data structures
       const categories = response.data.data || response.data;
       
       // Validate that we have categories data
       if (!Array.isArray(categories)) {
-        console.warn('Invalid categories data from server:', categories);
-        return [];
+        console.warn('Invalid categories data from server, using fallback:', categories);
+        return this.getFallbackCategories();
       }
       
+      if (categories.length === 0) {
+        console.warn('No categories returned from server, using fallback');
+        return this.getFallbackCategories();
+      }
+      
+      console.log(`Successfully loaded ${categories.length} categories`);
       return categories;
     } catch (error) {
-      console.error('Error fetching categories:', error);
-      throw error;
+      console.error('Error fetching categories, using fallback:', error);
+      return this.getFallbackCategories();
     }
+  }
+
+  /**
+   * Get fallback categories when backend is unavailable
+   * @returns Array of default categories
+   */
+  static getFallbackCategories(): Category[] {
+    return [
+      { id: 1, name: 'Fiction', slug: null, description: 'Books that tell made-up stories to entertain, inspire, or move the reader.', created_at: '', updated_at: '' },
+      { id: 2, name: 'Non-Fiction', slug: null, description: 'Books based on real events, people, or facts — perfect for those who love learning.', created_at: '', updated_at: '' },
+      { id: 3, name: 'Science', slug: null, description: 'Explore the wonders of the universe, nature, and technology through scientific literature.', created_at: '', updated_at: '' },
+      { id: 4, name: 'History', slug: null, description: 'Books that dive into past civilizations, wars, cultures, and historical figures.', created_at: '', updated_at: '' },
+      { id: 5, name: 'Technology', slug: null, description: 'Discover the latest in coding, innovation, and the digital world.', created_at: '', updated_at: '' },
+      { id: 6, name: 'Children', slug: null, description: 'Fun, educational, and heartwarming stories for young readers.', created_at: '', updated_at: '' },
+      { id: 7, name: 'Romance', slug: null, description: 'Love stories that make your heart flutter and bring emotions to life.', created_at: '', updated_at: '' },
+      { id: 8, name: 'Mystery', slug: null, description: 'Thrilling tales full of secrets, puzzles, and unexpected twists.', created_at: '', updated_at: '' },
+      { id: 9, name: 'Fantasy', slug: null, description: 'Step into magical worlds filled with dragons, heroes, and epic adventures.', created_at: '', updated_at: '' },
+      { id: 10, name: 'Self-help', slug: null, description: 'Books that motivate, heal, and guide you through personal growth.', created_at: '', updated_at: '' }
+    ];
   }
 
   /**

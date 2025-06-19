@@ -78,9 +78,10 @@ export interface BookImage {
 export interface Category {
   id: number;
   name: string;
-  slug: string;
+  slug: string | null;
   description?: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface CreateBookData {

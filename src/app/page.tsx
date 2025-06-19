@@ -16,7 +16,6 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,7 +31,6 @@ export default function HomePage() {
         setBooks(booksResponse.data);
       } catch (err) {
         console.error('Error loading home page:', err);
-        setError('Не вдалося завантажити дані');
       } finally {
         setLoading(false);
       }
@@ -48,7 +46,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Завантаження...</p>
+            <p className="text-gray-600">Loading...</p>
           </div>
         </div>
         <EcoSection />

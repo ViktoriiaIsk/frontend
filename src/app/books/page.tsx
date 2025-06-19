@@ -8,7 +8,7 @@ import Link from 'next/link';
 
 function buildQuery(params: Record<string, any>) {
   const q = Object.entries(params)
-    .filter(([_, v]) => v !== undefined && v !== null && v !== '')
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
     .join('&');
   return q ? `?${q}` : '';

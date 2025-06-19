@@ -7,7 +7,7 @@ import { useDeleteBook, useCategories } from '@/hooks/useBooks';
 import { extractErrorMessage } from '@/utils';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
-import BookCard from '@/components/books/BookCard';
+
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import FallbackImage from '@/components/ui/FallbackImage';
@@ -22,7 +22,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);

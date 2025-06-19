@@ -145,7 +145,7 @@ export class OrderService {
           orders.push(order);
           console.log(`Found order ${order.id}`);
         }
-      } catch (error) {
+      } catch {
         // Order doesn't exist, continue
         continue;
       }

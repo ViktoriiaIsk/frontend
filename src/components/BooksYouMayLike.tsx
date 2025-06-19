@@ -27,7 +27,7 @@ export default function BooksYouMayLike({ books }: { books: Book[] }) {
       try {
         const user = await AuthService.getCurrentUser();
         setCurrentUser(user);
-      } catch (error) {
+      } catch {
         // User not authenticated, that's fine
         setCurrentUser(null);
       }
