@@ -40,8 +40,18 @@ export default function SmartImage({
     
     // Extract filename from URL if it's a full URL
     let imagePath = src;
-    if (src.startsWith('http') && src.includes('/book-images/')) {
-      imagePath = src.split('/book-images/')[1];
+    if (src.startsWith('http')) {
+      // Extract path from full URL
+      if (src.includes('/storage/books/')) {
+        imagePath = src.split('/storage/books/')[1];
+      } else if (src.includes('/book-images/')) {
+        imagePath = src.split('/book-images/')[1];
+      } else if (src.includes('/books/')) {
+        imagePath = src.split('/books/')[1];
+      } else {
+        // Extract just the filename
+        imagePath = src.split('/').pop() || src;
+      }
     }
     return getImageUrlAlternatives(imagePath);
   });

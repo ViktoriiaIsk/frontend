@@ -250,34 +250,44 @@ export const getBaseUrl = (): string => {
   return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 };
 
-// Book image URL helper - backend now returns ready-to-use image_url
+// Book image URL helper - handle Laravel storage link issues
 export const getBookImageUrl = (bookId: number | string, imageName: string): string => {
   if (!imageName) return '/images/placeholder-book.svg';
   
   // If already a complete URL (as returned by backend API), return as is
   if (imageName.startsWith('http')) return imageName;
   
-  // Fallback for legacy image paths
+  // Handle Laravel storage link issues - use direct app/public/books path
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://bookswap-save-planet.vercel.app';
+  
+  // Try multiple URL patterns based on Laravel storage configuration
+  // Pattern 1: Direct storage path (if storage:link works)
+  // Pattern 2: app/public/books path (fallback for storage link issues)
   return `${backendUrl}/storage/books/${bookId}/${imageName}`;
 };
 
-// Generic image URL helper for book images - backend returns complete URLs
+// Generic image URL helper for book images - handle Laravel storage issues
 export const getBookImageUrlFromPath = (imagePath: string): string => {
   if (!imagePath) return '/images/placeholder-book.svg';
   
-  // Backend API now returns complete image_url, use as is
+  // Backend API returns complete image_url, use as is
   if (imagePath.startsWith('http')) return imagePath;
   
-  // Fallback for legacy or relative paths
+  // Handle Laravel storage link issues
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://bookswap-save-planet.vercel.app';
   
-  // Handle different path formats
+  // Handle different path formats and storage link issues
   if (imagePath.startsWith('/storage/')) {
+    // Direct storage path - may not work if storage:link is broken
     return `${backendUrl}${imagePath}`;
   } else if (imagePath.startsWith('storage/')) {
+    // Storage path without leading slash
     return `${backendUrl}/${imagePath}`;
+  } else if (imagePath.startsWith('books/')) {
+    // Direct books path - use storage prefix
+    return `${backendUrl}/storage/${imagePath}`;
   } else {
+    // Default: assume it's a filename in books directory
     return `${backendUrl}/storage/books/${imagePath}`;
   }
 };
@@ -294,23 +304,35 @@ export const getImageUrl = (path: string): string => {
   return `${backendUrl}/storage/book-images/${path}`;
 };
 
-// Image URL alternatives using direct backend URLs
+// Image URL alternatives - handle Laravel storage link issues
 export function getImageUrlAlternatives(imagePath: string): string[] {
   if (!imagePath) return [];
   
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://bookswap-save-planet.vercel.app';
   
-  // Try different paths on backend
+  // Extract filename if it's a full path
+  const filename = imagePath.includes('/') ? imagePath.split('/').pop() : imagePath;
+  
+  // Try different URL patterns to handle Laravel storage issues
   const alternatives = [
-    `${backendUrl}/storage/book-images/${imagePath}`,
-    `${backendUrl}/book-images/${imagePath}`,
+    // Standard Laravel storage paths
     `${backendUrl}/storage/books/${imagePath}`,
-    // Fallback to proxy for development
-    `/api/proxy/storage/book-images/${imagePath}`,
+    `${backendUrl}/storage/book-images/${imagePath}`,
+    
+    // Direct public paths (if storage link is broken)
+    `${backendUrl}/app/public/books/${filename}`,
+    `${backendUrl}/public/books/${filename}`,
+    
+    // Alternative storage paths
+    `${backendUrl}/storage/app/public/books/${filename}`,
+    `${backendUrl}/book-images/${imagePath}`,
+    
+    // Proxy fallback for development
     `/api/proxy/storage/books/${imagePath}`,
+    `/api/proxy/storage/book-images/${imagePath}`,
   ];
   
-  return alternatives;
+  return alternatives.filter(Boolean);
 }
 
 // Error message extractor

@@ -43,12 +43,25 @@ export default function FallbackImage({
   const handleImageError = () => {
     if (hasFailed) return;
     
-    // Try to get absolute URL if it's a relative path
+    // Try alternative URLs for Laravel storage link issues
     if (!currentSrc.startsWith('http') && currentSrc !== fallback) {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://bookswap-save-planet.vercel.app';
       const absoluteUrl = currentSrc.startsWith('/') ? `${backendUrl}${currentSrc}` : `${backendUrl}/${currentSrc}`;
       setCurrentSrc(absoluteUrl);
       return;
+    }
+    
+    // If it's already an absolute URL but failed, try alternative paths
+    if (currentSrc.startsWith('http') && currentSrc.includes('/storage/') && currentSrc !== fallback) {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://bookswap-save-planet.vercel.app';
+      const filename = currentSrc.split('/').pop();
+      
+      // Try direct public path as fallback for storage link issues
+      const alternativeUrl = `${backendUrl}/app/public/books/${filename}`;
+      if (alternativeUrl !== currentSrc) {
+        setCurrentSrc(alternativeUrl);
+        return;
+      }
     }
     
     setCurrentSrc(fallback);
