@@ -182,19 +182,31 @@ export class BooksService {
   }
 
   /**
-   * Upload images for a book
+   * Upload images for a book according to backend API specification
    * @param bookId - Book ID
    * @param images - Array of image files
-   * @returns Promise with upload result
+   * @returns Promise with upload result containing image URLs
    */
-  static async uploadImages(bookId: number, images: File[]): Promise<{ success: boolean; images?: string[] }> {
+  static async uploadImages(bookId: number, images: File[]): Promise<{ 
+    success: boolean; 
+    message?: string;
+    images?: Array<{
+      id: number;
+      book_id: number;
+      image_path: string;
+      image_url: string;
+    }>
+  }> {
     try {
       // Ensure CSRF token is available
       await initializeCsrfCookie();
       
+      // Create FormData according to API spec
       const formData = new FormData();
-      images.forEach((image, index) => {
-        formData.append(`images[${index}]`, image);
+      
+      // Append each image with the correct field name: images[]
+      images.forEach((image) => {
+        formData.append('images[]', image);
       });
 
       // Get auth token and CSRF token
@@ -205,10 +217,12 @@ export class BooksService {
         'X-Requested-With': 'XMLHttpRequest',
       };
       
+      // Authorization header is required
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
+      // CSRF token for security
       if (csrfToken) {
         headers['X-XSRF-TOKEN'] = csrfToken;
       }
@@ -223,11 +237,40 @@ export class BooksService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Upload failed: ${response.status} ${response.statusText}. ${errorText}`);
+        let errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch {
+          // Use default error message if parsing fails
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
-      return result;
+      
+      // Expected response format:
+      // {
+      //   "message": "Images uploaded successfully",
+      //   "images": [
+      //     {
+      //       "id": 1,
+      //       "book_id": 1,
+      //       "image_path": "books/1/image1.jpg",
+      //       "image_url": "http://domain.com/storage/books/1/image1.jpg"
+      //     }
+      //   ]
+      // }
+      
+      return {
+        success: true,
+        message: result.message,
+        images: result.images
+      };
     } catch (error: unknown) {
       throw error;
     }

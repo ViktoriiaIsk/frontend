@@ -250,28 +250,36 @@ export const getBaseUrl = (): string => {
   return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 };
 
-// Book image URL helper
+// Book image URL helper - backend now returns ready-to-use image_url
 export const getBookImageUrl = (bookId: number | string, imageName: string): string => {
   if (!imageName) return '/images/placeholder-book.svg';
   
-  // If already a complete URL, return as is
+  // If already a complete URL (as returned by backend API), return as is
   if (imageName.startsWith('http')) return imageName;
   
-  // Use backend URL directly for production
+  // Fallback for legacy image paths
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://bookswap-save-planet.vercel.app';
   return `${backendUrl}/storage/books/${bookId}/${imageName}`;
 };
 
-// Generic image URL helper for book images
+// Generic image URL helper for book images - backend returns complete URLs
 export const getBookImageUrlFromPath = (imagePath: string): string => {
   if (!imagePath) return '/images/placeholder-book.svg';
   
-  // If already a complete URL, return as is
+  // Backend API now returns complete image_url, use as is
   if (imagePath.startsWith('http')) return imagePath;
   
-  // Use backend URL directly for production
+  // Fallback for legacy or relative paths
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://bookswap-save-planet.vercel.app';
-  return `${backendUrl}/storage/books/${imagePath}`;
+  
+  // Handle different path formats
+  if (imagePath.startsWith('/storage/')) {
+    return `${backendUrl}${imagePath}`;
+  } else if (imagePath.startsWith('storage/')) {
+    return `${backendUrl}/${imagePath}`;
+  } else {
+    return `${backendUrl}/storage/books/${imagePath}`;
+  }
 };
 
 // Legacy Image URL helper - DEPRECATED: Backend now returns ready-to-use image URLs

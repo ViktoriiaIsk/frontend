@@ -15,6 +15,7 @@ import { useCreateBook, useCategories } from '@/hooks/useBooks';
 import { BOOK_CONDITIONS, BookCondition, CreateBookData } from '@/types';
 import { BooksService } from '@/lib/services/books';
 import { useAuthStore } from '@/store/authStore';
+import { validateImageFiles, createImagePreview, cleanupImagePreview } from '@/utils/imageValidation';
 
 
 // Helper function to get condition description
@@ -135,47 +136,48 @@ const CreateBookPage: React.FC = () => {
     );
   }
 
-  // Handle image selection with proper validation
+  // Handle image selection with proper validation according to API spec
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     
     if (files.length + selectedImages.length > 5) {
       alert('You can upload maximum 5 images');
+      event.target.value = '';
       return;
     }
 
-    // Validate file types and sizes according to backend requirements
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
-    const maxSize = 2048 * 1024; // 2MB (2048 kilobytes)
+    // Use API-compliant validation
+    const validation = validateImageFiles(files);
     
-    const validFiles = files.filter(file => {
-      // Check file type
-      if (!allowedTypes.includes(file.type)) {
-        alert(`${file.name} must be a file of type: jpeg, png, jpg, gif`);
-        return false;
-      }
-      
-      // Check file size
-      if (file.size > maxSize) {
-        alert(`${file.name} may not be greater than 2048 kilobytes (2MB)`);
-        return false;
-      }
-      
-      return true;
-    });
+    if (!validation.isValid) {
+      // Show validation errors
+      alert(`Image validation failed:\n${validation.errors.join('\n')}`);
+      event.target.value = '';
+      return;
+    }
 
-    if (validFiles.length === 0) return;
+    if (validation.validFiles.length === 0) {
+      event.target.value = '';
+      return;
+    }
 
-    // Create preview URLs
-    const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
+    // Create preview URLs using the utility function
+    const newPreviewUrls = validation.validFiles.map(file => {
+      const preview = createImagePreview(file);
+      return preview || '';
+    }).filter(Boolean);
     
-    setSelectedImages(prev => [...prev, ...validFiles]);
+    setSelectedImages(prev => [...prev, ...validation.validFiles]);
     setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+    
+    // Reset input
+    event.target.value = '';
   };
 
-  // Remove selected image
+  // Remove selected image with proper cleanup
   const removeImage = (index: number) => {
-    URL.revokeObjectURL(previewUrls[index]);
+    // Cleanup preview URL using utility function
+    cleanupImagePreview(previewUrls[index]);
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
@@ -227,10 +229,19 @@ const CreateBookPage: React.FC = () => {
           if (selectedImages.length > 0) {
             try {
               const uploadResult = await BooksService.uploadImages(createdBook.id, selectedImages);
-              // Fetch updated book after image upload
-              finalBook = await BooksService.getBook(createdBook.id);
+              
+              if (uploadResult.success && uploadResult.images) {
+                // Images uploaded successfully, show success message
+                console.log(`Successfully uploaded ${uploadResult.images.length} images`);
+                // Fetch updated book after image upload to get the latest data
+                finalBook = await BooksService.getBook(createdBook.id);
+              } else {
+                throw new Error(uploadResult.message || 'Failed to upload images');
+              }
             } catch (imgErr) {
-              alert('Book created, but failed to upload images.');
+              console.error('Image upload error:', imgErr);
+              const errorMessage = imgErr instanceof Error ? imgErr.message : 'Failed to upload images';
+              alert(`Book created successfully, but failed to upload images: ${errorMessage}`);
             }
           }
           
