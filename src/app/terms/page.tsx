@@ -4,7 +4,7 @@ export default function TermsPage() {
   return (
     <ComingSoon
       title="Terms of Service"
-      description="Our terms of service are being finalized to provide clear guidelines for using BookSwap. This page will be available soon with all the legal information you need."
+      description="We're preparing our detailed terms of service to ensure clarity about our platform usage. This page will be available soon with comprehensive information about user rights and responsibilities."
       icon="📋"
     />
   );

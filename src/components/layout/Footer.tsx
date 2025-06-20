@@ -1,19 +1,11 @@
-'use client';
-
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import Toast from '@/components/ui/Toast';
 
 /**
  * Footer component with company info, links, and eco message
  */
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
-  const [showToast, setShowToast] = useState(false);
-
-  const handleSocialClick = () => {
-    setShowToast(true);
-  };
 
   return (
     <footer className="bg-neutral-900 text-neutral-300">
@@ -32,34 +24,11 @@ const Footer: React.FC = () => {
               Give stories a new life and help the planet through sustainable reading.
             </p>
             <div className="flex space-x-4">
-              <button 
-                onClick={handleSocialClick}
-                className="text-neutral-400 hover:text-primary-400 transition-colors"
-                aria-label="Facebook"
-              >
-                📘
-              </button>
-              <button 
-                onClick={handleSocialClick}
-                className="text-neutral-400 hover:text-primary-400 transition-colors"
-                aria-label="Twitter"
-              >
-                🐦
-              </button>
-              <button 
-                onClick={handleSocialClick}
-                className="text-neutral-400 hover:text-primary-400 transition-colors"
-                aria-label="Instagram"
-              >
-                📷
-              </button>
-              <button 
-                onClick={handleSocialClick}
-                className="text-neutral-400 hover:text-primary-400 transition-colors"
-                aria-label="LinkedIn"
-              >
-                💼
-              </button>
+              <span className="text-neutral-400 text-sm">Follow us:</span>
+              <span className="text-neutral-400">📘</span>
+              <span className="text-neutral-400">🐦</span>
+              <span className="text-neutral-400">📷</span>
+              <span className="text-neutral-400">💼</span>
             </div>
           </div>
 
@@ -169,15 +138,6 @@ const Footer: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Toast Notification */}
-      {showToast && (
-        <Toast
-          message="Social media integration coming soon! 🚀"
-          type="info"
-          onClose={() => setShowToast(false)}
-        />
-      )}
     </footer>
   );
 };
