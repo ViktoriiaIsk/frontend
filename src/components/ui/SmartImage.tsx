@@ -3,10 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import Image, { ImageProps } from 'next/image';
 import { getImageUrlAlternatives } from '@/utils';
+import ImageDebugger from '@/components/debug/ImageDebugger';
 
 interface SmartImageProps extends Omit<ImageProps, 'src' | 'onError'> {
   src: string;
   fallback?: string;
+  bookId?: number | string;
+  showDebugger?: boolean;
 }
 
 /**
@@ -15,6 +18,8 @@ interface SmartImageProps extends Omit<ImageProps, 'src' | 'onError'> {
 export default function SmartImage({ 
   src, 
   fallback = '/images/placeholder-book.svg',
+  bookId,
+  showDebugger = false,
   ...props 
 }: SmartImageProps) {
   const [currentSrc, setCurrentSrc] = useState(() => {
@@ -100,13 +105,21 @@ export default function SmartImage({
   }
 
   return (
-    <Image
-      {...props}
-      src={currentSrc}
-      onError={handleImageError}
-      alt={props.alt || 'Book image'}
-      // Add unoptimized prop for external images to prevent Next.js optimization issues
-      unoptimized={currentSrc.startsWith('http')}
-    />
+    <>
+      <Image
+        {...props}
+        src={currentSrc}
+        onError={handleImageError}
+        alt={props.alt || 'Book image'}
+        // Add unoptimized prop for external images to prevent Next.js optimization issues
+        unoptimized={currentSrc.startsWith('http')}
+      />
+      {showDebugger && (
+        <ImageDebugger 
+          imagePath={src} 
+          bookId={bookId}
+        />
+      )}
+    </>
   );
 } 

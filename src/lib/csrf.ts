@@ -6,6 +6,14 @@
 let csrfCookieInitialized = false;
 
 /**
+ * Get CSRF cookie URL based on environment
+ */
+const getCsrfUrl = (): string => {
+  // Always use proxy for all environments to avoid CORS and Mixed Content issues
+  return '/api/proxy/sanctum/csrf-cookie';
+};
+
+/**
  * Initialize CSRF cookie for Laravel Sanctum
  * Should be called before login/register/any POST/PUT/DELETE requests
  */
@@ -16,7 +24,8 @@ export const initializeCsrfCookie = async (): Promise<void> => {
   }
 
   try {
-    const response = await fetch('/api/proxy/sanctum/csrf-cookie', {
+    const csrfUrl = getCsrfUrl();
+    const response = await fetch(csrfUrl, {
       method: 'GET',
       credentials: 'include', // Important: include cookies
       headers: {
@@ -30,6 +39,7 @@ export const initializeCsrfCookie = async (): Promise<void> => {
     }
   } catch (error) {
     // Don't throw error, continue with request
+    console.warn('Failed to initialize CSRF cookie:', error);
   }
 };
 

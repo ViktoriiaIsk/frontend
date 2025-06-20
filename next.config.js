@@ -6,8 +6,8 @@ const nextConfig = {
     remotePatterns: [
       // Backend domain
       {
-        protocol: "https",
-        hostname: "bookswap-save-planet.vercel.app",
+        protocol: "http",
+        hostname: "13.37.117.93",
       },
       {
         protocol: "http",
@@ -60,11 +60,9 @@ const nextConfig = {
   // Environment variables
   env: {
     NEXT_PUBLIC_BACKEND_URL:
-      process.env.NEXT_PUBLIC_BACKEND_URL ||
-      "https://bookswap-save-planet.vercel.app",
+      process.env.NEXT_PUBLIC_BACKEND_URL || "http://13.37.117.93",
     NEXT_PUBLIC_IMAGE_BASE_URL:
-      process.env.NEXT_PUBLIC_IMAGE_BASE_URL ||
-      "https://bookswap-save-planet.vercel.app",
+      process.env.NEXT_PUBLIC_IMAGE_BASE_URL || "http://13.37.117.93",
   },
 };
 

@@ -257,12 +257,10 @@ export const getBookImageUrl = (bookId: number | string, imageName: string): str
   // If already a complete URL (as returned by backend API), return as is
   if (imageName.startsWith('http')) return imageName;
   
-  // Handle Laravel storage link issues - use direct app/public/books path
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://bookswap-save-planet.vercel.app';
+  // Always use proxy for all environments to avoid CORS and Mixed Content issues
+  const backendUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '/api/proxy';
   
-  // Try multiple URL patterns based on Laravel storage configuration
-  // Pattern 1: Direct storage path (if storage:link works)
-  // Pattern 2: app/public/books path (fallback for storage link issues)
+  // Use proxy path format
   return `${backendUrl}/storage/books/${bookId}/${imageName}`;
 };
 
@@ -273,12 +271,12 @@ export const getBookImageUrlFromPath = (imagePath: string): string => {
   // Backend API returns complete image_url, use as is
   if (imagePath.startsWith('http')) return imagePath;
   
-  // Handle Laravel storage link issues
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://bookswap-save-planet.vercel.app';
+  // Always use proxy for all environments to avoid CORS and Mixed Content issues
+  const backendUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '/api/proxy';
   
   // Handle different path formats and storage link issues
   if (imagePath.startsWith('/storage/')) {
-    // Direct storage path - may not work if storage:link is broken
+    // Direct storage path
     return `${backendUrl}${imagePath}`;
   } else if (imagePath.startsWith('storage/')) {
     // Storage path without leading slash
@@ -308,28 +306,20 @@ export const getImageUrl = (path: string): string => {
 export function getImageUrlAlternatives(imagePath: string): string[] {
   if (!imagePath) return [];
   
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://bookswap-save-planet.vercel.app';
+  // Always use proxy for all environments to avoid CORS and Mixed Content issues
+  const backendUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '/api/proxy';
   
   // Extract filename if it's a full path
   const filename = imagePath.includes('/') ? imagePath.split('/').pop() : imagePath;
   
-  // Try different URL patterns to handle Laravel storage issues
-  const alternatives = [
-    // Standard Laravel storage paths
+  // All alternatives use proxy
+  const alternatives: string[] = [
     `${backendUrl}/storage/books/${imagePath}`,
     `${backendUrl}/storage/book-images/${imagePath}`,
-    
-    // Direct public paths (if storage link is broken)
     `${backendUrl}/app/public/books/${filename}`,
     `${backendUrl}/public/books/${filename}`,
-    
-    // Alternative storage paths
     `${backendUrl}/storage/app/public/books/${filename}`,
-    `${backendUrl}/book-images/${imagePath}`,
-    
-    // Proxy fallback for development
-    `/api/proxy/storage/books/${imagePath}`,
-    `/api/proxy/storage/book-images/${imagePath}`,
+    `${backendUrl}/book-images/${imagePath}`
   ];
   
   return alternatives.filter(Boolean);

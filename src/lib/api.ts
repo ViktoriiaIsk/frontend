@@ -2,8 +2,13 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 import { ApiError, BookFilters } from '@/types';
 import { initializeCsrfCookie, getCsrfToken } from '@/lib/csrf';
 
-// Base API configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/proxy/api';
+// Base API configuration - dynamic based on environment
+const getApiBaseUrl = (): string => {
+  // Always use proxy for all environments to avoid CORS and Mixed Content issues
+  return process.env.NEXT_PUBLIC_API_BASE_URL || '/api/proxy/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // API Base URL configured
 
