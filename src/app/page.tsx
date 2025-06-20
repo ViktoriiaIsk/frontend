@@ -30,7 +30,7 @@ export default function HomePage() {
         setCategories(categoriesData);
         setBooks(booksResponse.data);
       } catch (err) {
-        console.error('Error loading home page:', err);
+        // Silently handle error
       } finally {
         setLoading(false);
       }

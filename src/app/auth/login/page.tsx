@@ -13,6 +13,7 @@ import { useAuthStore } from '@/store/authStore';
 import { LoginCredentials } from '@/types';
 import { extractErrorMessage } from '@/utils';
 
+
 // Validation schema
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -183,6 +184,8 @@ const LoginPage: React.FC = () => {
               </Button>
             </Link>
           </form>
+          
+
         </Card>
       </div>
     </div>

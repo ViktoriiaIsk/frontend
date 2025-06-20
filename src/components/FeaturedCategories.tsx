@@ -45,7 +45,7 @@ export default function FeaturedCategories({ categories }: { categories: Categor
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {randomCategories.map((category) => (
-            <Link key={category.id} href={`/books?category=${category.id}`}>
+            <Link key={category.id} href={`/books?category_id=${category.id}`}>
               <Card hover padding="md" className="text-center cursor-pointer h-full">
                 <div className="w-16 h-16 rounded-2xl bg-primary-100 text-primary-800 flex items-center justify-center text-2xl mx-auto mb-3">
                   {getCategoryIcon(category.name)}

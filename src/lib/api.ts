@@ -22,8 +22,6 @@ export const api = axios.create({
 // Request interceptor to add auth token and handle CSRF
 api.interceptors.request.use(
   async (config) => {
-    console.log(`Making API request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-    
     // Initialize CSRF cookie for state-changing requests
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method?.toUpperCase() || '')) {
       await initializeCsrfCookie();
@@ -32,31 +30,23 @@ api.interceptors.request.use(
     const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('Added authorization token to request');
-    } else {
-      console.log('No auth token found');
-      if (config.url?.includes('/login') || config.url?.includes('/register')) {
-        // Ensure proper headers for auth requests
-        config.headers['Accept'] = 'application/json';
-        config.headers['Content-Type'] = 'application/json';
-      }
     }
     
     // Add CSRF token header if available
     const csrfToken = getCsrfToken();
     if (csrfToken) {
-      config.headers['X-CSRF-TOKEN'] = csrfToken;
+      config.headers['X-XSRF-TOKEN'] = csrfToken;
     }
     
     // Add required headers for Sanctum SPA
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
     config.headers['Accept'] = 'application/json';
     
-    console.log('Request headers:', config.headers);
+
+    
     return config;
   },
   (error) => {
-    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -64,12 +54,9 @@ api.interceptors.request.use(
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    console.log(`API response: ${response.status} ${response.statusText} for ${response.config.method?.toUpperCase()} ${response.config.url}`);
     return response;
   },
   (error: AxiosError) => {
-    console.error(`API error: ${error.response?.status} ${error.response?.statusText} for ${error.config?.method?.toUpperCase()} ${error.config?.url}`);
-    console.error('Error details:', error.response?.data);
 
     const apiError: ApiError = {
       message: 'An error occurred',
@@ -219,7 +206,7 @@ export const endpoints = {
     profile: '/user/profile',
     updateProfile: '/user/profile',
     changePassword: '/user/change-password',
-    books: '/books', // Use general books endpoint with user filter
+    books: '/my-books', // Correct endpoint for user's books
     orders: '/orders', // Use general orders endpoint with user authentication
   },
 };
@@ -242,17 +229,17 @@ export const buildQueryString = (filters: BookFilters): string => {
   }
   
   // Add category filter
-  if (filters.category_id) {
+  if (filters.category_id && filters.category_id > 0) {
     params.append('category_id', filters.category_id.toString());
   }
   
   // Add price range
-  if (filters.min_price) {
+  if (filters.min_price && filters.min_price > 0) {
     params.append('min_price', filters.min_price.toString());
   }
-  if (filters.max_price) {
+  if (filters.max_price && filters.max_price > 0) {
     params.append('max_price', filters.max_price.toString());
-    }
+  }
   
   const queryString = params.toString();
   

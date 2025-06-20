@@ -9,7 +9,20 @@ import BooksList from '@/components/books/BooksList';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
-import { Book, Category } from '@/types';
+import { Book, Category, BookFilters } from '@/types';
+
+// Safe parsing functions
+function safeParseInt(value: string | null): number | undefined {
+  if (!value || value.trim() === '') return undefined;
+  const parsed = parseInt(value);
+  return isNaN(parsed) || parsed <= 0 ? undefined : parsed;
+}
+
+function safeParseFloat(value: string | null): number | undefined {
+  if (!value || value.trim() === '') return undefined;
+  const parsed = parseFloat(value);
+  return isNaN(parsed) || parsed <= 0 ? undefined : parsed;
+}
 
 function buildQuery(params: Record<string, any>) {
   const q = Object.entries(params)
@@ -30,19 +43,21 @@ function BooksContent() {
 
   // Parse filters from URL - memoized to prevent re-renders
   const filters = useMemo(() => {
-    const categoryParam = searchParams?.get('category');
+    const categoryParam = searchParams?.get('category_id') || searchParams?.get('category'); // Support both for backward compatibility
     const pageParam = searchParams?.get('page');
     const minPriceParam = searchParams?.get('min_price');
     const maxPriceParam = searchParams?.get('max_price');
     
-    return {
+    const parsedFilters = {
       search: searchParams?.get('search') || '',
-      category_id: categoryParam ? parseInt(categoryParam) : undefined,
+      category_id: safeParseInt(categoryParam || null),
       page: pageParam ? parseInt(pageParam) : 1,
       per_page: 12,
-      min_price: minPriceParam ? parseInt(minPriceParam) : undefined,
-      max_price: maxPriceParam ? parseInt(maxPriceParam) : undefined,
+      min_price: safeParseFloat(minPriceParam || null),
+      max_price: safeParseFloat(maxPriceParam || null),
     };
+    
+    return parsedFilters;
   }, [searchParams]);
 
   // Load data on mount and when search params change
@@ -66,7 +81,6 @@ function BooksContent() {
         setCategories(categoriesData);
         
       } catch (err) {
-        console.error('Error loading books:', err);
         setError(err instanceof Error ? err.message : 'Failed to load books');
       } finally {
         setLoading(false);
@@ -122,6 +136,7 @@ function BooksContent() {
           <h1 className="text-3xl font-bold text-neutral-900 mb-2">Browse Books</h1>
           <p className="text-lg text-neutral-600">Find your next great read from our collection</p>
         </div>
+
         {/* Filters */}
         <Card className="mb-6">
           <form method="GET" className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -138,7 +153,7 @@ function BooksContent() {
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">Category</label>
               <select
-                name="category"
+                name="category_id"
                 defaultValue={filters.category_id || ''}
                 className="input"
               >
@@ -174,6 +189,7 @@ function BooksContent() {
             </div>
           </form>
         </Card>
+
         {/* Books List */}
         {books.length ? (
           <BooksList books={books} />
@@ -191,6 +207,7 @@ function BooksContent() {
             </Link>
           </div>
         )}
+
         {/* Pagination */}
         {pagination && pagination.last_page > 1 && (
           <div className="flex justify-center gap-2 mt-8">
@@ -211,7 +228,6 @@ function BooksContent() {
   );
 }
 
-// Loading fallback component
 function BooksPageFallback() {
   return (
     <div className="min-h-screen bg-accent-cream">
@@ -219,7 +235,7 @@ function BooksPageFallback() {
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">Loading books...</p>
         </div>
       </div>
       <Footer />

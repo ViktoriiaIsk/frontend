@@ -12,10 +12,10 @@ import Footer from '@/components/layout/Footer';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { useCreateBook, useCategories } from '@/hooks/useBooks';
-import { BOOK_CONDITIONS, BookCondition } from '@/types';
-import { extractErrorMessage } from '@/utils';
+import { BOOK_CONDITIONS, BookCondition, CreateBookData } from '@/types';
 import { BooksService } from '@/lib/services/books';
 import { useAuthStore } from '@/store/authStore';
+
 
 // Helper function to get condition description
 const getConditionDescription = (condition: BookCondition): string => {
@@ -182,7 +182,43 @@ const CreateBookPage: React.FC = () => {
 
   // Handle form submission
   const onSubmit = async (data: CreateBookFormData) => {
-      createBook(data, {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Submitting book data:', data);
+      }
+      
+      // Ensure all fields are properly formatted and not empty
+      const bookData: CreateBookData = {
+        title: data.title.trim(),
+        author: data.author.trim(),
+        description: data.description.trim(),
+        price: data.price.trim(),
+        condition: data.condition,
+        category_id: Number(data.category_id) || 1
+      };
+      
+      // Validate that required fields are not empty
+      if (!bookData.title) {
+        setError('title', { type: 'manual', message: 'Title is required' });
+        return;
+      }
+      if (!bookData.author) {
+        setError('author', { type: 'manual', message: 'Author is required' });
+        return;
+      }
+      if (!bookData.description || bookData.description.length < 10) {
+        setError('description', { type: 'manual', message: 'Description must be at least 10 characters' });
+        return;
+      }
+      if (!bookData.price || isNaN(parseFloat(bookData.price))) {
+        setError('price', { type: 'manual', message: 'Valid price is required' });
+        return;
+      }
+      if (!bookData.category_id || bookData.category_id < 1) {
+        setError('category_id', { type: 'manual', message: 'Please select a category' });
+        return;
+      }
+      
+      createBook(bookData, {
         onSuccess: async (createdBook) => {
           
           let finalBook = createdBook;
@@ -190,11 +226,10 @@ const CreateBookPage: React.FC = () => {
           // Upload images if any
           if (selectedImages.length > 0) {
             try {
-              const uploadResult = await BooksService.uploadBookImages(createdBook.id, selectedImages);
+              const uploadResult = await BooksService.uploadImages(createdBook.id, selectedImages);
               // Fetch updated book after image upload
               finalBook = await BooksService.getBook(createdBook.id);
             } catch (imgErr) {
-              console.error('Image upload error:', imgErr);
               alert('Book created, but failed to upload images.');
             }
           }
@@ -209,10 +244,25 @@ const CreateBookPage: React.FC = () => {
           router.push(`/books/${finalBook.id}`);
         },
         onError: (error) => {
-          const errorMessage = extractErrorMessage(error);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Create book error:', error);
+            console.error('Error details:', JSON.stringify(error, null, 2));
+          }
+          
+          let errorMessage = 'Failed to create book';
+          
+          // Extract error message
+          if (error && typeof error === 'object') {
+            if ('message' in error && typeof error.message === 'string') {
+              errorMessage = error.message;
+            }
+          }
+          
           // Handle validation errors
           if (error && typeof error === 'object' && 'errors' in error) {
             const errors = (error as { errors: Record<string, string[]> }).errors;
+            console.log('Validation errors:', errors);
+            
             Object.entries(errors).forEach(([field, messages]) => {
               if (Array.isArray(messages) && messages.length > 0) {
                 setError(field as keyof CreateBookFormData, {
@@ -430,6 +480,8 @@ const CreateBookPage: React.FC = () => {
                 </div>
               </div>
             )}
+
+
 
             {/* Submit Button */}
             <div className="flex gap-4">

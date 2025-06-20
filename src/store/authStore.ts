@@ -69,7 +69,6 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          
           // Clear any existing local orders before registration to prevent data leakage
           LocalOrdersService.clearAllUsersOrders();
           
@@ -78,27 +77,13 @@ export const useAuthStore = create<AuthState>()(
             data
           );
           
-          console.log('Register response details:', {
-            status: response.status,
-            statusText: response.statusText,
-            headers: response.headers,
-            data: response.data
-          });
-          
           // Handle both response.data.data and response.data structures
           const responseData = response.data.data || response.data;
           
           const { user, token } = responseData;
           
-          console.log('Parsed registration data:', {
-            user: user ? { id: user.id, email: user.email, name: user.name } : null, 
-            tokenExists: !!token,
-            tokenLength: token?.length || 0
-          });
-          
           // Validate that we have the required data
           if (!user || !token) {
-            console.error('Validation failed: Missing user or token', { user: !!user, token: !!token });
             throw new Error('Invalid response format from server - missing user or token');
           }
           
@@ -114,31 +99,14 @@ export const useAuthStore = create<AuthState>()(
           // Migrate any old order data to new user-specific format
           LocalOrdersService.migrateOldData();
           
-          
         } catch (err) {
-          console.error('💥 Registration error occurred:', err);
-          
-          // Log detailed error information
-          if (err && typeof err === 'object') {
-            console.error('📊 Error details:', {
-              name: (err as Error).name,
-              message: (err as Error).message,
-              status: (err as any).status,
-              response: (err as any).response?.data,
-              isNetworkError: !(err as any).response,
-              stack: (err as Error).stack
-            });
-          }
-          
           set({ isLoading: false });
           const message = err instanceof Error ? err.message : 'Registration failed';
-          console.error('🚨 Final error message:', message);
           throw new Error(message);
         }
       },
 
       logout: () => {
-        
         // Clear authentication tokens
         removeAuthToken();
         
@@ -155,7 +123,6 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
           isLoading: false
         });
-        
       },
 
       checkAuth: async () => {

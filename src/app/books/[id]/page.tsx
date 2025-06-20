@@ -64,11 +64,9 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
           const userData = await AuthService.getCurrentUser();
           setCurrentUser(userData);
         } catch (error: unknown) {
-          console.error('Auth error:', error);
           setCurrentUser(null);
         }
       } catch (err: unknown) {
-        console.error('Error fetching book:', err);
         
         // Retry up to 3 times with increasing delays for newly created books
         if (retryCount < 3) {

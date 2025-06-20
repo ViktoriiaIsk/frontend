@@ -27,7 +27,7 @@ export class LocalOrdersService {
       if (userDataStr) {
         const userData = JSON.parse(userDataStr);
         if (userData?.state?.user?.id) {
-          console.log('Found user ID from auth store:', userData.state.user.id);
+
           return userData.state.user.id.toString();
         }
       }
@@ -41,7 +41,7 @@ export class LocalOrdersService {
           const payload = JSON.parse(atob(parts[1]));
           const userId = payload.sub || payload.user_id || payload.id;
           if (userId) {
-            console.log('Found user ID from JWT:', userId);
+
             return userId.toString();
           }
         }
@@ -51,14 +51,14 @@ export class LocalOrdersService {
       if (token) {
         // Create a simple hash of the token for user identification
         const simpleHash = token.substring(0, 8) + token.length;
-        console.log('Using token hash as user ID:', simpleHash);
+
         return simpleHash;
       }
       
-      console.warn('No user identification method worked');
+
       return null;
     } catch (error) {
-      console.error('Failed to extract user ID:', error);
+
       return null;
     }
   }
@@ -127,7 +127,7 @@ export class LocalOrdersService {
       localStorage.setItem(storageKey, JSON.stringify(updatedOrders));
       
     } catch (error) {
-      console.error('Failed to save order to localStorage:', error);
+      // Silently fail
     }
   }
 
@@ -153,7 +153,6 @@ export class LocalOrdersService {
       const orders = JSON.parse(stored) as Order[];
       return Array.isArray(orders) ? orders : [];
     } catch (error) {
-      console.error('Failed to get orders from localStorage:', error);
       return [];
     }
   }
@@ -174,7 +173,7 @@ export class LocalOrdersService {
     try {
       localStorage.removeItem(storageKey);
     } catch (error) {
-      console.error('Failed to clear local orders:', error);
+      // Silently fail
     }
   }
 
@@ -202,7 +201,7 @@ export class LocalOrdersService {
       localStorage.removeItem('bookswap_local_orders');
       
     } catch (error) {
-      console.error('Failed to clear all local orders:', error);
+      // Silently fail
     }
   }
 
@@ -229,7 +228,7 @@ export class LocalOrdersService {
         localStorage.setItem(storageKey, JSON.stringify(orders));
       }
     } catch (error) {
-      console.error('Failed to update order status:', error);
+      // Silently fail
     }
   }
 
@@ -245,7 +244,6 @@ export class LocalOrdersService {
       const orders = this.getLocalOrders();
       return orders.find(order => order.id === orderId) || null;
     } catch (error) {
-      console.error('Failed to get local order:', error);
       return null;
     }
   }
@@ -281,7 +279,7 @@ export class LocalOrdersService {
         localStorage.removeItem('bookswap_local_orders');
       }
     } catch (error) {
-      console.error('Failed to migrate old orders data:', error);
+      // Silently fail
     }
   }
 } 

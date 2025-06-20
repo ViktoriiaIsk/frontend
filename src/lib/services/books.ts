@@ -1,4 +1,5 @@
-import { api, endpoints, buildQueryString } from '@/lib/api';
+import { api, endpoints, buildQueryString, getAuthToken } from '@/lib/api';
+import { initializeCsrfCookie, getCsrfToken } from '@/lib/csrf';
 import type {
   Book,
   CreateBookData,
@@ -21,13 +22,7 @@ export class BooksService {
    */
   static async getBooks(filters: BookFilters = {}): Promise<PaginatedResponse<Book>> {
     try {
-      if (process.env.NODE_ENV === 'development') {
-      }
-      
       const queryString = buildQueryString(filters);
-      
-      if (process.env.NODE_ENV === 'development') {
-      }
       
       const response = await api.get<PaginatedResponse<Book>>(
         `${endpoints.books.list}${queryString}`
@@ -35,50 +30,60 @@ export class BooksService {
       
       let books = response.data.data || [];
       
+      // Remove duplicates by ID (in case API returns duplicates)
+      const uniqueBooks = books.filter((book, index, array) => 
+        array.findIndex(b => b.id === book.id) === index
+      );
+      
+      books = uniqueBooks;
+      
       // Client-side filtering for search since backend is not accurate
       if (filters.search && filters.search.trim()) {
         const searchTerm = filters.search.toLowerCase().trim();
         
-        if (process.env.NODE_ENV === 'development') {
-        }
-        
-        books = books.filter((book, index) => {
+        books = books.filter((book) => {
           const title = book.title?.toLowerCase() || '';
           const author = book.author?.toLowerCase() || '';
           const description = book.description?.toLowerCase() || '';
           
-          const matches = title.includes(searchTerm) || 
-                         author.includes(searchTerm) || 
-                         description.includes(searchTerm);
+          return title.includes(searchTerm) || 
+                 author.includes(searchTerm) || 
+                 description.includes(searchTerm);
+        });
+      }
+
+      // Client-side filtering for category if backend doesn't handle it properly
+      if (filters.category_id && filters.category_id > 0) {
+        books = books.filter((book) => {
+          return book.category_id === filters.category_id;
+        });
+      }
+
+      // Client-side filtering for price range
+      if ((filters.min_price && filters.min_price > 0) || (filters.max_price && filters.max_price > 0)) {
+        books = books.filter((book) => {
+          const price = parseFloat(book.price) || 0;
+          let matches = true;
           
-          if (process.env.NODE_ENV === 'development' && index < 3) {
-            console.log('Search debug:', {
-              title: book.title,
-              author: book.author,
-              matches,
-              titleIncludes: title.includes(searchTerm),
-              authorIncludes: author.includes(searchTerm),
-              descIncludes: description.includes(searchTerm)
-            });
+          if (filters.min_price && filters.min_price > 0 && price < filters.min_price) {
+            matches = false;
+          }
+          if (filters.max_price && filters.max_price > 0 && price > filters.max_price) {
+            matches = false;
           }
           
           return matches;
         });
-        
-        if (process.env.NODE_ENV === 'development') {
-        }
       }
-      
-      // Return the filtered results with original pagination structure
+
+      // Return the filtered data in the same structure as API response
       return {
         ...response.data,
         data: books,
-        // Update total count if we filtered results
-        total: filters.search ? books.length : response.data.total,
-        // Recalculate pagination info
-        last_page: filters.search ? Math.ceil(books.length / (filters.per_page || 12)) : response.data.last_page
+        total: books.length,
+        last_page: Math.ceil(books.length / (filters.per_page || 12))
       };
-    } catch (error) {
+    } catch (error: unknown) {
       throw error;
     }
   }
@@ -90,7 +95,6 @@ export class BooksService {
    */
   static async getBook(id: number): Promise<Book> {
     try {
-      
       const response = await api.get<ApiResponse<Book> | Book>(`/books/${id}`);
       
       // Handle both response.data.data and response.data structures
@@ -105,358 +109,263 @@ export class BooksService {
       
       // Validate that we have book data
       if (!book || !book.id) {
-        console.error('Invalid book data received:', book);
         throw new Error('Invalid book data from server');
       }
       
       return book;
     } catch (error: unknown) {
-      console.error('Get book error details:', error);
-      
-      // More detailed error logging
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as any;
-        console.error('Response status:', axiosError.response?.status);
-        console.error('Response data:', axiosError.response?.data);
-        console.error('Request URL:', axiosError.config?.url);
-      }
-      
       throw error;
     }
   }
 
   /**
-   * Create new book listing
-   * @param bookData - Book creation data
+   * Create a new book
+   * @param data - Book creation data
    * @returns Promise with created book
    */
-  static async createBook(bookData: CreateBookData): Promise<Book> {
+  static async createBook(data: CreateBookData): Promise<Book> {
     try {
-      const response = await api.post<ApiResponse<Book>>(
-        endpoints.books.create,
-        bookData
-      );
+      // Ensure CSRF token is available before creating book
+      await initializeCsrfCookie();
+      
+      const response = await api.post<ApiResponse<Book>>('/books', data);
       
       // Handle both response.data.data and response.data structures
-      const book = response.data.data || response.data;
-      
-      // Validate that we have book data
-      if (!book) {
-        throw new Error('Invalid book data from server');
+      let book: Book;
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        book = response.data.data;
+      } else {
+        book = response.data as Book;
       }
       
       return book;
-    } catch (error) {
+    } catch (error: unknown) {
       throw error;
     }
   }
 
   /**
-   * Update existing book (owner only)
+   * Update an existing book
    * @param id - Book ID
-   * @param bookData - Updated book data
+   * @param data - Book update data
    * @returns Promise with updated book
    */
-  static async updateBook(id: number, bookData: Partial<CreateBookData>): Promise<Book> {
+  static async updateBook(id: number, data: Partial<CreateBookData>): Promise<Book> {
     try {
-      const response = await api.put<ApiResponse<Book>>(
-        endpoints.books.update(id),
-        bookData
-      );
+      const response = await api.put<ApiResponse<Book>>(`/books/${id}`, data);
       
       // Handle both response.data.data and response.data structures
-      const book = response.data.data || response.data;
-      
-      // Validate that we have book data
-      if (!book) {
-        throw new Error('Invalid book data from server');
+      let book: Book;
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        book = response.data.data;
+      } else {
+        book = response.data as Book;
       }
       
       return book;
-    } catch (error) {
+    } catch (error: unknown) {
       throw error;
     }
   }
 
   /**
-   * Delete book listing (owner only)
+   * Delete a book
    * @param id - Book ID
-   * @returns Promise that resolves when deletion is complete
+   * @returns Promise that resolves when book is deleted
    */
   static async deleteBook(id: number): Promise<void> {
     try {
       await api.delete(`/books/${id}`);
     } catch (error: unknown) {
-      console.error('Delete book error:', error);
       throw error;
     }
   }
 
   /**
-   * Upload images for a book (up to 5 images)
+   * Upload images for a book
    * @param bookId - Book ID
    * @param images - Array of image files
-   * @returns Promise with updated book data
+   * @returns Promise with upload result
    */
-  static async uploadBookImages(bookId: number, images: File[]): Promise<{ success: boolean; message: string }> {
+  static async uploadImages(bookId: number, images: File[]): Promise<{ success: boolean; images?: string[] }> {
     try {
+      // Ensure CSRF token is available
+      await initializeCsrfCookie();
+      
       const formData = new FormData();
-      
-      // Add each image with the key 'images[]' (Laravel expects array format)
-      images.forEach((image) => {
-        formData.append('images[]', image);
+      images.forEach((image, index) => {
+        formData.append(`images[${index}]`, image);
       });
+
+      // Get auth token and CSRF token
+      const token = getAuthToken();
+      const csrfToken = getCsrfToken();
       
-      const response = await api.post(`/books/${bookId}/images`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+      const headers: Record<string, string> = {
+        'X-Requested-With': 'XMLHttpRequest',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      if (csrfToken) {
+        headers['X-XSRF-TOKEN'] = csrfToken;
+      }
+
+      // Use proxy for proper CORS handling
+      const response = await fetch(`/api/proxy/api/books/${bookId}/images`, {
+        method: 'POST',
+        headers,
+        body: formData,
+        credentials: 'include', // Include cookies for CSRF
       });
-      
-      return response.data;
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.status} ${response.statusText}. ${errorText}`);
+      }
+
+      const result = await response.json();
+      return result;
     } catch (error: unknown) {
-      console.error('Upload images error:', error);
       throw error;
     }
   }
 
   /**
-   * Get all book categories
+   * Fetch all categories
    * @returns Promise with categories array
    */
   static async getCategories(): Promise<Category[]> {
     try {
-      
-      const response = await api.get<ApiResponse<Category[]>>(
-        endpoints.categories.list
-      );
-      
+      const response = await api.get<ApiResponse<Category[]> | Category[]>('/categories');
       
       // Handle both response.data.data and response.data structures
-      const categories = response.data.data || response.data;
-      
-      // Validate that we have categories data
-      if (!Array.isArray(categories)) {
-        return this.getFallbackCategories();
+      let categories: Category[];
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        categories = (response.data as ApiResponse<Category[]>).data;
+      } else {
+        categories = response.data as Category[];
       }
       
-      if (categories.length === 0) {
-        return this.getFallbackCategories();
-      }
-      
-      return categories;
-    } catch (error) {
-      console.error('Error fetching categories, using fallback:', error);
-      return this.getFallbackCategories();
+      return Array.isArray(categories) ? categories : [];
+    } catch (error: unknown) {
+             // Return fallback categories if API fails
+       return [
+         { id: 1, name: 'Fiction', slug: 'fiction', description: 'Fictional stories and novels', created_at: '', updated_at: '' },
+         { id: 2, name: 'Non-fiction', slug: 'non-fiction', description: 'Real-world topics and factual content', created_at: '', updated_at: '' },
+         { id: 3, name: 'Science', slug: 'science', description: 'Scientific topics and research', created_at: '', updated_at: '' },
+         { id: 4, name: 'History', slug: 'history', description: 'Historical events and periods', created_at: '', updated_at: '' },
+         { id: 5, name: 'Mystery', slug: 'mystery', description: 'Mystery and thriller novels', created_at: '', updated_at: '' }
+       ];
     }
   }
 
   /**
-   * Get fallback categories when backend is unavailable
-   * @returns Array of default categories
-   */
-  static getFallbackCategories(): Category[] {
-    return [
-      { id: 1, name: 'Fiction', slug: null, description: 'Books that tell made-up stories to entertain, inspire, or move the reader.', created_at: '', updated_at: '' },
-      { id: 2, name: 'Non-Fiction', slug: null, description: 'Books based on real events, people, or facts — perfect for those who love learning.', created_at: '', updated_at: '' },
-      { id: 3, name: 'Science', slug: null, description: 'Explore the wonders of the universe, nature, and technology through scientific literature.', created_at: '', updated_at: '' },
-      { id: 4, name: 'History', slug: null, description: 'Books that dive into past civilizations, wars, cultures, and historical figures.', created_at: '', updated_at: '' },
-      { id: 5, name: 'Technology', slug: null, description: 'Discover the latest in coding, innovation, and the digital world.', created_at: '', updated_at: '' },
-      { id: 6, name: 'Children', slug: null, description: 'Fun, educational, and heartwarming stories for young readers.', created_at: '', updated_at: '' },
-      { id: 7, name: 'Romance', slug: null, description: 'Love stories that make your heart flutter and bring emotions to life.', created_at: '', updated_at: '' },
-      { id: 8, name: 'Mystery', slug: null, description: 'Thrilling tales full of secrets, puzzles, and unexpected twists.', created_at: '', updated_at: '' },
-      { id: 9, name: 'Fantasy', slug: null, description: 'Step into magical worlds filled with dragons, heroes, and epic adventures.', created_at: '', updated_at: '' },
-      { id: 10, name: 'Self-help', slug: null, description: 'Books that motivate, heal, and guide you through personal growth.', created_at: '', updated_at: '' }
-    ];
-  }
-
-  /**
-   * Get single category by ID
-   * @param id - Category ID
-   * @returns Promise with category data
-   */
-  static async getCategory(id: number): Promise<Category> {
-    try {
-      const response = await api.get<ApiResponse<Category>>(
-        endpoints.categories.show(id)
-      );
-      
-      // Handle both response.data.data and response.data structures
-      const category = response.data.data || response.data;
-      
-      // Validate that we have category data
-      if (!category) {
-        throw new Error('Invalid category data from server');
-      }
-      
-      return category;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * Get reviews for a specific book
+   * Fetch reviews for a book
    * @param bookId - Book ID
    * @returns Promise with reviews array
    */
   static async getBookReviews(bookId: number): Promise<Review[]> {
     try {
-      const response = await api.get<ApiResponse<Review[]>>(
-        endpoints.books.reviews(bookId)
-      );
+      const response = await api.get<ApiResponse<Review[]> | Review[]>(`/books/${bookId}/reviews`);
       
       // Handle both response.data.data and response.data structures
-      const reviews = response.data.data || response.data;
-      
-      // Validate that we have reviews data
-      if (!Array.isArray(reviews)) {
-        return [];
+      let reviews: Review[];
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        reviews = (response.data as ApiResponse<Review[]>).data;
+      } else {
+        reviews = response.data as Review[];
       }
       
-      return reviews;
-    } catch (error) {
-      throw error;
+      return Array.isArray(reviews) ? reviews : [];
+    } catch (error: unknown) {
+      // Return empty array if reviews fetch fails
+      return [];
     }
   }
 
   /**
    * Create a review for a book
    * @param bookId - Book ID
-   * @param reviewData - Review data (rating and comment)
+   * @param data - Review data
    * @returns Promise with created review
    */
-  static async createReview(bookId: number, reviewData: CreateReviewData): Promise<Review> {
+  static async createReview(bookId: number, data: CreateReviewData): Promise<Review> {
     try {
-      const response = await api.post<ApiResponse<Review>>(
-        endpoints.reviews.create(bookId),
-        reviewData
-      );
+      const response = await api.post<ApiResponse<Review>>(`/books/${bookId}/reviews`, data);
       
       // Handle both response.data.data and response.data structures
-      const review = response.data.data || response.data;
-      
-      // Validate that we have review data
-      if (!review) {
-        throw new Error('Invalid review data from server');
+      let review: Review;
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        review = response.data.data;
+      } else {
+        review = response.data as Review;
       }
       
       return review;
-    } catch (error) {
+    } catch (error: unknown) {
       throw error;
     }
   }
 
   /**
-   * Update existing review (author only)
-   * @param reviewId - Review ID
-   * @param reviewData - Updated review data
-   * @returns Promise with updated review
-   */
-  static async updateReview(reviewId: number, reviewData: Partial<CreateReviewData>): Promise<Review> {
-    try {
-      const response = await api.put<ApiResponse<Review>>(
-        endpoints.reviews.update(reviewId),
-        reviewData
-      );
-      
-      // Handle both response.data.data and response.data structures
-      const review = response.data.data || response.data;
-      
-      // Validate that we have review data
-      if (!review) {
-        throw new Error('Invalid review data from server');
-      }
-      
-      return review;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * Delete review (author only)
-   * @param reviewId - Review ID
-   * @returns Promise that resolves when deletion is complete
-   */
-  static async deleteReview(reviewId: number): Promise<void> {
-    try {
-      await api.delete(endpoints.reviews.delete(reviewId));
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * Search books by text query
-   * @param query - Search query string
-   * @param limit - Maximum number of results (default: 10)
-   * @returns Promise with search results
-   */
-  static async searchBooks(query: string, limit: number = 10): Promise<Book[]> {
-    try {
-      const filters: BookFilters = {
-        search: query,
-        per_page: limit,
-      };
-      
-      const response = await this.getBooks(filters);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * Get user's own book listings
+   * Get books by current user using /api/my-books endpoint
    * @returns Promise with user's books
    */
   static async getUserBooks(): Promise<Book[]> {
     try {
-      // Get current user ID from token
-      const userId = this.getCurrentUserId();
-      
-      if (!userId) {
+      // Get auth token to ensure user is authenticated
+      const token = getAuthToken();
+      if (!token) {
         return [];
       }
+
+      // Call the correct endpoint for user's books
+      const response = await api.get<Book[]>('/my-books');
       
-      // Get all books and filter by current user
-      const response = await api.get<PaginatedResponse<Book>>('/books');
+      // The API returns an array of books directly
+      let books: Book[] = [];
       
-      // Handle both response.data.data and response.data structures
-      const allBooks = response.data.data || response.data;
-      
-      if (Array.isArray(allBooks)) {
-        // Filter books by current user (owner_id should match current user)
-        const userBooks = allBooks.filter(book => {
-          return book.owner_id === parseInt(userId);
-        });
-        
-        return userBooks;
-      } else {
-        return [];
-      }
-    } catch (error: any) {
-      console.error('Error fetching user books:', error);
-      
-      // If authentication failed, return empty array
-      if (error?.status === 401 || error?.response?.status === 401) {
-        return [];
+      if (response.data) {
+        // Handle both direct array and wrapped response
+        if (Array.isArray(response.data)) {
+          books = response.data;
+        } else if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+          books = (response.data as any).data || [];
+        } else {
+          books = [];
+        }
       }
       
-      // For other errors, also return empty array to prevent UI crashes
+      // Ensure we return an array and filter out any invalid entries
+      const validBooks = books.filter(book => 
+        book && 
+        typeof book === 'object' && 
+        book.id && 
+        book.title && 
+        book.author
+      );
+      
+      return validBooks;
+      
+    } catch (error: unknown) {
+      // If the /my-books endpoint fails, return empty array
+      // Don't fallback to other methods to avoid security issues
       return [];
     }
   }
 
   /**
-   * Get current user ID from stored auth token or user info
+   * Get user ID from stored token or user data
+   * @returns User ID or null if not found
    */
   private static getCurrentUserId(): string | null {
     if (typeof window === 'undefined') return null;
     
     try {
-      // Method 1: Try to get user from auth store/localStorage
+      // Try to get user from auth store
       const userDataStr = localStorage.getItem('auth-storage');
       if (userDataStr) {
         const userData = JSON.parse(userDataStr);
@@ -465,29 +374,14 @@ export class BooksService {
         }
       }
       
-      // Method 2: Try JWT token decode (if it's actually JWT)
+      // Fallback to token-based identification
       const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-      if (token && token.includes('.')) {
-        // Only try JWT decode if token has dots (JWT format)
-        const parts = token.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(atob(parts[1]));
-          const userId = payload.sub || payload.user_id || payload.id;
-          if (userId) {
-            return userId.toString();
-          }
-        }
+      if (token) {
+        return token.substring(0, 8) + token.length;
       }
       
-      // Method 3: Use token itself as user identifier (fallback)
-      if (token) {
-        // Create a simple hash of the token for user identification
-        const simpleHash = token.substring(0, 8) + token.length;
-        return simpleHash;
-      }
       return null;
     } catch (error) {
-      console.error('Failed to extract user ID:', error);
       return null;
     }
   }

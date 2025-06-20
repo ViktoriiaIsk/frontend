@@ -81,7 +81,6 @@ export class AuthService {
       await api.post(endpoints.auth.logout);
     } catch (error) {
       // Even if server logout fails, clear local token
-      console.error('Server logout failed:', error);
     } finally {
       // Always clear token from local storage
       removeAuthToken();

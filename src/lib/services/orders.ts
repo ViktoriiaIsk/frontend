@@ -64,10 +64,6 @@ export class OrderService {
           const hasRequiredFields = order.book_id && order.total_amount;
           
           if (!hasRequiredFields) {
-            console.log('Order missing required fields:', {
-              book_id: order.book_id,
-              total_amount: order.total_amount
-            });
             return false;
           }
           
@@ -83,9 +79,6 @@ export class OrderService {
       
       return response.data;
     } catch (error: any) {
-      console.error('Backend orders error:', error);
-      console.error('Error status:', error?.status);
-      console.error('Error response:', error?.response?.data);
       
       // Backend failed, return empty result since we already checked localStorage
       return {
@@ -122,13 +115,11 @@ export class OrderService {
       
       // Check if order data is valid
       if (!order || !order.id) {
-        console.error('Invalid order data received:', order);
         throw new Error('Order data not found or invalid');
       }
       
       return order;
     } catch (error) {
-      console.error('Get order error:', error);
       throw error;
     }
   }

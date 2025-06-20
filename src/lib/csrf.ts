@@ -16,8 +16,6 @@ export const initializeCsrfCookie = async (): Promise<void> => {
   }
 
   try {
-    console.log('Initializing CSRF cookie...');
-    
     const response = await fetch('/api/proxy/sanctum/csrf-cookie', {
       method: 'GET',
       credentials: 'include', // Important: include cookies
@@ -29,43 +27,31 @@ export const initializeCsrfCookie = async (): Promise<void> => {
 
     if (response.ok) {
       csrfCookieInitialized = true;
-      console.log('CSRF cookie initialized successfully');
-    } else {
-      console.warn('CSRF cookie initialization failed:', response.status, response.statusText);
-      // Don't throw error, as some backends might not require CSRF
     }
   } catch (error) {
-    console.warn('CSRF cookie initialization error:', error);
     // Don't throw error, continue with request
   }
 };
 
 /**
- * Reset CSRF cookie initialization state
- * Useful when user logs out or token expires
+ * Get CSRF token from cookies (if available)
  */
-export const resetCsrfCookie = (): void => {
-  csrfCookieInitialized = false;
+export const getCsrfToken = (): string | null => {
+  if (typeof document === 'undefined') return null;
+  
+  const cookies = document.cookie.split(';');
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'XSRF-TOKEN') {
+      return decodeURIComponent(value);
+    }
+  }
+  return null;
 };
 
 /**
- * Get CSRF token from meta tag or cookie
- * This is typically set by Laravel in the page header
+ * Reset CSRF cookie state (for logout)
  */
-export const getCsrfToken = (): string | null => {
-  if (typeof window === 'undefined') return null;
-  
-  // Try to get from meta tag first
-  const metaTag = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
-  if (metaTag) {
-    return metaTag.content;
-  }
-  
-  // Try to get from cookie
-  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-  if (match) {
-    return decodeURIComponent(match[1]);
-  }
-  
-  return null;
+export const resetCsrfCookie = (): void => {
+  csrfCookieInitialized = false;
 }; 

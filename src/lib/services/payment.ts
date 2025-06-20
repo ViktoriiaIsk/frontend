@@ -92,7 +92,6 @@ export class PaymentService {
       return { success: false, error: 'Payment failed' };
 
     } catch (error) {
-      console.error('Process payment intent error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to process payment' 
@@ -125,14 +124,6 @@ export class PaymentService {
         order_id: orderId
       };
     } catch (error: unknown) {
-      console.error('Create payment intent error:', error);
-      // Log detailed error information
-      if (error && typeof error === 'object' && 'errors' in error) {
-        console.error('Validation errors:', (error as any).errors);
-      }
-      if (error && typeof error === 'object' && 'message' in error) {
-        console.error('Error message:', (error as any).message);
-      }
       throw error;
     }
   }
@@ -149,7 +140,6 @@ export class PaymentService {
         data
       );
     } catch (error) {
-      console.error('Confirm payment error:', error);
       throw error;
     }
   }
@@ -191,7 +181,6 @@ export class PaymentService {
         clientSecret: client_secret 
       };
     } catch (error) {
-      console.error('Create book payment intent error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'An error occurred while creating payment' 

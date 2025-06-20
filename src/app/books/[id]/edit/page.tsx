@@ -110,7 +110,6 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
         });
         
       } catch (err: unknown) {
-        console.error('Error loading book:', err);
         setError(err instanceof Error ? err.message : 'Failed to load book');
       } finally {
         setLoading(false);
@@ -231,11 +230,10 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
           // Upload new images if any
           if (selectedImages.length > 0) {
             try {
-              await BooksService.uploadBookImages(book.id, selectedImages);
-            } catch (imgErr) {
-              console.error('Image upload error:', imgErr);
-              alert('Book updated, but failed to upload new images.');
-            }
+              await BooksService.uploadImages(book.id, selectedImages);
+                          } catch (imgErr) {
+                alert('Book updated, but failed to upload new images.');
+              }
           }
           
           // Redirect to book details

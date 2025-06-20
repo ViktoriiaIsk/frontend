@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BooksService } from '@/lib/services/books';
+import { useAuthStore } from '@/store/authStore';
 import {
   BookFilters,
   CreateBookData,
@@ -103,7 +104,7 @@ export const useUploadBookImages = () => {
 
   return useMutation({
     mutationFn: ({ bookId, images }: { bookId: number; images: File[] }) =>
-      BooksService.uploadBookImages(bookId, images),
+      BooksService.uploadImages(bookId, images),
     onSuccess: (_, { bookId }) => {
       // Invalidate the book cache to refetch with new images
       queryClient.invalidateQueries({ queryKey: ['book', bookId] });
@@ -148,19 +149,33 @@ export const useCreateReview = () => {
 export const useSearchBooks = (query: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ['search-books', query],
-    queryFn: () => BooksService.searchBooks(query),
+    queryFn: () => BooksService.getBooks({ search: query }),
     enabled: enabled && query.length > 2, // Only search if query is longer than 2 chars
     staleTime: 1 * 60 * 1000, // 1 minute
   });
 };
 
 /**
- * Hook for fetching user's own books
+ * Hook for fetching user's own books from /my-books endpoint
  */
 export const useUserBooks = () => {
+  const { isAuthenticated, user } = useAuthStore();
+  
   return useQuery({
-    queryKey: ['user-books'],
+    queryKey: ['user-books', user?.id],
     queryFn: () => BooksService.getUserBooks(),
+    enabled: isAuthenticated && !!user?.id,
     staleTime: 2 * 60 * 1000,
+    retry: (failureCount, error) => {
+      // Don't retry if it's an authentication error
+      if (error && typeof error === 'object' && 'status' in error) {
+        const status = (error as any).status;
+        if (status === 401 || status === 403) {
+          return false;
+        }
+      }
+      // Retry up to 2 times for other errors
+      return failureCount < 2;
+    },
   });
 }; 

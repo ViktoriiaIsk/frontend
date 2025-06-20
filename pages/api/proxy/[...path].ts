@@ -1,5 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+// Disable body parsing to handle raw request body
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { path = [] } = req.query;
   const targetPath = Array.isArray(path) ? path.join('/') : path;
@@ -20,79 +27,134 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
 
-    // Ensure proper content-type for JSON requests
-    if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-      if (!headers['content-type']) {
-        headers['content-type'] = 'application/json';
-      }
-    }
-
-    // Add CORS headers for the backend
-    headers['Access-Control-Allow-Origin'] = '*';
-    headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
-    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
-
-    console.log(`Proxy request: ${req.method} ${url}`);
-    console.log('Headers:', headers);
+    // Important: Set the correct origin for Laravel Sanctum
+    headers['Origin'] = 'http://13.37.117.93';
+    headers['Referer'] = 'http://13.37.117.93';
+    
+    // Ensure these headers are set for Laravel
+    headers['X-Requested-With'] = 'XMLHttpRequest';
+    headers['Accept'] = 'application/json';
 
     let body = null;
-    if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method!)) {
-      if (req.body) {
-        // If body is already a string, use it as is, otherwise stringify
-        body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    
+    // Handle different content types
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      const contentType = req.headers['content-type'];
+      
+      if (contentType && contentType.includes('multipart/form-data')) {
+        // For multipart/form-data, we need to pass the raw body
+        const chunks: Buffer[] = [];
+        
+        await new Promise((resolve, reject) => {
+          req.on('data', (chunk: Buffer) => {
+            chunks.push(chunk);
+          });
+          
+          req.on('end', () => {
+            resolve(undefined);
+          });
+          
+          req.on('error', (err) => {
+            reject(err);
+          });
+        });
+        
+        body = Buffer.concat(chunks);
+      } else {
+        // For other content types, read the raw body first
+        const chunks: Buffer[] = [];
+        
+        await new Promise((resolve, reject) => {
+          req.on('data', (chunk: Buffer) => {
+            chunks.push(chunk);
+          });
+          
+          req.on('end', () => {
+            resolve(undefined);
+          });
+          
+          req.on('error', (err) => {
+            reject(err);
+          });
+        });
+        
+        const rawBody = Buffer.concat(chunks);
+        
+        if (rawBody.length > 0) {
+          if (contentType && contentType.includes('application/json')) {
+            // For JSON, we can pass the raw buffer
+            body = rawBody;
+            headers['content-type'] = 'application/json';
+          } else {
+            // For other types, convert to string
+            body = rawBody.toString();
+          }
+        }
       }
     }
 
-    const proxyRes = await fetch(url, {
+
+
+    const fetchOptions: RequestInit = {
       method: req.method,
       headers,
       body,
-      credentials: 'include', // Forward cookies for Sanctum
+      // Don't use credentials: 'include' here as it can cause CORS issues
+      // Instead, manually handle cookies
+    };
+
+    const response = await fetch(url, fetchOptions);
+
+
+
+    // Forward all cookies from backend to client
+    const setCookieHeaders = response.headers.getSetCookie ? 
+      response.headers.getSetCookie() : 
+      response.headers.get('set-cookie')?.split(/,(?=\s*\w+\s*=)/) || [];
+    
+    if (setCookieHeaders.length > 0) {
+      setCookieHeaders.forEach(cookie => {
+        // Modify cookie settings for local development
+        let modifiedCookie = cookie.trim();
+        
+        // For development, remove Secure flag and modify SameSite
+        if (process.env.NODE_ENV === 'development') {
+          modifiedCookie = modifiedCookie
+            .replace(/; Secure/gi, '')
+            .replace(/; SameSite=None/gi, '; SameSite=Lax');
+        }
+        
+        res.appendHeader('Set-Cookie', modifiedCookie);
+      });
+    }
+
+    // Copy other response headers
+    response.headers.forEach((value, key) => {
+      // Skip problematic headers and cookies (already handled above)
+      if (!['content-encoding', 'transfer-encoding', 'connection', 'set-cookie'].includes(key.toLowerCase())) {
+        res.setHeader(key, value);
+      }
     });
 
-    console.log(`Proxy response: ${proxyRes.status} ${proxyRes.statusText}`);
+    // Set status code
+    res.status(response.status);
 
-    // Copy response headers
-    const responseHeaders: Record<string, string> = {};
-    proxyRes.headers.forEach((value, key) => {
-      responseHeaders[key] = value;
-    });
-
-    // Set CORS headers for the client
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-TOKEN, X-Requested-With');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-    // Forward cookies from backend
-    const setCookieHeader = proxyRes.headers.get('set-cookie');
-    if (setCookieHeader) {
-      res.setHeader('Set-Cookie', setCookieHeader);
+    // Handle response body
+    const responseText = await response.text();
+    
+    try {
+      // Try to parse as JSON
+      const jsonData = JSON.parse(responseText);
+      res.json(jsonData);
+    } catch {
+      // If not JSON, send as text
+      res.send(responseText);
     }
 
-    // Set content type
-    const contentType = proxyRes.headers.get('content-type');
-    if (contentType) {
-      res.setHeader('Content-Type', contentType);
-    }
-
-    // Handle different content types appropriately
-    if (contentType?.includes('application/json')) {
-      const text = await proxyRes.text();
-      res.status(proxyRes.status).send(text);
-    } else if (contentType?.startsWith('image/')) {
-      const buffer = await proxyRes.arrayBuffer();
-      res.status(proxyRes.status).send(Buffer.from(buffer));
-    } else {
-      const text = await proxyRes.text();
-      res.status(proxyRes.status).send(text);
-    }
   } catch (error) {
-    console.error('Proxy error:', error);
     res.status(500).json({ 
-      error: 'Proxy request failed', 
-      details: (error as any).message,
-      url: url
+      error: 'Proxy error', 
+      message: error instanceof Error ? error.message : 'Unknown error' 
     });
   }
 } 
