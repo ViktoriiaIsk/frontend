@@ -1,10 +1,29 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    // Disable image optimization to avoid proxy issues
-    unoptimized: true,
+    // Enable image optimization for production
+    unoptimized: false,
     remotePatterns: [
-      // Allow all domains for development
+      // Backend domain
+      {
+        protocol: "https",
+        hostname: "bookswap-save-planet.vercel.app",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "8000",
+      },
+      // Allow common image CDNs
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "via.placeholder.com",
+      },
+      // Allow all domains for development (fallback)
       {
         protocol: "http",
         hostname: "**",
@@ -18,6 +37,8 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Add formats for better optimization
+    formats: ["image/webp", "image/avif"],
   },
 
   // API Proxy is now handled by pages/api/proxy/[...path].ts
@@ -31,6 +52,19 @@ const nextConfig = {
         as: "*.js",
       },
     },
+  },
+
+  // Add output configuration for Vercel
+  output: "standalone",
+
+  // Environment variables
+  env: {
+    NEXT_PUBLIC_BACKEND_URL:
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      "https://bookswap-save-planet.vercel.app",
+    NEXT_PUBLIC_IMAGE_BASE_URL:
+      process.env.NEXT_PUBLIC_IMAGE_BASE_URL ||
+      "https://bookswap-save-planet.vercel.app",
   },
 };
 

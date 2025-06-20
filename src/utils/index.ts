@@ -257,8 +257,9 @@ export const getBookImageUrl = (bookId: number | string, imageName: string): str
   // If already a complete URL, return as is
   if (imageName.startsWith('http')) return imageName;
   
-  const imageBaseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '/api/proxy';
-  return `${imageBaseUrl}/storage/books/${bookId}/${imageName}`;
+  // Use backend URL directly for production
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://bookswap-save-planet.vercel.app';
+  return `${backendUrl}/storage/books/${bookId}/${imageName}`;
 };
 
 // Generic image URL helper for book images
@@ -268,8 +269,9 @@ export const getBookImageUrlFromPath = (imagePath: string): string => {
   // If already a complete URL, return as is
   if (imagePath.startsWith('http')) return imagePath;
   
-  const imageBaseUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '/api/proxy';
-  return `${imageBaseUrl}/storage/books/${imagePath}`;
+  // Use backend URL directly for production
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://bookswap-save-planet.vercel.app';
+  return `${backendUrl}/storage/books/${imagePath}`;
 };
 
 // Legacy Image URL helper - DEPRECATED: Backend now returns ready-to-use image URLs
@@ -284,14 +286,19 @@ export const getImageUrl = (path: string): string => {
   return `${backendUrl}/storage/book-images/${path}`;
 };
 
-// Image URL alternatives using proxy
+// Image URL alternatives using direct backend URLs
 export function getImageUrlAlternatives(imagePath: string): string[] {
   if (!imagePath) return [];
   
-  // Use proxy for all alternative image URLs
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://bookswap-save-planet.vercel.app';
+  
+  // Try different paths on backend
   const alternatives = [
+    `${backendUrl}/storage/book-images/${imagePath}`,
+    `${backendUrl}/book-images/${imagePath}`,
+    `${backendUrl}/storage/books/${imagePath}`,
+    // Fallback to proxy for development
     `/api/proxy/storage/book-images/${imagePath}`,
-    `/api/proxy/book-images/${imagePath}`,
     `/api/proxy/storage/books/${imagePath}`,
   ];
   

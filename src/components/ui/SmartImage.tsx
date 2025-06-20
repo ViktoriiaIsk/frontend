@@ -23,10 +23,11 @@ export default function SmartImage({
       return fallback;
     }
     
-    // Convert direct backend URLs to proxy URLs
+    // Use direct backend URL for production
     if (src.includes('13.37.117.93')) {
       const path = src.replace('http://13.37.117.93/', '').replace('https://13.37.117.93/', '');
-      return `/api/proxy/${path}`;
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://bookswap-save-planet.vercel.app';
+      return `${backendUrl}/${path}`;
     }
     
     return src;
@@ -53,14 +54,15 @@ export default function SmartImage({
       return;
     }
     
-    // Convert direct backend URLs to proxy URLs
-    let proxiedSrc = src;
+    // Use direct backend URL for production
+    let backendSrc = src;
     if (src.includes('13.37.117.93')) {
       const path = src.replace('http://13.37.117.93/', '').replace('https://13.37.117.93/', '');
-      proxiedSrc = `/api/proxy/${path}`;
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://bookswap-save-planet.vercel.app';
+      backendSrc = `${backendUrl}/${path}`;
     }
     
-    setCurrentSrc(proxiedSrc);
+    setCurrentSrc(backendSrc);
     setAlternativeIndex(-1);
     setHasFailed(false);
   }, [src, fallback]);

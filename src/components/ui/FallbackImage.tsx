@@ -43,8 +43,16 @@ export default function FallbackImage({
   const handleImageError = () => {
     if (hasFailed) return;
     
-      setCurrentSrc(fallback);
-      setHasFailed(true);
+    // Try to get absolute URL if it's a relative path
+    if (!currentSrc.startsWith('http') && currentSrc !== fallback) {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://bookswap-save-planet.vercel.app';
+      const absoluteUrl = currentSrc.startsWith('/') ? `${backendUrl}${currentSrc}` : `${backendUrl}/${currentSrc}`;
+      setCurrentSrc(absoluteUrl);
+      return;
+    }
+    
+    setCurrentSrc(fallback);
+    setHasFailed(true);
   };
 
   if (!currentSrc) {
