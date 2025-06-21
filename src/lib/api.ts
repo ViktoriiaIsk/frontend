@@ -20,7 +20,8 @@ export const api = axios.create({
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest', // Required for Sanctum SPA
   },
-  withCredentials: true, // Required for Sanctum SPA to send cookies
+  // Temporarily disable credentials for development to avoid CORS issues
+  withCredentials: process.env.NODE_ENV === 'production',
   timeout: 10000,
 });
 

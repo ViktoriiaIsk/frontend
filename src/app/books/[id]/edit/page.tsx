@@ -471,7 +471,7 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
                   {book.images.map((image, index) => (
                     <div key={index} className="relative aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden">
                       <FallbackImage
-                        src={image.url ? getBookImageUrlFromPath(image.url) : '/images/placeholder-book.svg'}
+                        src={image.url ? getBookImageUrlFromPath(image.url, book.id) : '/images/placeholder-book.svg'}
                         alt={`${book.title} - Image ${index + 1}`}
                         className="w-full h-full object-cover"
                       />

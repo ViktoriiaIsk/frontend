@@ -34,16 +34,16 @@ const BookCard: React.FC<BookCardProps> = ({
   // Get the primary image or first image from API - memoized to prevent re-renders
   const imageUrl = useMemo(() => {
     if (book.first_image) {
-      return getBookImageUrlFromPath(book.first_image);
+      return getBookImageUrlFromPath(book.first_image, book.id);
     }
     if (book.images?.[0]?.image_url) {
-      return getBookImageUrlFromPath(book.images[0].image_url);
+      return getBookImageUrlFromPath(book.images[0].image_url, book.id);
     }
     if (book.images?.[0]?.url) {
-      return getBookImageUrlFromPath(book.images[0].url);
+      return getBookImageUrlFromPath(book.images[0].url, book.id);
     }
     return '/images/placeholder-book.svg';
-  }, [book.first_image, book.images]);
+  }, [book.first_image, book.images, book.id]);
 
   // Handle buy now click
   const handleBuyNow = () => {

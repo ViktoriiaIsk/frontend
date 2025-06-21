@@ -109,6 +109,7 @@ export default function SmartImage({
         alt={props.alt || 'Book image'}
         // Add unoptimized prop for external images to prevent Next.js optimization issues
         unoptimized={currentSrc.startsWith('http')}
+        // Remove crossOrigin to avoid CORS issues
       />
       {showDebugger && (
         <ImageDebugger 

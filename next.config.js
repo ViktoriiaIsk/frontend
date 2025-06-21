@@ -37,8 +37,7 @@ const nextConfig = {
     formats: ["image/webp", "image/avif"],
   },
 
-  // API Proxy is now handled by pages/api/proxy/[...path].ts
-  // Removed rewrites to avoid conflicts with the new proxy API
+  // Direct HTTPS backend - no proxy needed
 
   // Turbopack configuration for Next.js 15
   turbopack: {

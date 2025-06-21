@@ -25,6 +25,12 @@ export const initializeCsrfCookie = async (): Promise<void> => {
     return;
   }
 
+  // Skip CSRF in development to avoid CORS issues
+  if (process.env.NODE_ENV === 'development') {
+    csrfCookieInitialized = true;
+    return;
+  }
+
   try {
     const csrfUrl = getCsrfUrl();
     const response = await fetch(csrfUrl, {

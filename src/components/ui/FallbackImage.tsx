@@ -86,7 +86,8 @@ export default function FallbackImage({
         height: '100%',
       }}
       loading="lazy"
-      crossOrigin="anonymous"
+      // Only use crossOrigin for our backend images in production
+      {...(currentSrc.includes('api.bookswap.space') && process.env.NODE_ENV === 'production' ? { crossOrigin: 'anonymous' } : {})}
     />
   );
 } 

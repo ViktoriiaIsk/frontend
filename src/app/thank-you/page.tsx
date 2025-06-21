@@ -182,7 +182,7 @@ function ThankYouContent() {
             <div className="flex items-start space-x-4 mb-6">
               {order.book?.first_image ? (
                 <Image
-                  src={getBookImageUrlFromPath(order.book.first_image)}
+                  src={getBookImageUrlFromPath(order.book.first_image, order.book.id)}
                   alt={order.book?.title || 'Book'}
                   width={80}
                   height={112}

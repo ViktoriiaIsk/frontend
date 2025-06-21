@@ -227,12 +227,13 @@ export class BooksService {
         headers['X-XSRF-TOKEN'] = csrfToken;
       }
 
-      // Use proxy for proper CORS handling
-      const response = await fetch(`/api/proxy/api/books/${bookId}/images`, {
+      // Use direct HTTPS backend
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.bookswap.space/api'}/books/${bookId}/images`, {
         method: 'POST',
         headers,
         body: formData,
-        credentials: 'include', // Include cookies for CSRF
+        // Only include credentials in production to avoid CORS issues in development
+        credentials: process.env.NODE_ENV === 'production' ? 'include' : 'omit',
       });
 
       if (!response.ok) {

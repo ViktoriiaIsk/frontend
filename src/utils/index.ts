@@ -250,34 +250,45 @@ export const getBaseUrl = (): string => {
   return process.env.NEXT_PUBLIC_APP_URL || 'https://bookswap-save-planet.vercel.app';
 };
 
-// Simple book image URL helper for HTTPS backend
+// Simple and reliable book image URL helper
 export const getBookImageUrl = (bookId: number | string, imageName: string): string => {
   if (!imageName) return '/images/placeholder-book.svg';
   
   // If already a complete URL, return as is
-  if (imageName.startsWith('http')) return imageName;
+  if (imageName.startsWith('http')) {
+    return imageName;
+  }
   
-  // Build URL with HTTPS backend
+  // Backend confirmed path: /storage/books/{book_id}/{filename}
   const backendUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://api.bookswap.space';
   return `${backendUrl}/storage/books/${bookId}/${imageName}`;
 };
 
-// Simple image URL helper from path
-export const getBookImageUrlFromPath = (imagePath: string): string => {
+// Handle image URLs from API responses (fixes legacy /book-images/ paths)
+export const getBookImageUrlFromPath = (imagePath: string, bookId?: number | string): string => {
   if (!imagePath) return '/images/placeholder-book.svg';
   
-  // If already a complete URL, return as is
-  if (imagePath.startsWith('http')) return imagePath;
-  
-  // Build URL with HTTPS backend
-  const backendUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://api.bookswap.space';
-  
-  // Handle path formats
-  if (imagePath.startsWith('/')) {
-    return `${backendUrl}${imagePath}`;
+  // If already a complete URL, check if it needs fixing
+  if (imagePath.startsWith('http')) {
+    // API sometimes returns legacy /book-images/ path - fix it
+    if (imagePath.includes('/book-images/') && bookId) {
+      const filename = imagePath.split('/book-images/')[1];
+      const backendUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://api.bookswap.space';
+      return `${backendUrl}/storage/books/${bookId}/${filename}`;
+    }
+    
+    // If it's already correct /storage/books/ path, return as is
+    return imagePath;
   }
   
-  return `${backendUrl}/${imagePath}`;
+  // Build URL from relative path
+  const backendUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://api.bookswap.space';
+  
+  if (imagePath.startsWith('/')) {
+    return `${backendUrl}${imagePath}`;
+  } else {
+    return `${backendUrl}/${imagePath}`;
+  }
 };
 
 // Legacy Image URL helper - DEPRECATED: Backend now returns ready-to-use image URLs
@@ -288,22 +299,22 @@ export const getImageUrl = (path: string): string => {
   if (path.startsWith('http')) return path;
   
   // Fallback for old image paths (should not be needed anymore)
-  const backendUrl = '/api/proxy';
+  const backendUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://api.bookswap.space';
   return `${backendUrl}/storage/book-images/${path}`;
 };
 
-// Simple image URL alternatives for fallback (if needed)
+// Not needed anymore - backend paths are confirmed working
+// Keeping for backward compatibility but simplified
 export function getImageUrlAlternatives(imagePath: string): string[] {
   if (!imagePath) return [];
   
   const backendUrl = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://api.bookswap.space';
   const filename = imagePath.includes('/') ? imagePath.split('/').pop() : imagePath;
   
-  // Simple alternatives for common Laravel storage paths
+  // Only the confirmed working paths
   return [
-    `${backendUrl}/storage/books/${imagePath}`,
-    `${backendUrl}/storage/book-images/${filename}`,
-    `${backendUrl}/storage/${imagePath}`,
+    `${backendUrl}/storage/books/1/${filename}`, // Default book ID for fallback
+    `${backendUrl}/book-images/${filename}`, // Legacy path that also works
   ].filter(Boolean);
 }
 

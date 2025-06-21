@@ -49,6 +49,8 @@ export default function SimpleImage({
       src={currentSrc}
       onError={handleImageError}
       alt={props.alt || 'Book image'}
+      // Enable optimization for external HTTPS images
+      unoptimized={false}
     />
   );
 } 

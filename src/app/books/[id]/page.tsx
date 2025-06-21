@@ -40,10 +40,10 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
     if (!book) return '/images/placeholder-book.svg';
     
     if (allImages[selectedImageIndex]?.url) {
-      return getBookImageUrlFromPath(allImages[selectedImageIndex].url);
+      return getBookImageUrlFromPath(allImages[selectedImageIndex].url, book.id);
     }
     if (book.first_image) {
-      return getBookImageUrlFromPath(book.first_image);
+      return getBookImageUrlFromPath(book.first_image, book.id);
     }
     return '/images/placeholder-book.svg';
   }, [book, allImages, selectedImageIndex]);
@@ -268,7 +268,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                     onClick={() => setSelectedImageIndex(index)}
                   >
                     <FallbackImage
-                      src={image.url ? getBookImageUrlFromPath(image.url) : '/images/placeholder-book.svg'}
+                      src={image.url ? getBookImageUrlFromPath(image.url, book.id) : '/images/placeholder-book.svg'}
                       alt={`${book.title} - Image ${index + 1}`}
                       className="object-cover absolute inset-0"
                     />

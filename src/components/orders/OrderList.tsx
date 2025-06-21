@@ -154,7 +154,7 @@ export default function OrderList({ className = '' }: OrderListProps) {
                               <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
                   {order.book?.first_image ? (
                     <Image
-                      src={getBookImageUrlFromPath(order.book.first_image)}
+                      src={getBookImageUrlFromPath(order.book.first_image, order.book.id)}
                       alt={order.book.title || 'Book'}
                       width={256}
                       height={192}
