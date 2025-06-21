@@ -2,10 +2,10 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 import { ApiError, BookFilters } from '@/types';
 import { initializeCsrfCookie, getCsrfToken } from '@/lib/csrf';
 
-// Base API configuration - dynamic based on environment
+// Base API configuration - direct HTTPS backend
 const getApiBaseUrl = (): string => {
-  // Always use proxy for all environments to avoid CORS and Mixed Content issues
-  return process.env.NEXT_PUBLIC_API_BASE_URL || '/api/proxy/api';
+  // Use direct HTTPS backend - no proxy needed
+  return process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.bookswap.space/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();

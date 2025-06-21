@@ -29,10 +29,8 @@ export default function SmartImage({
     }
     
     // Use direct backend URL for production
-    if (src.includes('13.37.117.93')) {
-      const path = src.replace('http://13.37.117.93/', '').replace('https://13.37.117.93/', '');
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://bookswap-save-planet.vercel.app';
-      return `${backendUrl}/${path}`;
+    if (src.includes('api.bookswap.space')) {
+      return src; // Already correct URL
     }
     
     return src;
@@ -71,10 +69,8 @@ export default function SmartImage({
     
     // Use direct backend URL for production
     let backendSrc = src;
-    if (src.includes('13.37.117.93')) {
-      const path = src.replace('http://13.37.117.93/', '').replace('https://13.37.117.93/', '');
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://bookswap-save-planet.vercel.app';
-      backendSrc = `${backendUrl}/${path}`;
+    if (src.includes('api.bookswap.space')) {
+      backendSrc = src; // Already correct URL
     }
     
     setCurrentSrc(backendSrc);

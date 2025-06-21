@@ -6,14 +6,10 @@ const nextConfig = {
     remotePatterns: [
       // Backend domain
       {
-        protocol: "http",
-        hostname: "13.37.117.93",
+        protocol: "https",
+        hostname: "api.bookswap.space",
       },
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "8000",
-      },
+
       // Allow common image CDNs
       {
         protocol: "https",
@@ -57,12 +53,27 @@ const nextConfig = {
   // Add output configuration for Vercel
   output: "standalone",
 
-  // Environment variables
-  env: {
-    NEXT_PUBLIC_BACKEND_URL:
-      process.env.NEXT_PUBLIC_BACKEND_URL || "http://13.37.117.93",
-    NEXT_PUBLIC_IMAGE_BASE_URL:
-      process.env.NEXT_PUBLIC_IMAGE_BASE_URL || "http://13.37.117.93",
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+          {
+            key: "X-XSS-Protection",
+            value: "1; mode=block",
+          },
+        ],
+      },
+    ];
   },
 };
 

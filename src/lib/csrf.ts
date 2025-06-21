@@ -9,8 +9,10 @@ let csrfCookieInitialized = false;
  * Get CSRF cookie URL based on environment
  */
 const getCsrfUrl = (): string => {
-  // Always use proxy for all environments to avoid CORS and Mixed Content issues
-  return '/api/proxy/sanctum/csrf-cookie';
+  // Use direct HTTPS backend - no proxy needed
+  return process.env.NEXT_PUBLIC_BACKEND_URL ? 
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/sanctum/csrf-cookie` : 
+    'https://api.bookswap.space/sanctum/csrf-cookie';
 };
 
 /**
