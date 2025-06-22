@@ -46,8 +46,10 @@ export const initializeCsrfCookie = async (): Promise<void> => {
       csrfCookieInitialized = true;
     }
   } catch (error) {
-    // Don't throw error, continue with request
-    console.warn('Failed to initialize CSRF cookie:', error);
+    // CSRF initialization failed - continue without it in development
+    if (process.env.NODE_ENV === 'production') {
+      throw error;
+    }
   }
 };
 

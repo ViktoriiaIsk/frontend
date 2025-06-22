@@ -15,13 +15,18 @@ export function TestCardInfo({ isVisible = false, onToggle }: TestCardInfoProps)
   const [copiedCard, setCopiedCard] = useState<string | null>(null);
   const testCards = PaymentService.getTestCards();
 
-  const copyToClipboard = async (text: string, cardType: string) => {
+  const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedCard(cardType);
-      setTimeout(() => setCopiedCard(null), 2000);
+      // Successfully copied
     } catch (err) {
-      console.error('Failed to copy: ', err);
+      // Fallback for older browsers or when clipboard API fails
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
     }
   };
 
@@ -75,7 +80,7 @@ export function TestCardInfo({ isVisible = false, onToggle }: TestCardInfoProps)
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => copyToClipboard(value as string, key)}
+                      onClick={() => copyToClipboard(value as string)}
                       className="h-6 w-6 p-0 text-green-600 hover:text-green-800"
                     >
                       <Copy className="w-3 h-3" />
@@ -112,7 +117,7 @@ export function TestCardInfo({ isVisible = false, onToggle }: TestCardInfoProps)
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => copyToClipboard(value as string, key)}
+                      onClick={() => copyToClipboard(value as string)}
                       className="h-6 w-6 p-0 text-red-600 hover:text-red-800"
                     >
                       <Copy className="w-3 h-3" />
@@ -143,7 +148,7 @@ export function TestCardInfo({ isVisible = false, onToggle }: TestCardInfoProps)
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => copyToClipboard(testCards.auth.requireAuth, 'auth')}
+                  onClick={() => copyToClipboard(testCards.auth.requireAuth)}
                   className="h-6 w-6 p-0 text-blue-600 hover:text-blue-800"
                 >
                   <Copy className="w-3 h-3" />

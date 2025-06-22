@@ -1,15 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image, { ImageProps } from 'next/image';
 import { getImageUrlAlternatives } from '@/utils';
-import ImageDebugger from '@/components/debug/ImageDebugger';
+import FallbackImage from './FallbackImage';
 
-interface SmartImageProps extends Omit<ImageProps, 'src' | 'onError'> {
+interface SmartImageProps {
   src: string;
-  fallback?: string;
-  bookId?: number | string;
-  showDebugger?: boolean;
+  alt: string;
+  bookId?: number;
+  className?: string;
+  sizes?: string;
+  priority?: boolean;
 }
 
 /**
@@ -17,15 +18,16 @@ interface SmartImageProps extends Omit<ImageProps, 'src' | 'onError'> {
  */
 export default function SmartImage({ 
   src, 
-  fallback = '/images/placeholder-book.svg',
+  alt,
   bookId,
-  showDebugger = false,
-  ...props 
+  className,
+  sizes,
+  priority,
 }: SmartImageProps) {
   const [currentSrc, setCurrentSrc] = useState(() => {
     // Start with fallback if src is invalid
     if (!src || src === 'null' || src === 'undefined') {
-      return fallback;
+      return '/images/placeholder-book.svg';
     }
     
     // Use direct backend URL for production
@@ -62,7 +64,7 @@ export default function SmartImage({
   // Reset when src changes
   useEffect(() => {
     if (!src || src === 'null' || src === 'undefined') {
-      setCurrentSrc(fallback);
+      setCurrentSrc('/images/placeholder-book.svg');
       setHasFailed(true);
       return;
     }
@@ -76,7 +78,7 @@ export default function SmartImage({
     setCurrentSrc(backendSrc);
     setAlternativeIndex(-1);
     setHasFailed(false);
-  }, [src, fallback]);
+  }, [src]);
 
   const handleImageError = () => {
     if (hasFailed) return; // Prevent infinite loops
@@ -90,7 +92,7 @@ export default function SmartImage({
       setCurrentSrc(alternatives[nextIndex]);
     } else {
       // All alternatives failed, use fallback
-      setCurrentSrc(fallback);
+      setCurrentSrc('/images/placeholder-book.svg');
       setHasFailed(true);
     }
   };
@@ -101,22 +103,12 @@ export default function SmartImage({
   }
 
   return (
-    <>
-      <Image
-        {...props}
-        src={currentSrc}
-        onError={handleImageError}
-        alt={props.alt || 'Book image'}
-        // Add unoptimized prop for external images to prevent Next.js optimization issues
-        unoptimized={currentSrc.startsWith('http')}
-        // Remove crossOrigin to avoid CORS issues
-      />
-      {showDebugger && (
-        <ImageDebugger 
-          imagePath={src} 
-          bookId={bookId}
-        />
-      )}
-    </>
+    <img
+      src={currentSrc}
+      onError={handleImageError}
+      alt={alt || 'Book image'}
+      className={className}
+      sizes={sizes}
+    />
   );
 } 

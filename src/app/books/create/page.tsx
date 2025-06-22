@@ -184,109 +184,33 @@ const CreateBookPage: React.FC = () => {
 
   // Handle form submission
   const onSubmit = async (data: CreateBookFormData) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Submitting book data:', data);
-      }
+    try {
+      setIsRedirecting(true);
+
+      const response = await BooksService.createBook(data);
       
-      // Ensure all fields are properly formatted and not empty
-      const bookData: CreateBookData = {
-        title: data.title.trim(),
-        author: data.author.trim(),
-        description: data.description.trim(),
-        price: data.price.trim(),
-        condition: data.condition,
-        category_id: Number(data.category_id) || 1
-      };
-      
-      // Validate that required fields are not empty
-      if (!bookData.title) {
-        setError('title', { type: 'manual', message: 'Title is required' });
-        return;
-      }
-      if (!bookData.author) {
-        setError('author', { type: 'manual', message: 'Author is required' });
-        return;
-      }
-      if (!bookData.description || bookData.description.length < 10) {
-        setError('description', { type: 'manual', message: 'Description must be at least 10 characters' });
-        return;
-      }
-      if (!bookData.price || isNaN(parseFloat(bookData.price))) {
-        setError('price', { type: 'manual', message: 'Valid price is required' });
-        return;
-      }
-      if (!bookData.category_id || bookData.category_id < 1) {
-        setError('category_id', { type: 'manual', message: 'Please select a category' });
-        return;
-      }
-      
-      createBook(bookData, {
-        onSuccess: async (createdBook) => {
-          
-          let finalBook = createdBook;
-          
-          // Upload images if any
-          if (selectedImages.length > 0) {
-            try {
-              const uploadResult = await BooksService.uploadImages(createdBook.id, selectedImages);
-              
-              if (uploadResult.success && uploadResult.images) {
-                // Images uploaded successfully, show success message
-                console.log(`Successfully uploaded ${uploadResult.images.length} images`);
-                // Fetch updated book after image upload to get the latest data
-                finalBook = await BooksService.getBook(createdBook.id);
-              } else {
-                throw new Error(uploadResult.message || 'Failed to upload images');
-              }
-            } catch (imgErr) {
-              console.error('Image upload error:', imgErr);
-              const errorMessage = imgErr instanceof Error ? imgErr.message : 'Failed to upload images';
-              alert(`Book created successfully, but failed to upload images: ${errorMessage}`);
-            }
+      if (response?.id) {
+        // Upload images if any
+        if (selectedImages.length > 0) {
+          try {
+            const uploadResult = await BooksService.uploadImages(response.id, selectedImages);
+            // Images uploaded successfully
+          } catch (imgErr) {
+            // Image upload failed but book was created - continue to redirect
           }
-          
-          // Show success message and prepare for redirect
-          setIsRedirecting(true);
-          
-          // Add a small delay to ensure backend consistency
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          
-          // Navigate to book details
-          router.push(`/books/${finalBook.id}`);
-        },
-        onError: (error) => {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('Create book error:', error);
-            console.error('Error details:', JSON.stringify(error, null, 2));
-          }
-          
-          let errorMessage = 'Failed to create book';
-          
-          // Extract error message
-          if (error && typeof error === 'object') {
-            if ('message' in error && typeof error.message === 'string') {
-              errorMessage = error.message;
-            }
-          }
-          
-          // Handle validation errors
-          if (error && typeof error === 'object' && 'errors' in error) {
-            const errors = (error as { errors: Record<string, string[]> }).errors;
-            console.log('Validation errors:', errors);
-            
-            Object.entries(errors).forEach(([field, messages]) => {
-              if (Array.isArray(messages) && messages.length > 0) {
-                setError(field as keyof CreateBookFormData, {
-                  type: 'server',
-                  message: messages[0],
-                });
-              }
-            });
-          } else {
-            alert(errorMessage);
-          }
-        },
-      });
+        }
+
+        // Redirect to book details
+        router.push(`/books/${response.id}`);
+      } else {
+        throw new Error('Failed to create book');
+      }
+    } catch (error: any) {
+      // Handle error by showing it to user
+      alert(error.message || 'Failed to create book. Please try again.');
+    } finally {
+      setIsRedirecting(false);
+    }
   };
 
   return (
@@ -491,8 +415,6 @@ const CreateBookPage: React.FC = () => {
                 </div>
               </div>
             )}
-
-
 
             {/* Submit Button */}
             <div className="flex gap-4">

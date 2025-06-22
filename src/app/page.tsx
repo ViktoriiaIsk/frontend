@@ -24,7 +24,7 @@ export default function HomePage() {
         // Get data in parallel for better performance
         const [categoriesData, booksResponse] = await Promise.all([
           BooksService.getCategories(),
-          BooksService.getBooks({ per_page: 8 })
+          BooksService.getBooks({ per_page: 50 }) // Get more books for better randomization
         ]);
         
         setCategories(categoriesData);

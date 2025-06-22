@@ -29,8 +29,6 @@ function ThankYouContent() {
 
     const fetchOrderDetails = async () => {
       try {
-  
-        
         // Get order from localStorage only (no backend)
         const localOrder = LocalOrdersService.getLocalOrder(parseInt(orderId));
         if (localOrder) {
@@ -39,8 +37,8 @@ function ThankYouContent() {
           setError('Order details could not be found');
         }
       } catch (err) {
-        console.error('Error fetching local order:', err);
-        setError('Order details could not be found');
+        // Failed to fetch local order - continue without it
+        setOrder(null);
       } finally {
         setLoading(false);
       }

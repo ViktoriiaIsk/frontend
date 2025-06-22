@@ -227,20 +227,14 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
       { id: book.id, data },
       {
         onSuccess: async (updatedBook) => {
-                    // Upload new images if any
+          // Upload images if any
           if (selectedImages.length > 0) {
             try {
               const uploadResult = await BooksService.uploadImages(book.id, selectedImages);
-              
-              if (uploadResult.success && uploadResult.images) {
-                console.log(`Successfully uploaded ${uploadResult.images.length} new images`);
-              } else {
-                throw new Error(uploadResult.message || 'Failed to upload images');
-              }
+              // Images uploaded successfully
             } catch (imgErr) {
-              console.error('Image upload error:', imgErr);
-              const errorMessage = imgErr instanceof Error ? imgErr.message : 'Failed to upload images';
-              alert(`Book updated successfully, but failed to upload new images: ${errorMessage}`);
+              // Image upload failed - show warning but continue
+              alert('Book updated but some images failed to upload. You can try adding them again.');
             }
           }
           

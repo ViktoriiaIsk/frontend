@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense, useMemo } from 'react';
+import { useEffect, useState, Suspense, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BooksService } from '@/lib/services/books';
 import Navigation from '@/components/layout/Navigation';
@@ -10,6 +10,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
 import { Book, Category, BookFilters } from '@/types';
+import BookCard from '@/components/books/BookCard';
 
 // Safe parsing functions
 function safeParseInt(value: string | null): number | undefined {
@@ -24,14 +25,6 @@ function safeParseFloat(value: string | null): number | undefined {
   return isNaN(parsed) || parsed <= 0 ? undefined : parsed;
 }
 
-function buildQuery(params: Record<string, any>) {
-  const q = Object.entries(params)
-    .filter(([, v]) => v !== undefined && v !== null && v !== '')
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-    .join('&');
-  return q ? `?${q}` : '';
-}
-
 function BooksContent() {
   const searchParams = useSearchParams();
   
@@ -39,7 +32,10 @@ function BooksContent() {
   const [pagination, setPagination] = useState<any>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Parse filters from URL - memoized to prevent re-renders
   const filters = useMemo(() => {
@@ -63,25 +59,25 @@ function BooksContent() {
   // Load data on mount and when search params change
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      
       try {
-        setLoading(true);
-        setError(null);
-        
-        const [booksResponse, categoriesData] = await Promise.all([
-          BooksService.getBooks(filters),
-          BooksService.getCategories()
+        const [categoriesData, booksResponse] = await Promise.all([
+          BooksService.getCategories(),
+          BooksService.getBooks({ ...filters, per_page: 5, page: 1 })
         ]);
         
-        setBooks(booksResponse.data);
-        setPagination({
-          current_page: booksResponse.current_page,
-          last_page: booksResponse.last_page,
-          total: booksResponse.total
-        });
         setCategories(categoriesData);
+        setBooks(booksResponse.data);
+        setPagination(booksResponse);
+        
+        // Reset infinite scroll state
+        setCurrentPage(1);
+        setHasMore(booksResponse.last_page ? 1 < booksResponse.last_page : booksResponse.data.length === 5);
         
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load books');
+        setError('Failed to load books. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -89,6 +85,59 @@ function BooksContent() {
 
     fetchData();
   }, [filters]);
+
+  // Load more books for infinite scroll
+  const loadMoreBooks = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    
+    setLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const response = await BooksService.getBooks({
+        ...filters,
+        page: nextPage,
+        per_page: 5
+      });
+      
+      if (response.data && response.data.length > 0) {
+        setBooks(prev => {
+          // Filter out duplicates by id
+          const existingIds = new Set(prev.map(book => book.id));
+          const newBooks = response.data.filter(book => !existingIds.has(book.id));
+          return [...prev, ...newBooks];
+        });
+        setCurrentPage(nextPage);
+        
+        // Check if there are more pages
+        if (response.last_page) {
+          setHasMore(nextPage < response.last_page);
+        } else {
+          setHasMore(response.data.length === 5);
+        }
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      // Error loading more books - silently fail
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [filters, currentPage, loadingMore, hasMore]);
+
+  // Infinite scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop
+        >= document.documentElement.offsetHeight - 1000 // Load 1000px before bottom
+      ) {
+        loadMoreBooks();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loadMoreBooks]);
 
   // Show loading while fetching data
   if (loading) {
@@ -191,35 +240,46 @@ function BooksContent() {
         </Card>
 
         {/* Books List */}
-        {books.length ? (
-          <BooksList books={books} />
+        {books.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {books.map((book, index) => (
+                <BookCard key={`${book.id}-${index}`} book={book} />
+              ))}
+            </div>
+            
+            {/* Loading indicator for infinite scroll */}
+            {loadingMore && (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              </div>
+            )}
+            
+            {/* End of results indicator */}
+            {!hasMore && books.length > 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-600">You've seen all available books!</p>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/>
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-neutral-900 mb-2">No books found</h3>
-            <p className="text-neutral-600 mb-6">Try adjusting your filters or search query.</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No books found
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Try adjusting your search or browse all available books.
+            </p>
             <Link href="/books/create">
-              <Button>Add First Book</Button>
+              <Button className="bg-green-600 text-white hover:bg-green-700">
+                Add a Book
+              </Button>
             </Link>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {pagination && pagination.last_page > 1 && (
-          <div className="flex justify-center gap-2 mt-8">
-            {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map((page) => (
-              <Link
-                key={page}
-                href={buildQuery({ ...filters, page })}
-                className={`px-4 py-2 rounded-lg border ${filters.page === page ? 'bg-primary-600 text-white' : 'bg-white text-primary-700'}`}
-              >
-                {page}
-              </Link>
-            ))}
           </div>
         )}
       </div>

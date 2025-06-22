@@ -195,7 +195,7 @@ export const storage = {
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
-      console.error('Failed to save to localStorage:', error);
+      // localStorage not available or quota exceeded
     }
   },
   
@@ -229,7 +229,7 @@ export const sessionStorage = {
     try {
       window.sessionStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
-      console.error('Failed to save to sessionStorage:', error);
+      // sessionStorage not available or quota exceeded
     }
   },
   
