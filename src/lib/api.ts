@@ -20,9 +20,9 @@ export const api = axios.create({
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest', // Required for Sanctum SPA
   },
-  // Temporarily disable credentials for development to avoid CORS issues
-  withCredentials: process.env.NODE_ENV === 'production',
-  timeout: 10000,
+  // Enable credentials for authentication
+  withCredentials: false, // Disable for now to avoid CORS
+  timeout: 15000, // Increase timeout
 });
 
 // Request interceptor to add auth token and handle CSRF
@@ -48,11 +48,10 @@ api.interceptors.request.use(
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
     config.headers['Accept'] = 'application/json';
     
-
-    
     return config;
   },
   (error) => {
+    console.error('❌ Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -63,7 +62,7 @@ api.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
-
+    
     const apiError: ApiError = {
       message: 'An error occurred',
       status: error.response?.status,
@@ -227,11 +226,6 @@ export const buildQueryString = (filters: BookFilters): string => {
   }
   if (filters.per_page) {
     params.append('per_page', filters.per_page.toString());
-  }
-  
-  // Add search
-  if (filters.search) {
-    params.append('search', filters.search);
   }
   
   // Add category filter

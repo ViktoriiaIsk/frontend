@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { BooksService } from '@/lib/services/books';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
@@ -27,12 +27,19 @@ function safeParseFloat(value: string | null): number | undefined {
 
 function BooksContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   
   const [books, setBooks] = useState<Book[]>([]);
   const [pagination, setPagination] = useState<any>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Local state for form inputs to enable immediate feedback
+  const [categoryInput, setCategoryInput] = useState('');
+  const [minPriceInput, setMinPriceInput] = useState('');
+  const [maxPriceInput, setMaxPriceInput] = useState('');
 
   // Parse filters from URL - memoized to prevent re-renders
   const filters = useMemo(() => {
@@ -42,7 +49,6 @@ function BooksContent() {
     const maxPriceParam = searchParams?.get('max_price');
     
     const parsedFilters = {
-      search: searchParams?.get('search') || '',
       category_id: safeParseInt(categoryParam || null),
       page: pageParam ? parseInt(pageParam) : 1,
       per_page: 12,
@@ -52,6 +58,71 @@ function BooksContent() {
     
     return parsedFilters;
   }, [searchParams]);
+
+  // Update local form state when URL changes
+  useEffect(() => {
+    setCategoryInput(filters.category_id?.toString() || '');
+    setMinPriceInput(filters.min_price?.toString() || '');
+    setMaxPriceInput(filters.max_price?.toString() || '');
+  }, [filters]);
+
+  // Function to update URL parameters
+  const updateFilters = useCallback((newFilters: Partial<BookFilters>) => {
+    const params = new URLSearchParams(searchParams || '');
+    
+    // Update category parameter
+    if (newFilters.category_id !== undefined) {
+      if (newFilters.category_id) {
+        params.set('category_id', newFilters.category_id.toString());
+      } else {
+        params.delete('category_id');
+      }
+    }
+    
+    // Update price parameters
+    if (newFilters.min_price !== undefined) {
+      if (newFilters.min_price) {
+        params.set('min_price', newFilters.min_price.toString());
+      } else {
+        params.delete('min_price');
+      }
+    }
+    
+    if (newFilters.max_price !== undefined) {
+      if (newFilters.max_price) {
+        params.set('max_price', newFilters.max_price.toString());
+      } else {
+        params.delete('max_price');
+      }
+    }
+    
+    // Reset page to 1 when filters change
+    params.delete('page');
+    
+    const queryString = params.toString();
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    
+    router.push(newUrl);
+  }, [searchParams, pathname, router]);
+
+  // Handle form submission for filters
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    updateFilters({
+      category_id: categoryInput ? parseInt(categoryInput) : undefined,
+      min_price: minPriceInput ? parseFloat(minPriceInput) : undefined,
+      max_price: maxPriceInput ? parseFloat(maxPriceInput) : undefined,
+    });
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setCategoryInput('');
+    setMinPriceInput('');
+    setMaxPriceInput('');
+    router.push(pathname);
+  };
 
   // Scroll to top on page load
   useEffect(() => {
@@ -65,19 +136,24 @@ function BooksContent() {
       setError(null);
       
       try {
-                const [categoriesData, booksResponse] = await Promise.all([
-          BooksService.getCategories(),
-          BooksService.getBooks({ ...filters, per_page: 100, page: 1 }) // Load all books at once
-        ]);
-        
+        // Load categories first
+        const categoriesData = await BooksService.getCategories();
         setCategories(categoriesData);
+        
+        // Load books with current filters
+        const safeFilters: BookFilters = { 
+          ...filters, 
+          per_page: 100, 
+          page: 1
+        };
+        
+        const booksResponse = await BooksService.getBooks(safeFilters);
+        
         setBooks(booksResponse.data);
         setPagination(booksResponse);
 
         // Scroll to top when new books are loaded
         window.scrollTo(0, 0);
-
-        // No pagination - load all books at once
         
       } catch (err) {
         setError('Failed to load books. Please try again.');
@@ -88,10 +164,6 @@ function BooksContent() {
 
     fetchData();
   }, [filters]);
-
-      // No infinite scroll - all books loaded at once
-
-  // No scroll effect needed - all books loaded at once
 
   // Show loading while fetching data
   if (loading) {
@@ -140,24 +212,14 @@ function BooksContent() {
           <p className="text-lg text-neutral-600">Find your next great read from our collection</p>
         </div>
 
-        {/* Filters */}
+                {/* Filters */}
         <Card className="mb-6">
-          <form method="GET" className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">Search Books</label>
-              <input
-                type="text"
-                name="search"
-                defaultValue={filters.search}
-                placeholder="Type to search titles and authors..."
-                className="input pr-10"
-              />
-            </div>
+          <form onSubmit={handleFormSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">Category</label>
               <select
-                name="category_id"
-                defaultValue={filters.category_id || ''}
+                value={categoryInput}
+                onChange={(e) => setCategoryInput(e.target.value)}
                 className="input"
               >
                 <option value="">All Categories</option>
@@ -171,31 +233,77 @@ function BooksContent() {
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="number"
-                  name="min_price"
+                  value={minPriceInput}
+                  onChange={(e) => setMinPriceInput(e.target.value)}
                   placeholder="Min"
-                  defaultValue={filters.min_price || ''}
                   className="input text-sm"
                   min="0"
                 />
                 <input
                   type="number"
-                  name="max_price"
+                  value={maxPriceInput}
+                  onChange={(e) => setMaxPriceInput(e.target.value)}
                   placeholder="Max"
-                  defaultValue={filters.max_price || ''}
                   className="input text-sm"
                   min="0"
                 />
               </div>
             </div>
-            <div className="flex items-end">
-              <Button type="submit" className="w-full">Apply Filters</Button>
+            <div className="flex items-end gap-2">
+              <Button type="submit" className="flex-1">Apply Filters</Button>
+              {(categoryInput || minPriceInput || maxPriceInput) && (
+                <div title="Clear all filters">
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    onClick={clearFilters}
+                    className="px-3"
+                  >
+                    ✕
+                  </Button>
+                </div>
+              )}
             </div>
           </form>
         </Card>
 
+        {/* Active Filters Display */}
+        {(filters.category_id || filters.min_price || filters.max_price) && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            <span className="text-sm text-gray-600">Active filters:</span>
+            {filters.category_id && (
+              <span className="inline-flex items-center px-2 py-1 bg-primary-100 text-primary-800 text-xs rounded-full">
+                Category: {categories.find(c => c.id === filters.category_id)?.name}
+                <button
+                  onClick={() => updateFilters({ category_id: undefined })}
+                  className="ml-1 text-primary-600 hover:text-primary-800"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            {(filters.min_price || filters.max_price) && (
+              <span className="inline-flex items-center px-2 py-1 bg-primary-100 text-primary-800 text-xs rounded-full">
+                Price: {filters.min_price || 0}€ - {filters.max_price || '∞'}€
+                <button
+                  onClick={() => updateFilters({ min_price: undefined, max_price: undefined })}
+                  className="ml-1 text-primary-600 hover:text-primary-800"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Books List */}
         {books.length > 0 ? (
           <>
+            <div className="mb-4">
+              <p className="text-sm text-gray-600">
+                Found {books.length} book{books.length !== 1 ? 's' : ''}
+              </p>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {books.map((book, index) => (
                 <BookCard key={`${book.id}-${index}`} book={book} />
@@ -215,16 +323,29 @@ function BooksContent() {
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No books found
+              {filters.category_id || filters.min_price || filters.max_price 
+                ? 'No books match your filters' 
+                : 'No books found'
+              }
             </h3>
             <p className="text-gray-600 mb-6">
-              Try adjusting your search or browse all available books.
+              {filters.category_id || filters.min_price || filters.max_price 
+                ? 'Try adjusting your category or price filters.'
+                : 'Browse our collection of books or add your own.'
+              }
             </p>
-            <Link href="/books/create">
-              <Button className="bg-green-600 text-white hover:bg-green-700">
-                Add a Book
-              </Button>
-            </Link>
+            <div className="flex gap-4 justify-center">
+              {(filters.category_id || filters.min_price || filters.max_price) && (
+                <Button variant="secondary" onClick={clearFilters}>
+                  Clear Filters
+                </Button>
+              )}
+              <Link href="/books/create">
+                <Button className="bg-green-600 text-white hover:bg-green-700">
+                  Add a Book
+                </Button>
+              </Link>
+            </div>
           </div>
         )}
       </div>

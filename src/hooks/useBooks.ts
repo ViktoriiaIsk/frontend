@@ -143,17 +143,7 @@ export const useCreateReview = () => {
   });
 };
 
-/**
- * Hook for searching books
- */
-export const useSearchBooks = (query: string, enabled: boolean = true) => {
-  return useQuery({
-    queryKey: ['search-books', query],
-    queryFn: () => BooksService.getBooks({ search: query }),
-    enabled: enabled && query.length > 2, // Only search if query is longer than 2 chars
-    staleTime: 1 * 60 * 1000, // 1 minute
-  });
-};
+
 
 /**
  * Hook for fetching user's own books from /my-books endpoint

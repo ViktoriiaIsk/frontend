@@ -190,7 +190,6 @@ export interface PaginatedResponse<T> {
 export interface BookFilters {
   page?: number;
   per_page?: number;
-  search?: string;
   category_id?: number;
   min_price?: number;
   max_price?: number;
