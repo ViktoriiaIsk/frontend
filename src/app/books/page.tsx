@@ -32,10 +32,7 @@ function BooksContent() {
   const [pagination, setPagination] = useState<any>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
 
   // Parse filters from URL - memoized to prevent re-renders
   const filters = useMemo(() => {
@@ -56,6 +53,11 @@ function BooksContent() {
     return parsedFilters;
   }, [searchParams]);
 
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Load data on mount and when search params change
   useEffect(() => {
     const fetchData = async () => {
@@ -63,18 +65,19 @@ function BooksContent() {
       setError(null);
       
       try {
-        const [categoriesData, booksResponse] = await Promise.all([
+                const [categoriesData, booksResponse] = await Promise.all([
           BooksService.getCategories(),
-          BooksService.getBooks({ ...filters, per_page: 5, page: 1 })
+          BooksService.getBooks({ ...filters, per_page: 100, page: 1 }) // Load all books at once
         ]);
         
         setCategories(categoriesData);
         setBooks(booksResponse.data);
         setPagination(booksResponse);
-        
-        // Reset infinite scroll state
-        setCurrentPage(1);
-        setHasMore(booksResponse.last_page ? 1 < booksResponse.last_page : booksResponse.data.length === 5);
+
+        // Scroll to top when new books are loaded
+        window.scrollTo(0, 0);
+
+        // No pagination - load all books at once
         
       } catch (err) {
         setError('Failed to load books. Please try again.');
@@ -86,58 +89,9 @@ function BooksContent() {
     fetchData();
   }, [filters]);
 
-  // Load more books for infinite scroll
-  const loadMoreBooks = useCallback(async () => {
-    if (loadingMore || !hasMore) return;
-    
-    setLoadingMore(true);
-    try {
-      const nextPage = currentPage + 1;
-      const response = await BooksService.getBooks({
-        ...filters,
-        page: nextPage,
-        per_page: 5
-      });
-      
-      if (response.data && response.data.length > 0) {
-        setBooks(prev => {
-          // Filter out duplicates by id
-          const existingIds = new Set(prev.map(book => book.id));
-          const newBooks = response.data.filter(book => !existingIds.has(book.id));
-          return [...prev, ...newBooks];
-        });
-        setCurrentPage(nextPage);
-        
-        // Check if there are more pages
-        if (response.last_page) {
-          setHasMore(nextPage < response.last_page);
-        } else {
-          setHasMore(response.data.length === 5);
-        }
-      } else {
-        setHasMore(false);
-      }
-    } catch (err) {
-      // Error loading more books - silently fail
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [filters, currentPage, loadingMore, hasMore]);
+      // No infinite scroll - all books loaded at once
 
-  // Infinite scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + document.documentElement.scrollTop
-        >= document.documentElement.offsetHeight - 1000 // Load 1000px before bottom
-      ) {
-        loadMoreBooks();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [loadMoreBooks]);
+  // No scroll effect needed - all books loaded at once
 
   // Show loading while fetching data
   if (loading) {
@@ -248,19 +202,10 @@ function BooksContent() {
               ))}
             </div>
             
-            {/* Loading indicator for infinite scroll */}
-            {loadingMore && (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-              </div>
-            )}
-            
             {/* End of results indicator */}
-            {!hasMore && books.length > 0 && (
-              <div className="text-center py-8">
-                <p className="text-gray-600">You've seen all available books!</p>
-              </div>
-            )}
+            <div className="text-center py-8">
+              <p className="text-gray-600">All available books displayed</p>
+            </div>
           </>
         ) : (
           <div className="text-center py-12">

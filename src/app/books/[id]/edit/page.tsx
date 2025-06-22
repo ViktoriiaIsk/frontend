@@ -276,9 +276,10 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
         onSuccess: () => {
           router.push('/books');
         },
-        onError: (error: unknown) => {
-          const errorMessage = extractErrorMessage(error);
-          alert(`Failed to delete book: ${errorMessage}`);
+        onError: (error: any) => {
+          // Error handling is now done in the service layer
+          // Just log the error for debugging
+          console.error('Delete book failed:', error);
         }
       });
     }

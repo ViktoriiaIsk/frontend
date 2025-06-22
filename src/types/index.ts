@@ -11,7 +11,8 @@ export const BOOK_STATUSES = [
   'available',
   'sold', 
   'reserved',
-  'pending'
+  'pending',
+  'deleted'
 ] as const;
 
 export type BookCondition = typeof BOOK_CONDITIONS[number];

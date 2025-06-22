@@ -156,9 +156,11 @@ export default function ProfilePage() {
                   <div className="text-xs text-neutral-400 mb-2">
                     €{book.price} • {book.condition}
                   </div>
-                  <Link href={`/books/${book.id}`}>
-                    <Button size="sm">View Details</Button>
-                  </Link>
+                  {book.status !== 'deleted' && (
+                    <Link href={`/books/${book.id}`}>
+                      <Button size="sm">View Details</Button>
+                    </Link>
+                  )}
                 </Card>
               ))}
           </div>

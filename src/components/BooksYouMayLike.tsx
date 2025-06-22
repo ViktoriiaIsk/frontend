@@ -35,9 +35,11 @@ export default function BooksYouMayLike({ books }: { books: Book[] }) {
     getCurrentUser();
   }, []);
 
-  // Filter out books owned by current user and show only available books
+  // Filter out books owned by current user, show only available books
+  // (Backend automatically excludes deleted books from API responses)
   const booksForUser = books.filter(book => 
-    book.owner_id !== currentUser?.id && book.status === 'available'
+    book.owner_id !== currentUser?.id && 
+    book.status === 'available'
   );
   
   // Always show exactly 5 random books (randomize only when books change, not on every render)

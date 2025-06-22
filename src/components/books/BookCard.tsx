@@ -74,11 +74,11 @@ const BookCard: React.FC<BookCardProps> = ({
               className="object-cover absolute inset-0"
             />
             {book.status !== 'available' && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                <span className="text-white text-sm font-medium capitalize">
-                  {book.status}
-                </span>
-              </div>
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <span className="text-white text-sm font-medium capitalize">
+                {book.status === 'deleted' ? 'Deleted' : book.status === 'reserved' ? 'Unavailable' : book.status === 'sold' ? 'Sold' : book.status}
+              </span>
+            </div>
             )}
           </div>
 
@@ -143,7 +143,7 @@ const BookCard: React.FC<BookCardProps> = ({
         {book.status !== 'available' && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <span className="text-white text-sm font-medium capitalize">
-              {book.status}
+              {book.status === 'deleted' ? 'Deleted' : book.status === 'reserved' ? 'Unavailable' : book.status === 'sold' ? 'Sold' : book.status}
             </span>
           </div>
         )}
@@ -204,7 +204,7 @@ const BookCard: React.FC<BookCardProps> = ({
               </Button>
             ) : (
               <Button variant="secondary" size="sm" className="w-full" disabled>
-                {book.status === 'sold' ? 'Sold' : 'Reserved'}
+                {book.status === 'deleted' ? 'Deleted' : book.status === 'sold' ? 'Sold' : book.status === 'reserved' ? 'Unavailable' : 'Unavailable'}
               </Button>
             )}
             

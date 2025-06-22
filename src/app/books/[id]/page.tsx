@@ -33,6 +33,18 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   // Categories hook
   const { data: categories } = useCategories();
 
+  // Check if current user is the owner of this book and if book is deleted
+  const isOwner = currentUser && book?.owner_id === currentUser.id;
+  const isAvailable = book?.status === 'available';
+  const isDeleted = book?.status === 'deleted'; // Backend now uses "deleted" status
+  
+  // If book is deleted and user is not the owner, redirect to books page
+  useEffect(() => {
+    if (book && isDeleted && !isOwner) {
+      router.push('/books');
+    }
+  }, [book, isDeleted, isOwner, router]);
+
   // Memoized values - must be before any conditional returns
   const allImages = useMemo(() => book?.images || [], [book?.images]);
   
@@ -144,9 +156,10 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
         onSuccess: () => {
           router.push('/books');
         },
-        onError: (error: unknown) => {
-          const errorMessage = extractErrorMessage(error);
-          alert(`Failed to delete book: ${errorMessage}`);
+        onError: (error: any) => {
+          // Error handling is now done in the service layer
+          // Just log the error for debugging
+          console.error('Delete book failed:', error);
         }
       });
     }
@@ -214,17 +227,14 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  // Check if current user is the owner of this book
-  const isOwner = currentUser && book?.owner_id === currentUser.id;
-  const isAvailable = book?.status === 'available';
-  
   // Find category by ID
   const bookCategory = categories?.find(cat => cat.id === book.category_id);
   const statusColors = {
     available: 'bg-green-100 text-green-800',
     reserved: 'bg-yellow-100 text-yellow-800',
-    sold: 'bg-red-100 text-red-800',
+    sold: 'bg-gray-100 text-gray-800',
     pending: 'bg-blue-100 text-blue-800',
+    deleted: 'bg-red-100 text-red-800', // Red for deleted books
   };
 
   return (
@@ -247,7 +257,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                 onClick={() => setShowImageModal(true)}
               />
               <div className={`absolute top-4 left-4 px-3 py-1 rounded-lg text-sm font-medium ${statusColors[book.status] || 'bg-gray-100 text-gray-800'}`}>
-                {book.status ? book.status.charAt(0).toUpperCase() + book.status.slice(1) : 'Unknown'}
+                {book.status === 'deleted' ? 'Deleted' : book.status ? book.status.charAt(0).toUpperCase() + book.status.slice(1) : 'Unknown'}
               </div>
               {allImages.length > 1 && (
                 <div className="absolute bottom-4 right-4 bg-black/50 text-white px-2 py-1 rounded text-sm">
@@ -306,27 +316,36 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
               <span className="font-medium text-neutral-700">Description:</span>
               <div className="text-neutral-800 mt-1 whitespace-pre-line">{book.description}</div>
                 </div>
-            {/* Book actions - different for owner vs other users */}
+                        {/* Book actions - different for owner vs other users */}
                 <div>
               {isOwner ? (
                 <div className="space-y-3">
-                  <p className="text-sm text-neutral-600">This is your book listing</p>
-                  <div className="flex gap-3">
-                    <Link href={`/books/${book.id}/edit`} className="flex-1">
-                      <Button className="w-full bg-blue-600 text-white hover:bg-blue-700">
-                        Edit Book
-                      </Button>
-                    </Link>
-                    <Button 
-                      variant="danger" 
-                      className="flex-1"
-                      onClick={handleDelete}
-                      loading={isDeleting}
-                      disabled={isDeleting}
-                    >
-                      {isDeleting ? 'Deleting...' : 'Delete'}
-                    </Button>
-                  </div>
+                  {isDeleted ? (
+                    <div className="text-center p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-red-800 font-medium">This book has been deleted</p>
+                      <p className="text-red-600 text-sm mt-1">This book is no longer visible to other users</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm text-neutral-600">This is your book listing</p>
+                      <div className="flex gap-3">
+                        <Link href={`/books/${book.id}/edit`} className="flex-1">
+                          <Button className="w-full bg-blue-600 text-white hover:bg-blue-700">
+                            Edit Book
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="danger"
+                          className="flex-1"
+                          onClick={handleDelete}
+                          loading={isDeleting}
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? 'Deleting...' : 'Delete'}
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <>

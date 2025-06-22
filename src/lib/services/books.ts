@@ -31,57 +31,16 @@ export class BooksService {
       let books = response.data.data || [];
       
       // Remove duplicates by ID (in case API returns duplicates)
-      const uniqueBooks = books.filter((book, index, array) => 
+      books = books.filter((book, index, array) => 
         array.findIndex(b => b.id === book.id) === index
       );
       
-      books = uniqueBooks;
-      
-      // Client-side filtering for search since backend is not accurate
-      if (filters.search && filters.search.trim()) {
-        const searchTerm = filters.search.toLowerCase().trim();
-        
-        books = books.filter((book) => {
-          const title = book.title?.toLowerCase() || '';
-          const author = book.author?.toLowerCase() || '';
-          const description = book.description?.toLowerCase() || '';
-          
-          return title.includes(searchTerm) || 
-                 author.includes(searchTerm) || 
-                 description.includes(searchTerm);
-        });
-      }
+      // Backend now handles all filtering (deleted books, search, categories, prices)
 
-      // Client-side filtering for category if backend doesn't handle it properly
-      if (filters.category_id && filters.category_id > 0) {
-        books = books.filter((book) => {
-          return book.category_id === filters.category_id;
-        });
-      }
-
-      // Client-side filtering for price range
-      if ((filters.min_price && filters.min_price > 0) || (filters.max_price && filters.max_price > 0)) {
-        books = books.filter((book) => {
-          const price = parseFloat(book.price) || 0;
-          let matches = true;
-          
-          if (filters.min_price && filters.min_price > 0 && price < filters.min_price) {
-            matches = false;
-          }
-          if (filters.max_price && filters.max_price > 0 && price > filters.max_price) {
-            matches = false;
-          }
-          
-          return matches;
-        });
-      }
-
-      // Return the filtered data in the same structure as API response
+      // Return the data preserving original pagination info from backend
       return {
         ...response.data,
-        data: books,
-        total: books.length,
-        last_page: Math.ceil(books.length / (filters.per_page || 12))
+        data: books
       };
     } catch (error: unknown) {
       throw error;
@@ -175,8 +134,57 @@ export class BooksService {
    */
   static async deleteBook(id: number): Promise<void> {
     try {
-      await api.delete(`/books/${id}`);
-    } catch (error: unknown) {
+      const token = getAuthToken();
+      if (!token) {
+        throw new Error('Authentication required to delete book');
+      }
+
+      // Make DELETE request directly to backend
+      const deleteResponse = await fetch(`https://api.bookswap.space/api/books/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (deleteResponse.ok) {
+        alert('Book deleted successfully!');
+        return;
+      } else {
+        // Handle specific error responses from backend
+        const errorData = await deleteResponse.json();
+
+        // Handle different error types with user-friendly messages
+        if (errorData.error === 'PENDING_ORDERS_EXIST') {
+          alert('Cannot delete book with pending orders. Please wait for completion or cancel the orders.');
+        } else if (errorData.error === 'ACTIVE_ORDERS_EXIST') {
+          // Keep for backward compatibility
+          alert('Cannot delete book with active orders. Please complete or cancel all orders first.');
+        } else if (errorData.error === 'DELETION_FAILED') {
+          alert('Technical error while deleting book. Please try again later or contact support.');
+        } else if (deleteResponse.status === 500) {
+          alert('Server error. Please try again later or contact support.');
+        } else if (deleteResponse.status === 403) {
+          alert('You do not have permission to delete this book.');
+        } else {
+          alert(`Error deleting book: ${errorData.message || 'Unknown error'}`);
+        }
+
+        throw new Error(errorData.message || 'Failed to delete book');
+      }
+
+    } catch (error: any) {
+      // Show user-friendly message only if not already shown
+      if (!error.message.includes('Authentication') &&
+          !error.message.includes('PENDING_ORDERS_EXIST') &&
+          !error.message.includes('ACTIVE_ORDERS_EXIST') &&
+          !error.message.includes('DELETION_FAILED')) {
+        alert(`Error deleting book: ${error.message}`);
+      }
+
       throw error;
     }
   }
@@ -429,4 +437,16 @@ export class BooksService {
       return null;
     }
   }
-} 
+}
+
+// Test function to check API connectivity
+export const testApiConnection = async () => {
+  try {
+    const response = await api.get('/books?page=1&limit=1');
+    console.log('✅ API connection test successful:', response.status);
+    return true;
+  } catch (error: any) {
+    console.error('❌ API connection test failed:', error.response?.status, error.response?.data);
+    return false;
+  }
+}; 
